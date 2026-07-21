@@ -22,8 +22,8 @@
             --text: #17233b;
             --muted: #5e6d87;
             --subtle: #7a88a1;
-            --accent: #ff9900;
-            --accent-2: #2f6bff;
+            --accent: #7c3aed;
+            --accent-2: #4f46e5;
             --success: #12805c;
             --warning: #b7791f;
             --shadow: 0 24px 56px rgba(34, 63, 120, 0.1);
@@ -52,8 +52,8 @@
             margin: 0;
             font-family: "Aptos", "Segoe UI", Arial, sans-serif;
             background:
-                radial-gradient(circle at top left, rgba(58, 108, 255, 0.07), transparent 24%),
-                radial-gradient(circle at top right, rgba(255, 153, 0, 0.08), transparent 18%),
+                radial-gradient(circle at top left, rgba(79, 70, 229, 0.07), transparent 24%),
+                radial-gradient(circle at top right, rgba(124, 58, 237, 0.08), transparent 18%),
                 linear-gradient(180deg, #fbfdff 0%, #f5f8ff 100%);
             color: var(--text);
             line-height: 1.75;
@@ -121,7 +121,7 @@
             display: block;
             width: 0;
             height: 100%;
-            background: linear-gradient(90deg, var(--accent), #ffb84d);
+            background: linear-gradient(90deg, var(--accent), #a78bfa);
             transition: width 0.12s linear;
         }
 
@@ -155,13 +155,13 @@
             border-radius: var(--radius-md);
             display: grid;
             place-items: center;
-            background: linear-gradient(135deg, var(--accent), #ffbf5c);
+            background: linear-gradient(135deg, var(--accent), #a78bfa);
             color: #1c1407;
             font-weight: 900;
             font-size: 1.05rem;
             text-transform: lowercase;
             flex: 0 0 auto;
-            box-shadow: 0 12px 28px rgba(255, 153, 0, 0.24);
+            box-shadow: 0 12px 28px rgba(124, 58, 237, 0.24);
         }
 
         .brand h1 {
@@ -248,7 +248,7 @@
         }
 
         .control-btn:hover:not(:disabled) {
-            background: #fff6ea;
+            background: #f6f3ff;
             border-color: #efc48b;
         }
 
@@ -287,13 +287,13 @@
 
         .nav-link:hover,
         .nav-link.active {
-            background: linear-gradient(90deg, #fff8f0 0%, #fffbf7 100%);
+            background: linear-gradient(90deg, #f6f3ff 0%, #faf9ff 100%);
             color: #b96d00;
             border-color: #f0d4a8;
         }
 
         .nav-link.active {
-            box-shadow: inset 4px 0 0 var(--accent), 0 2px 8px rgba(255, 153, 0, 0.12);
+            box-shadow: inset 4px 0 0 var(--accent), 0 2px 8px rgba(124, 58, 237, 0.12);
             font-weight: 700;
         }
 
@@ -312,8 +312,8 @@
         }
 
         .nav-link.active .nav-icon {
-            border-color: #ffd59b;
-            background: #fff1d7;
+            border-color: #c9b8f5;
+            background: #efe9ff;
             color: #b96d00;
         }
 
@@ -428,7 +428,7 @@
             overflow: visible;
             background:
                 radial-gradient(circle at center, rgba(47, 107, 255, 0.08), transparent 54%),
-                radial-gradient(circle at right bottom, rgba(255, 153, 0, 0.14), transparent 24%),
+                radial-gradient(circle at right bottom, rgba(124, 58, 237, 0.14), transparent 24%),
                 radial-gradient(circle at left top, rgba(47, 107, 255, 0.08), transparent 18%);
         }
 
@@ -544,9 +544,9 @@
             box-shadow: var(--shadow-soft);
         }
 
-        .hero-service:nth-child(1) .hero-service-icon { color: #ff8a00; }
+        .hero-service:nth-child(1) .hero-service-icon { color: #6d28d9; }
         .hero-service:nth-child(2) .hero-service-icon { color: #14a44d; }
-        .hero-service:nth-child(3) .hero-service-icon { color: #2f6bff; }
+        .hero-service:nth-child(3) .hero-service-icon { color: #4f46e5; }
         .hero-service:nth-child(4) .hero-service-icon { color: #7a3cff; }
 
         .eyebrow {
@@ -620,8 +620,8 @@
         .pill,
         .module-tag {
             color: #8a5300;
-            background: #fff4e5;
-            border: 1px solid #f2c98f;
+            background: #f3eeff;
+            border: 1px solid #c9b8f5;
         }
 
         .hero-metrics,
@@ -663,7 +663,7 @@
             width: 0;
             height: 100%;
             border-radius: inherit;
-            background: linear-gradient(90deg, #9f7bff 0%, #2f6bff 100%);
+            background: linear-gradient(90deg, #9f7bff 0%, #4f46e5 100%);
             transition: width 0.3s ease;
         }
 
@@ -879,7 +879,7 @@
             margin-bottom: 10px;
             padding: 6px 10px;
             border-radius: 999px;
-            background: #fff4e5;
+            background: #f3eeff;
             border: 1px solid #f3d09d;
             color: #9a5d00;
             font-size: 0.8rem;
@@ -1020,7 +1020,7 @@
             padding: 16px 20px;
             border-radius: var(--radius-lg);
             border-left: 5px solid var(--accent);
-            background: linear-gradient(90deg, #fff8f0 0%, #fffbf7 100%);
+            background: linear-gradient(90deg, #f6f3ff 0%, #faf9ff 100%);
             border: 1px solid #f0d4a8;
             color: #8a5300;
             margin: 20px 0;
@@ -1092,7 +1092,7 @@
         }
 
         .highlight {
-            outline: 2px solid rgba(255, 153, 0, 0.4);
+            outline: 2px solid rgba(124, 58, 237, 0.4);
             outline-offset: 2px;
         }
 
@@ -1502,7 +1502,7 @@
                 padding: 6px 10px;
                 color: #764600;
                 border-color: #e5ba7b;
-                background: #fff3e1;
+                background: #f3eeff;
             }
 
             .card p,
@@ -3060,8 +3060,8 @@ AWS</p>
                 </div>
 
                 <!-- MODULE 10 VISUAL LEARNING SECTION -->
-                <div class="card" style="margin-top:20px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>🚀</span> Migration Journey: 3 Phases</h3>
+                <div class="card" style="margin-top:20px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>🚀</span> Migration Journey: 3 Phases</h3>
                     <div class="text-diagram" style="margin-top:12px;">         AWS MIGRATION PHASES
 
     PHASE 1: ASSESS
@@ -3084,8 +3084,8 @@ AWS</p>
     Refactor → Replatform → Decommission</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>🔄</span> 7 Rs Migration Strategy Decision Tree</h3>
+                <div class="card" style="margin-top:16px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>🔄</span> 7 Rs Migration Strategy Decision Tree</h3>
                     <div class="text-diagram" style="margin-top:12px;">    MIGRATION DECISION TREE (7 Rs)
 
 ┌─ Rehost (Lift & Shift)
@@ -3111,8 +3111,8 @@ AWS</p>
    • Switch to different vendor SaaS</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>🛠️</span> Migration Services Architecture</h3>
+                <div class="card" style="margin-top:16px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>🛠️</span> Migration Services Architecture</h3>
                     <div class="text-diagram" style="margin-top:12px;">      MIGRATION TOOLS & SERVICES
 
     DISCOVER PHASE
@@ -3132,8 +3132,8 @@ AWS</p>
     SCT = Schema conversion</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>📊</span> Migration Service Selection Matrix</h3>
+                <div class="card" style="margin-top:16px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>📊</span> Migration Service Selection Matrix</h3>
                     <div class="text-diagram" style="margin-top:12px;">   WHICH SERVICE FOR WHAT?
 
 ┌─ Server migration (VMs)?
@@ -3158,7 +3158,7 @@ AWS</p>
     → AWS Direct Connect</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #2f6bff;">
+                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #4f46e5;">
                     <h3 style="display: flex; align-items: center; gap: 10px;"><span>🧠</span> Exam Memory Map: Migration</h3>
                     <div style="margin-top:12px; font-size: 0.95rem; line-height: 1.8;">
                         <strong>Migration Phases:</strong><br>
@@ -4886,7 +4886,7 @@ AWS Accounts</p>
                 </div>
 
                 <!-- MODULE 8 VISUAL LEARNING SECTION -->
-                <div class="card" style="margin-top:20px; border: 2px solid #b7791f; background: linear-gradient(135deg, #ffffff 0%, #fff9f3 100%);">
+                <div class="card" style="margin-top:20px; border: 2px solid #b7791f; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
                     <h3 style="color: #b7791f; display: flex; align-items: center; gap: 10px;"><span>🔐</span> IAM Identity Management Flow</h3>
                     <div class="text-diagram" style="margin-top:12px;">          IAM AUTHENTICATION FLOW
 
@@ -4905,7 +4905,7 @@ AWS Accounts</p>
 Accept / Deny API Call</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; border: 2px solid #b7791f; background: linear-gradient(135deg, #ffffff 0%, #fff9f3 100%);">
+                <div class="card" style="margin-top:16px; border: 2px solid #b7791f; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
                     <h3 style="color: #b7791f; display: flex; align-items: center; gap: 10px;"><span>🛡️</span> Security & Compliance Architecture</h3>
                     <div class="text-diagram" style="margin-top:12px;">      DEFENSE-IN-DEPTH LAYERS
 
@@ -4923,7 +4923,7 @@ Accept / Deny API Call</div>
        CloudTrail → Config → Security Hub</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; border: 2px solid #b7791f; background: linear-gradient(135deg, #ffffff 0%, #fff9f3 100%);">
+                <div class="card" style="margin-top:16px; border: 2px solid #b7791f; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
                     <h3 style="color: #b7791f; display: flex; align-items: center; gap: 10px;"><span>🔀</span> Threat Detection Flow</h3>
                     <div class="text-diagram" style="margin-top:12px;">         THREAT DETECTION STACK
 
@@ -4942,7 +4942,7 @@ Accept / Deny API Call</div>
     Root Cause Analysis</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; border: 2px solid #b7791f; background: linear-gradient(135deg, #ffffff 0%, #fff9f3 100%);">
+                <div class="card" style="margin-top:16px; border: 2px solid #b7791f; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
                     <h3 style="color: #b7791f; display: flex; align-items: center; gap: 10px;"><span>🏢</span> Multi-Account Governance</h3>
                     <div class="text-diagram" style="margin-top:12px;">    ORGANIZATIONS & ACCOUNT STRUCTURE
 
@@ -5535,8 +5535,8 @@ Alert</p>
                 </div>
 
                 <!-- MODULE 9 VISUAL LEARNING SECTION -->
-                <div class="card" style="margin-top:20px; border: 2px solid #ff9900; background: linear-gradient(135deg, #ffffff 0%, #fff9f3 100%);">
-                    <h3 style="color: #ff9900; display: flex; align-items: center; gap: 10px;"><span>💰</span> AWS Pricing Models</h3>
+                <div class="card" style="margin-top:20px; border: 2px solid #7c3aed; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
+                    <h3 style="color: #7c3aed; display: flex; align-items: center; gap: 10px;"><span>💰</span> AWS Pricing Models</h3>
                     <div class="text-diagram" style="margin-top:12px;">        PRICING MODELS COMPARISON
 
 ┌─ On-Demand
@@ -5561,8 +5561,8 @@ Alert</p>
    • Fault-tolerant workloads only</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; border: 2px solid #ff9900; background: linear-gradient(135deg, #ffffff 0%, #fff9f3 100%);">
-                    <h3 style="color: #ff9900; display: flex; align-items: center; gap: 10px;"><span>📊</span> Billing & Cost Management Flow</h3>
+                <div class="card" style="margin-top:16px; border: 2px solid #7c3aed; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
+                    <h3 style="color: #7c3aed; display: flex; align-items: center; gap: 10px;"><span>📊</span> Billing & Cost Management Flow</h3>
                     <div class="text-diagram" style="margin-top:12px;">         COST TRACKING ARCHITECTURE
 
     AWS Services Usage
@@ -5583,8 +5583,8 @@ Alert</p>
       Optimization Tips</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; border: 2px solid #ff9900; background: linear-gradient(135deg, #ffffff 0%, #fff9f3 100%);">
-                    <h3 style="color: #ff9900; display: flex; align-items: center; gap: 10px;"><span>✅</span> Cost Optimization Decision Tree</h3>
+                <div class="card" style="margin-top:16px; border: 2px solid #7c3aed; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
+                    <h3 style="color: #7c3aed; display: flex; align-items: center; gap: 10px;"><span>✅</span> Cost Optimization Decision Tree</h3>
                     <div class="text-diagram" style="margin-top:12px;">      REDUCE COSTS STRATEGY
 
 ┌─ Compute overutilized?
@@ -5606,7 +5606,7 @@ Alert</p>
     YES → Archive old data, use cheaper tiers</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #ff9900;">
+                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #7c3aed;">
                     <h3 style="display: flex; align-items: center; gap: 10px;"><span>🧠</span> Exam Memory Map: Pricing & Billing</h3>
                     <div style="margin-top:12px; font-size: 0.95rem; line-height: 1.8;">
                         <strong>Pricing Fundamentals:</strong><br>
@@ -6195,8 +6195,8 @@ Edge Location → Delivers content closer to users</p>
                 </div>
 
                 <!-- MODULE 1 VISUAL LEARNING SECTION -->
-                <div class="card" style="margin-top:20px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>📊</span> Visual Learning: Cloud Computing Evolution</h3>
+                <div class="card" style="margin-top:20px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>📊</span> Visual Learning: Cloud Computing Evolution</h3>
                     <div class="text-diagram" style="margin-top:12px;">TRADITIONAL IT                    CLOUD COMPUTING
 
 ┌─────────────────┐               ┌──────────────────┐
@@ -6212,8 +6212,8 @@ Edge Location → Delivers content closer to users</p>
               (IaaS, PaaS, SaaS)</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: linear-gradient(135deg, #fff8f0 0%, #fffbf7 100%); border: 2px solid #ff9900;">
-                    <h3 style="color: #ff9900; display: flex; align-items: center; gap: 10px;"><span>⚡</span> AWS Cloud Benefits</h3>
+                <div class="card" style="margin-top:16px; background: linear-gradient(135deg, #f6f3ff 0%, #faf9ff 100%); border: 2px solid #7c3aed;">
+                    <h3 style="color: #7c3aed; display: flex; align-items: center; gap: 10px;"><span>⚡</span> AWS Cloud Benefits</h3>
                     <div class="text-diagram" style="margin-top:12px;">┌──────────────────────────────────────────────────┐
 │ AGILITY      → Launch resources in minutes      │
 │ SCALABILITY  → Add capacity on-demand          │
@@ -6292,7 +6292,7 @@ Edge Location → Delivers content closer to users</p>
     └─ Recovery acceptable └─ Zero interruption</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #2f6bff;">
+                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #4f46e5;">
                     <h3 style="display: flex; align-items: center; gap: 10px;"><span>🧠</span> Exam Memory Map: Cloud Foundations</h3>
                     <div style="margin-top:12px; font-size: 0.95rem; line-height: 1.8;">
                         <strong>Three Pillars:</strong><br>
@@ -6632,8 +6632,8 @@ Edge Location → Delivers content closer to users</p>
                 </div>
 
                 <!-- MODULE 2 VISUAL LEARNING SECTION -->
-                <div class="card" style="margin-top:20px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>🌍</span> AWS Global Infrastructure Hierarchy</h3>
+                <div class="card" style="margin-top:20px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>🌍</span> AWS Global Infrastructure Hierarchy</h3>
                     <div class="text-diagram" style="margin-top:12px;">                     GLOBAL AWS NETWORK
                               │
         ┌────────────────────┼────────────────────┐
@@ -6647,8 +6647,8 @@ Edge Location → Delivers content closer to users</p>
     └─ ... (30+ total)                        (CloudFront PoPs)</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: linear-gradient(135deg, #fff8f0 0%, #fffbf7 100%); border: 2px solid #ff9900;">
-                    <h3 style="color: #ff9900; display: flex; align-items: center; gap: 10px;"><span>🎯</span> Region Selection Decision Tree</h3>
+                <div class="card" style="margin-top:16px; background: linear-gradient(135deg, #f6f3ff 0%, #faf9ff 100%); border: 2px solid #7c3aed;">
+                    <h3 style="color: #7c3aed; display: flex; align-items: center; gap: 10px;"><span>🎯</span> Region Selection Decision Tree</h3>
                     <div class="text-diagram" style="margin-top:12px;">        WHERE SHOULD I DEPLOY?
                     │
         ┌───────────┴──────────────────────────────┐
@@ -6753,7 +6753,7 @@ Edge Location → Delivers content closer to users</p>
          that jurisdiction</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #2f6bff;">
+                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #4f46e5;">
                     <h3 style="display: flex; align-items: center; gap: 10px;"><span>🧠</span> Exam Memory Map: Global Infrastructure</h3>
                     <div style="margin-top:12px; font-size: 0.95rem; line-height: 1.8;">
                         <strong>Three Levels (Outermost → Innermost):</strong><br>
@@ -7005,8 +7005,8 @@ Developer Commit -> CodePipeline -> ECR -> ECS / EKS / Fargate</p>
                 </div>
 
                 <!-- MODULE 3 VISUAL LEARNING SECTION -->
-                <div class="card" style="margin-top:20px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>🖥️</span> EC2 Request Flow</h3>
+                <div class="card" style="margin-top:20px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>🖥️</span> EC2 Request Flow</h3>
                     <div class="text-diagram" style="margin-top:12px;">      USER REQUEST FLOW IN EC2
 
     User/Client
@@ -7145,7 +7145,7 @@ Developer Commit -> CodePipeline -> ECR -> ECS / EKS / Fargate</p>
        └─ Less management</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #2f6bff;">
+                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #4f46e5;">
                     <h3 style="display: flex; align-items: center; gap: 10px;"><span>🧠</span> Exam Memory Map: Compute Services</h3>
                     <div style="margin-top:12px; font-size: 0.95rem; line-height: 1.8;">
                         <strong>Traditional Server Management:</strong><br>
@@ -7301,7 +7301,7 @@ aws lambda update-function-code --function-name hello \
                 </div>
 
                 <!-- REAL-WORLD SCENARIO 1: SERVERLESS CRUD API -->
-                <div class="card" data-searchable style="margin-top:16px; border: 2px solid #ff9900; background: linear-gradient(135deg, #ffffff 0%, #fff7ec 100%);">
+                <div class="card" data-searchable style="margin-top:16px; border: 2px solid #7c3aed; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
                     <h3 style="color:#b8690a; display:flex; align-items:center; gap:10px;"><span>🌍</span> Real-World 1 — Serverless CRUD API (API Gateway → Lambda → DynamoDB)</h3>
                     <div class="text-diagram" style="margin-top:12px;">// createItem Lambda (Node.js) — POST /items
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
@@ -7385,7 +7385,7 @@ sam build &amp;&amp; sam deploy --guided</div>
                 </div>
 
                 <!-- BEST PRACTICES -->
-                <div class="card" data-searchable style="margin-top:16px; background:#f9fbff; border-left:5px solid #ff9900;">
+                <div class="card" data-searchable style="margin-top:16px; background:#f9fbff; border-left:5px solid #7c3aed;">
                     <h3 style="display:flex; align-items:center; gap:10px;"><span>✅</span> Serverless Best Practices</h3>
                     <div style="margin-top:12px; font-size:0.95rem; line-height:1.8;">
                         • <strong>Least-privilege IAM</strong> per function (scope to the exact resource).<br>
@@ -7640,8 +7640,8 @@ sam build &amp;&amp; sam deploy --guided</div>
                 </div>
 
                 <!-- MODULE 4 VISUAL LEARNING SECTION -->
-                <div class="card" style="margin-top:20px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>🌐</span> VPC Network Architecture</h3>
+                <div class="card" style="margin-top:20px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>🌐</span> VPC Network Architecture</h3>
                     <div class="text-diagram" style="margin-top:12px;">        VPC NETWORK STRUCTURE
 
     AWS REGION
@@ -7689,8 +7689,8 @@ sam build &amp;&amp; sam deploy --guided</div>
 └────────────────┴──────────────┴────────────────┘</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: linear-gradient(135deg, #fff8f0 0%, #fffbf7 100%); border: 2px solid #ff9900;">
-                    <h3 style="color: #ff9900; display: flex; align-items: center; gap: 10px;"><span>🔀</span> VPN vs Direct Connect Decision</h3>
+                <div class="card" style="margin-top:16px; background: linear-gradient(135deg, #f6f3ff 0%, #faf9ff 100%); border: 2px solid #7c3aed;">
+                    <h3 style="color: #7c3aed; display: flex; align-items: center; gap: 10px;"><span>🔀</span> VPN vs Direct Connect Decision</h3>
                     <div class="text-diagram" style="margin-top:12px;">    CONNECTING ON-PREMISES TO AWS
 
     Need to connect office/datacenter to AWS?
@@ -7731,7 +7731,7 @@ sam build &amp;&amp; sam deploy --guided</div>
   └─ Security Groups</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #2f6bff;">
+                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #4f46e5;">
                     <h3 style="display: flex; align-items: center; gap: 10px;"><span>🧠</span> Exam Memory Map: Networking</h3>
                     <div style="margin-top:12px; font-size: 0.95rem; line-height: 1.8;">
                         <strong>Core Concept:</strong> VPC is your private network in AWS<br><br>
@@ -7966,8 +7966,8 @@ Browser -> S3 static website</p>
                 </div>
 
                 <!-- MODULE 5 VISUAL LEARNING SECTION -->
-                <div class="card" style="margin-top:20px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>💾</span> Storage Service Patterns</h3>
+                <div class="card" style="margin-top:20px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>💾</span> Storage Service Patterns</h3>
                     <div class="text-diagram" style="margin-top:12px;">         AWS STORAGE ARCHITECTURE PATTERNS
 
     S3 PATTERN (Object Storage)
@@ -8005,7 +8005,7 @@ Browser -> S3 static website</p>
 └────────┴──────────────┴───────────┴──────────────┴──────────────┘</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #2f6bff;">
+                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #4f46e5;">
                     <h3 style="display: flex; align-items: center; gap: 10px;"><span>🧠</span> Exam Memory Map: Storage</h3>
                     <div style="margin-top:12px; font-size: 0.95rem; line-height: 1.8;">
                         <strong>Block Storage (EBS):</strong><br>
@@ -8722,8 +8722,8 @@ User → Route 53 → CloudFront → Edge → Origin</p>
                 </div>
 
                 <!-- MODULE 6 VISUAL LEARNING SECTION -->
-                <div class="card" style="margin-top:20px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>🌍</span> Global Delivery Service Architecture</h3>
+                <div class="card" style="margin-top:20px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>🌍</span> Global Delivery Service Architecture</h3>
                     <div class="text-diagram" style="margin-top:12px;">       GLOBAL CONTENT DELIVERY STACK
 
     Route 53 (Global DNS)
@@ -8742,7 +8742,7 @@ User → Route 53 → CloudFront → Edge → Origin</p>
     (S3, ELB, EC2)</div>
                 </div>
 
-                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #2f6bff;">
+                <div class="card" style="margin-top:16px; background: #f9fbff; border-left: 5px solid #4f46e5;">
                     <h3 style="display: flex; align-items: center; gap: 10px;"><span>🧠</span> Exam Memory Map: Global Delivery</h3>
                     <div style="margin-top:12px; font-size: 0.95rem; line-height: 1.8;">
                         <strong>Route 53 (Global DNS):</strong><br>
@@ -8768,7 +8768,7 @@ User → Route 53 → CloudFront → Edge → Origin</p>
                      ═══════════════════════════════════════════════════════════════ -->
 
                 <!-- ── PRIVATE SUBNET DEEP DIVE ──────────────────────────────── -->
-                <div class="card" data-searchable style="margin-top:20px; border-left: 5px solid #2f6bff;">
+                <div class="card" data-searchable style="margin-top:20px; border-left: 5px solid #4f46e5;">
                     <h3>🔒 Private Subnet — Deep Dive</h3>
                     <p><strong>Definition:</strong> A Private Subnet is a subnet within a VPC that does not have a direct route to the Internet Gateway (IGW). Resources placed in a private subnet are inaccessible from the public Internet by default and can only be reached from within the VPC, from peered VPCs, or through controlled access paths such as a Bastion Host or VPN.</p>
                     <p><strong>Why It Is Needed:</strong> Not every resource should be publicly reachable. Databases, application servers, caching layers, and internal APIs contain sensitive data or perform backend logic that must never be exposed to the Internet. Private subnets enforce network-level isolation without relying solely on software firewalls.</p>
@@ -8969,7 +8969,7 @@ Security Group needs ONE rule:
                 </div>
 
                 <!-- ── NAT GATEWAY DEDICATED SECTION ─────────────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #ff9900;">
+                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #7c3aed;">
                     <h3>🔄 NAT Gateway — Dedicated Full Section</h3>
                     <p><strong>Definition:</strong> NAT Gateway (Network Address Translation Gateway) is a fully managed AWS service that enables EC2 instances in private subnets to initiate outbound connections to the Internet or to other AWS services, while preventing the Internet from initiating inbound connections to those private instances.</p>
                     <p><strong>Why Private Subnet Instances Need Internet Access:</strong> Even though private subnet instances must be hidden from the Internet, they still need outbound access for legitimate reasons: downloading OS patches (yum update / apt-get upgrade), pulling Docker images from Docker Hub or ECR, downloading application dependencies (pip, npm, Maven), reaching external APIs (payment gateways, SMS providers, IP geolocation services), and sending logs to external monitoring services.</p>
@@ -9040,7 +9040,7 @@ Internet
                 </div>
 
                 <!-- ── BASTION HOST + SESSION MANAGER COMPARISON ─────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #2f6bff;">
+                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #4f46e5;">
                     <h3>🏰 Bastion Host vs AWS Systems Manager Session Manager</h3>
                     <p><strong>Definition:</strong> A Bastion Host is a hardened EC2 instance in a public subnet used as an SSH/RDP jump server to access private EC2 instances. AWS Systems Manager Session Manager is a modern, agentless alternative that provides secure, browser-based or CLI-based shell access to EC2 instances without requiring open SSH ports, public IPs, or Bastion Hosts.</p>
                     <p><strong>Why Both Exist:</strong> Bastion Hosts have been the traditional approach for over a decade. Session Manager was introduced to eliminate the operational overhead, cost, and security risks associated with managing a Bastion Host. Modern AWS architectures prefer Session Manager, but Bastion Hosts remain common in legacy and hybrid environments.</p>
@@ -9177,8 +9177,8 @@ Without both routes, traffic is one-way or completely blocked.</pre>
                 </div>
 
                 <!-- ── VPC FLOW END-TO-END — STEP BY STEP ────────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #f9fbff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff;">🔁 VPC Request Flow — End-to-End Step-by-Step</h3>
+                <div class="card" data-searchable style="margin-top:16px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #f9fbff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5;">🔁 VPC Request Flow — End-to-End Step-by-Step</h3>
                     <p><strong>Definition:</strong> A complete walkthrough of every networking component a user request passes through from the moment the user types a URL to the moment the application server sends a response — showing every routing decision, security check, and AWS component involved.</p>
                     <h4>Architecture</h4>
                     <pre class="text-diagram">User
@@ -9248,7 +9248,7 @@ Response returns via same path</pre>
                 </div>
 
                 <!-- ── NETWORKING MEMORY MAP ──────────────────────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; background: linear-gradient(135deg, #fff8f0 0%, #fffbf7 100%); border: 2px solid #ff9900;">
+                <div class="card" data-searchable style="margin-top:16px; background: linear-gradient(135deg, #f6f3ff 0%, #faf9ff 100%); border: 2px solid #7c3aed;">
                     <h3 style="color: #b96d00; display: flex; align-items: center; gap: 10px;"><span>🧠</span> Networking Module — Complete Memory Map</h3>
                     <p><strong>Definition:</strong> A concise, one-per-concept revision list covering every core AWS networking concept — designed for last-minute exam revision and rapid interview recall.</p>
                     <div style="margin-top:14px; font-size: 0.95rem; line-height: 2.1;">
@@ -9307,7 +9307,7 @@ Response returns via same path</pre>
                      ═══════════════════════════════════════════════════════════════ -->
 
                 <!-- ── ELASTIC IP ────────────────────────────────────────────── -->
-                <div class="card" data-searchable style="margin-top:20px; border-left: 5px solid #ff9900;">
+                <div class="card" data-searchable style="margin-top:20px; border-left: 5px solid #7c3aed;">
                     <h3>🔵 Elastic IP (EIP) — Deep Dive</h3>
                     <p><strong>Definition:</strong> An Elastic IP (EIP) is a static, persistent public IPv4 address that you allocate to your AWS account. Unlike a standard public IP that changes every time you stop and start an EC2 instance, an Elastic IP remains fixed until you explicitly release it.</p>
                     <p><strong>Why It Is Needed:</strong> When an EC2 instance with a regular public IP is stopped, AWS releases that IP and assigns a new one on the next start. Any DNS records, firewall whitelists, or API partners that depend on that IP break immediately. An Elastic IP solves this by giving you a permanent public address you control.</p>
@@ -9375,7 +9375,7 @@ Application</pre>
                 </div>
 
                 <!-- ── NAT GATEWAY DEEP DIVE ────────────────────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #ff9900;">
+                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #7c3aed;">
                     <h3>🔄 NAT Gateway — Deep Dive</h3>
                     <p><strong>Definition:</strong> NAT Gateway (Network Address Translation Gateway) is an AWS-managed, highly available service that enables instances in private subnets to make outbound connections to the Internet or other AWS services, while blocking unsolicited inbound connections from the Internet.</p>
                     <p><strong>Why It Is Needed:</strong> Application servers and databases in private subnets need to download OS patches, software updates, or reach AWS APIs — but they must never be directly reachable from the Internet. NAT Gateway provides this one-way outbound door without exposing the private resources.</p>
@@ -9448,7 +9448,7 @@ Internet</pre>
                 </div>
 
                 <!-- ── BASTION HOST DEEP DIVE ──────────────────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #2f6bff;">
+                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #4f46e5;">
                     <h3>🏰 Bastion Host — Deep Dive</h3>
                     <p><strong>Definition:</strong> A Bastion Host (also called a Jump Server or Jump Box) is a hardened, internet-facing EC2 instance placed in a public subnet that serves as the single, controlled access point for SSH or RDP access to private EC2 instances.</p>
                     <p><strong>Why It Is Needed:</strong> Private EC2 instances have no public IP and no route to the Internet, so administrators cannot directly SSH into them from outside AWS. The Bastion Host acts as a trusted intermediary — you SSH into the bastion first, then jump from the bastion into private instances using their internal private IPs.</p>
@@ -9666,7 +9666,7 @@ On-Premises (via VPN or Direct Connect)</pre>
                 </div>
 
                 <!-- ── VPN CONNECTION DEEP DIVE ───────────────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #ff9900;">
+                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #7c3aed;">
                     <h3>🔐 AWS Site-to-Site VPN — Deep Dive</h3>
                     <p><strong>Definition:</strong> AWS Site-to-Site VPN creates an encrypted IPSec VPN tunnel between your on-premises network or data center (via a Customer Gateway) and your AWS VPC (via a Virtual Private Gateway or Transit Gateway). All traffic between the two sites is encrypted in transit over the public Internet.</p>
                     <p><strong>Why It Is Needed:</strong> Organizations running hybrid infrastructure need to connect their on-premises servers, employees, or data centers to AWS VPCs privately and securely. Site-to-Site VPN provides this connectivity quickly (within minutes to hours) over the existing Internet connection — without requiring a dedicated physical circuit.</p>
@@ -9746,7 +9746,7 @@ EC2 Instances / Databases</pre>
                 </div>
 
                 <!-- ── AWS DIRECT CONNECT DEEP DIVE ───────────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #2f6bff;">
+                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #4f46e5;">
                     <h3>⚡ AWS Direct Connect — Deep Dive</h3>
                     <p><strong>Definition:</strong> AWS Direct Connect is a dedicated, private physical network connection between your on-premises data center or colocation facility and AWS. Unlike Site-to-Site VPN, Direct Connect bypasses the public Internet entirely, providing a consistent, low-latency, high-throughput connection directly into AWS infrastructure.</p>
                     <p><strong>Why It Is Needed:</strong> Workloads requiring large-scale data transfer (Big Data, media rendering, database replication), consistent latency (real-time trading, voice/video), or strict compliance requirements (data must not traverse public Internet) need a dedicated, private network path to AWS.</p>
@@ -10054,7 +10054,7 @@ CloudWatch Insights     Athena queries
                 </div>
 
                 <!-- ── ROUTE 53 NETWORKING INTEGRATION ───────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #ff9900;">
+                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #7c3aed;">
                     <h3>🌐 Route 53 Networking Integration</h3>
                     <p><strong>Definition:</strong> In the context of VPC networking, Route 53 provides DNS resolution for both publicly accessible and privately hosted applications. It bridges the gap between human-readable domain names and the IP addresses of your AWS infrastructure including Load Balancers, EC2 instances, and internal services.</p>
                     <p><strong>Why It Is Needed:</strong> Application endpoints in AWS (ALBs, NLBs, EC2, ECS) are assigned complex AWS-generated DNS names or IPs that change. Route 53 allows you to map friendly domain names (api.example.com) to these resources, and handle failover, load balancing, and geographic routing at the DNS layer.</p>
@@ -10127,7 +10127,7 @@ RDS Database (Private Subnet)</pre>
                 </div>
 
                 <!-- ── LOAD BALANCER NETWORKING PLACEMENT ─────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #2f6bff;">
+                <div class="card" data-searchable style="margin-top:16px; border-left: 5px solid #4f46e5;">
                     <h3>⚖️ Load Balancer Networking Placement</h3>
                     <p><strong>Definition:</strong> Load Balancers distribute incoming traffic across multiple targets (EC2, containers, Lambda, IP addresses) to improve availability, fault tolerance, and scalability. Their placement in public or private subnets determines whether they handle Internet-facing traffic or internal application traffic.</p>
                     <p><strong>Why It Is Needed:</strong> A single server cannot handle all incoming traffic reliably. Load Balancers distribute traffic, detect and bypass unhealthy targets, and provide a single DNS entry point that hides the complexity of the backend fleet.</p>
@@ -10260,8 +10260,8 @@ EC2 Application</pre>
                 </div>
 
                 <!-- ── COMPLETE VPC REQUEST FLOW ──────────────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; border: 2px solid #2f6bff; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
-                    <h3 style="color: #2f6bff; display: flex; align-items: center; gap: 10px;"><span>🗺️</span> Complete VPC Request Flow — Master Architecture</h3>
+                <div class="card" data-searchable style="margin-top:16px; border: 2px solid #4f46e5; background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);">
+                    <h3 style="color: #4f46e5; display: flex; align-items: center; gap: 10px;"><span>🗺️</span> Complete VPC Request Flow — Master Architecture</h3>
                     <p><strong>Definition:</strong> A complete end-to-end view of how a user request travels from the Internet through every AWS networking layer to reach a database, showing every security control, routing decision, and subnet boundary along the way.</p>
                     <pre class="text-diagram" style="font-size: 0.85rem; line-height: 1.7;">
 COMPLETE VPC REQUEST FLOW — MASTER ARCHITECTURE
@@ -10447,7 +10447,7 @@ USER receives response</pre>
                 </div>
 
                 <!-- ── NETWORKING DECISION TREE ───────────────────────────── -->
-                <div class="card" data-searchable style="margin-top:16px; background: linear-gradient(135deg, #fff8f0 0%, #fffbf7 100%); border: 2px solid #ff9900;">
+                <div class="card" data-searchable style="margin-top:16px; background: linear-gradient(135deg, #f6f3ff 0%, #faf9ff 100%); border: 2px solid #7c3aed;">
                     <h3 style="color: #b96d00; display: flex; align-items: center; gap: 10px;"><span>🌳</span> AWS Networking Decision Tree</h3>
                     <p><strong>Definition:</strong> A quick-reference guide to choosing the right AWS networking service or pattern based on the specific connectivity or access requirement you are solving.</p>
                     <pre class="text-diagram" style="font-size: 0.9rem; line-height: 2;">
