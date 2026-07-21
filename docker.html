@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete Docker handbook — images, containers, Dockerfile, multi-stage builds, volumes, networks, Compose, real-world React/FastAPI/Express dockerization, security, and 100+ interview questions." />
+<title>Docker — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #0b6bcb; --blue-dark: #0a4a8f; --blue-mid: #2496ed; --sky: #5eb8f5;
+    --light-blue: #dbeeff; --light-blue-2: #eff8ff;
+    --bg: #ffffff; --bg-soft: #f5fbff; --panel: #ffffff;
+    --text: #0d2438; --muted: #4f6a82; --border: #cbe4f8;
+    --code-bg: #0a1a2b; --accent: #f59e0b; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(36, 150, 237, 0.10); --shadow-lg: 0 14px 40px rgba(10, 74, 143, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 300px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(36, 150, 237, 0.18), transparent), linear-gradient(160deg, #d9edff, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #163656; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #07131f; border-bottom: 1px solid #163656; font-size: 0.75rem; color: #7cc4f7; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #e2f0fb; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #24557f; color: #7cc4f7; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(94,184,245,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #6f92ab; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-cmd { color: #7cc4f7; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #163b58; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #163b58; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #2c4d68; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🐳 Docker Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#concepts">Images &amp; Containers</a>
+    <a href="#cli">Core CLI</a>
+    <a href="#dockerfile">Dockerfile</a>
+    <a href="#layers">Layers &amp; Caching</a>
+    <a href="#multistage">Multi-Stage Builds</a>
+    <a class="section-title">Data &amp; Network</a>
+    <a href="#volumes">Volumes &amp; Storage</a>
+    <a href="#network">Networking</a>
+    <a href="#env">Env &amp; Secrets</a>
+    <a href="#compose">Docker Compose</a>
+    <a class="section-title">Real-World Dockerfiles</a>
+    <a href="#react-docker">React App</a>
+    <a href="#fastapi-docker">FastAPI App</a>
+    <a href="#express-docker">Express App</a>
+    <a href="#fullstack">Full-Stack Compose</a>
+    <a class="section-title">Production</a>
+    <a href="#security">Security &amp; Best Practices</a>
+    <a href="#registry">Registry &amp; CI/CD</a>
+    <a href="#orchestration">Orchestration</a>
+    <a class="section-title">Interview</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">Docker</span> Hands-On Guide</h1>
+    <p>Images, containers, Dockerfiles, multi-stage builds, volumes, networks, Compose — plus real-world Dockerfiles for React, FastAPI &amp; Express, full-stack Compose, security, CI/CD, and 100+ interview questions.</p>
+    <div class="badges">
+      <span class="badge">Images</span>
+      <span class="badge">Multi-Stage</span>
+      <span class="badge">Compose</span>
+      <span class="badge">React/FastAPI/Express</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">Docker packages an app and all its dependencies into a portable <b>image</b> that runs identically anywhere as a <b>container</b> — solving "works on my machine".</p>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>🐳 Containers</h4><ul><li>Share the host kernel (lightweight)</li><li>Start in milliseconds</li><li>MBs in size</li><li>Process-level isolation</li></ul></div>
+        <div class="vs-card b"><h4>🖥️ Virtual Machines</h4><ul><li>Full guest OS (heavy)</li><li>Boot in seconds/minutes</li><li>GBs in size</li><li>Hardware-level isolation</li></ul></div>
+      </div>
+      <div class="callout tip"><b>Interview importance:</b> image vs container, Dockerfile layers/caching, multi-stage builds, volumes vs bind mounts, and Compose are the most-asked Docker topics.</div>
+    </section>
+
+    <!-- CONCEPTS -->
+    <section id="concepts">
+      <h2><span class="num"></span> Images &amp; Containers</h2>
+      <table>
+        <tr><th>Term</th><th>Meaning</th></tr>
+        <tr><td><b>Image</b></td><td>Read-only template (layers) built from a Dockerfile</td></tr>
+        <tr><td><b>Container</b></td><td>A running instance of an image (writable layer on top)</td></tr>
+        <tr><td><b>Registry</b></td><td>Stores/distributes images (Docker Hub, ECR, GHCR)</td></tr>
+        <tr><td><b>Layer</b></td><td>A filesystem diff cached &amp; shared between images</td></tr>
+        <tr><td><b>Volume</b></td><td>Persistent data managed by Docker</td></tr>
+      </table>
+      <div class="callout"><b>Flow:</b> <code class="inline">Dockerfile</code> → <code class="inline">docker build</code> → <b>image</b> → <code class="inline">docker run</code> → <b>container</b>. Push/pull images via a registry.</div>
+    </section>
+
+    <!-- CLI -->
+    <section id="cli">
+      <h2><span class="num"></span> Core CLI</h2>
+      <div class="code"><div class="code-head"><span>Everyday commands</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> build -t myapp:1.0 .        <span class="tok-com"># build image from Dockerfile</span>
+<span class="tok-cmd">docker</span> run -d -p 3000:3000 --name web myapp:1.0
+<span class="tok-cmd">docker</span> ps        / <span class="tok-cmd">docker</span> ps -a  <span class="tok-com"># running / all containers</span>
+<span class="tok-cmd">docker</span> logs -f web
+<span class="tok-cmd">docker</span> exec -it web sh            <span class="tok-com"># shell into a container</span>
+<span class="tok-cmd">docker</span> stop web  / <span class="tok-cmd">docker</span> rm web
+<span class="tok-cmd">docker</span> images   / <span class="tok-cmd">docker</span> rmi myapp:1.0
+<span class="tok-cmd">docker</span> system prune -af          <span class="tok-com"># clean up (⚠️ removes unused)</span></pre></div>
+    </section>
+
+    <!-- DOCKERFILE -->
+    <section id="dockerfile">
+      <h2><span class="num"></span> Dockerfile</h2>
+      <div class="code"><div class="code-head"><span>Anatomy</span><button class="copy">Copy</button></div><pre><span class="tok-key">FROM</span> node:20-alpine        <span class="tok-com"># base image</span>
+<span class="tok-key">WORKDIR</span> /app               <span class="tok-com"># working dir inside container</span>
+<span class="tok-key">COPY</span> package*.json ./       <span class="tok-com"># copy deps manifest first (cache!)</span>
+<span class="tok-key">RUN</span> npm ci                  <span class="tok-com"># install (own layer)</span>
+<span class="tok-key">COPY</span> . .                    <span class="tok-com"># copy source</span>
+<span class="tok-key">EXPOSE</span> 3000                 <span class="tok-com"># document port</span>
+<span class="tok-key">ENV</span> NODE_ENV=production
+<span class="tok-key">CMD</span> [<span class="tok-str">"node"</span>, <span class="tok-str">"server.js"</span>]     <span class="tok-com"># default process</span></pre></div>
+      <table>
+        <tr><th>Instruction</th><th>Purpose</th></tr>
+        <tr><td><code>FROM</code></td><td>Base image</td></tr>
+        <tr><td><code>WORKDIR</code></td><td>Set working directory</td></tr>
+        <tr><td><code>COPY</code> / <code>ADD</code></td><td>Add files (ADD can fetch URLs/untar)</td></tr>
+        <tr><td><code>RUN</code></td><td>Execute at build time (new layer)</td></tr>
+        <tr><td><code>CMD</code> vs <code>ENTRYPOINT</code></td><td>Default command vs fixed executable</td></tr>
+        <tr><td><code>EXPOSE</code></td><td>Document a port (doesn't publish)</td></tr>
+        <tr><td><code>ENV</code> / <code>ARG</code></td><td>Runtime env / build-time arg</td></tr>
+      </table>
+      <div class="callout tip"><b>CMD vs ENTRYPOINT:</b> <code class="inline">ENTRYPOINT</code> sets the executable, <code class="inline">CMD</code> provides default args. Use both: <code class="inline">ENTRYPOINT ["node"]</code> + <code class="inline">CMD ["server.js"]</code>.</div>
+    </section>
+
+    <!-- LAYERS -->
+    <section id="layers">
+      <h2><span class="num"></span> Layers &amp; Build Caching</h2>
+      <p class="lead">Each instruction creates a cached layer. If a layer's inputs don't change, Docker reuses the cache — so <b>order matters</b>.</p>
+      <div class="code"><div class="code-head"><span>Cache-friendly ordering</span><button class="copy">Copy</button></div><pre><span class="tok-com"># ✅ deps copied &amp; installed BEFORE source</span>
+<span class="tok-key">COPY</span> package*.json ./
+<span class="tok-key">RUN</span> npm ci            <span class="tok-com"># cached unless deps change</span>
+<span class="tok-key">COPY</span> . .              <span class="tok-com"># source changes don't bust the deps layer</span>
+
+<span class="tok-com"># ❌ copying everything first re-installs deps on every code change</span></pre></div>
+      <div class="callout warn"><b>Use a <code class="inline">.dockerignore</code></b> (node_modules, .git, .env, dist) to keep the build context small and avoid leaking secrets.</div>
+    </section>
+
+    <!-- MULTISTAGE -->
+    <section id="multistage">
+      <h2><span class="num"></span> Multi-Stage Builds</h2>
+      <p class="lead">Build in one stage, ship only the artifacts in a tiny final image — drastically smaller and more secure (no build tools in production).</p>
+      <div class="code"><div class="code-head"><span>Generic multi-stage</span><button class="copy">Copy</button></div><pre><span class="tok-key">FROM</span> node:20-alpine <span class="tok-key">AS</span> build
+<span class="tok-key">WORKDIR</span> /app
+<span class="tok-key">COPY</span> package*.json ./
+<span class="tok-key">RUN</span> npm ci
+<span class="tok-key">COPY</span> . .
+<span class="tok-key">RUN</span> npm run build            <span class="tok-com"># produces /app/dist</span>
+
+<span class="tok-key">FROM</span> nginx:alpine           <span class="tok-com"># small final image, no Node</span>
+<span class="tok-key">COPY</span> --from=build /app/dist /usr/share/nginx/html</pre></div>
+      <div class="callout tip"><b>Result:</b> the final image contains only the built assets + runtime — often 10× smaller than a single-stage build.</div>
+    </section>
+
+    <!-- VOLUMES -->
+    <section id="volumes">
+      <h2><span class="num"></span> Volumes &amp; Storage</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Named Volume</h4><p>Docker-managed persistent storage (DB data). Survives container removal.</p>
+          <div class="code"><div class="code-head"><span>volume</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> run -v pgdata:/var/lib/postgresql/data postgres</pre></div>
+        </div>
+        <div class="vs-card b"><h4>Bind Mount</h4><p>Maps a host path into the container (live code in dev).</p>
+          <div class="code"><div class="code-head"><span>bind</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> run -v $(pwd):/app node</pre></div>
+        </div>
+      </div>
+      <div class="callout"><b>Container filesystems are ephemeral</b> — data written inside a container is lost on removal. Persist databases/uploads with named volumes.</div>
+    </section>
+
+    <!-- NETWORK -->
+    <section id="network">
+      <h2><span class="num"></span> Networking</h2>
+      <table>
+        <tr><th>Driver</th><th>Use</th></tr>
+        <tr><td><b>bridge</b></td><td>Default; containers on the same bridge talk by name</td></tr>
+        <tr><td><b>host</b></td><td>Share the host network (no isolation)</td></tr>
+        <tr><td><b>none</b></td><td>No networking</td></tr>
+        <tr><td><b>overlay</b></td><td>Multi-host (Swarm/K8s)</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Service discovery by name</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> network create app-net
+<span class="tok-cmd">docker</span> run --network app-net --name db postgres
+<span class="tok-cmd">docker</span> run --network app-net --name api myapi
+<span class="tok-com"># api connects to "db:5432" — Docker DNS resolves the name</span></pre></div>
+      <div class="callout warn"><b>Port publishing:</b> <code class="inline">-p host:container</code> exposes a container port to the host. <code class="inline">EXPOSE</code> alone does not publish.</div>
+    </section>
+
+    <!-- ENV -->
+    <section id="env">
+      <h2><span class="num"></span> Environment &amp; Secrets</h2>
+      <div class="code"><div class="code-head"><span>Env vars &amp; files</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> run -e NODE_ENV=production -e PORT=3000 myapp
+<span class="tok-cmd">docker</span> run --env-file .env myapp   <span class="tok-com"># load from file</span></pre></div>
+      <div class="callout warn"><b>Never bake secrets into images</b> (they persist in layers/history). Use runtime env vars, Docker/BuildKit secrets, or a secrets manager. Add <code class="inline">.env</code> to <code class="inline">.dockerignore</code>.</div>
+    </section>
+
+    <!-- COMPOSE -->
+    <section id="compose">
+      <h2><span class="num"></span> Docker Compose</h2>
+      <p class="lead">Compose defines and runs multi-container apps from one YAML file — <code class="inline">docker compose up</code> starts everything.</p>
+      <div class="code"><div class="code-head"><span>compose.yaml</span><button class="copy">Copy</button></div><pre>services:
+  api:
+    build: ./api
+    ports: [<span class="tok-str">"3000:3000"</span>]
+    environment:
+      - DATABASE_URL=postgres://user:pass@db:5432/app
+    depends_on: [db]
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: [<span class="tok-str">"CMD-SHELL"</span>, <span class="tok-str">"pg_isready -U user"</span>]
+      interval: 5s
+volumes:
+  pgdata:</pre></div>
+      <div class="code"><div class="code-head"><span>Compose commands</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> compose up -d --build
+<span class="tok-cmd">docker</span> compose logs -f api
+<span class="tok-cmd">docker</span> compose down -v          <span class="tok-com"># stop + remove volumes</span></pre></div>
+    </section>
+
+    <!-- REACT DOCKER -->
+    <section id="react-docker">
+      <h2><span class="num"></span> Real-World: Dockerize a React App</h2>
+      <p class="lead">React builds to static files, so the pattern is: <b>build with Node, serve with Nginx</b> (multi-stage → tiny image).</p>
+      <div class="code"><div class="code-head"><span>react-app/Dockerfile</span><button class="copy">Copy</button></div><pre><span class="tok-com"># --- Stage 1: build ---</span>
+<span class="tok-key">FROM</span> node:20-alpine <span class="tok-key">AS</span> build
+<span class="tok-key">WORKDIR</span> /app
+<span class="tok-key">COPY</span> package*.json ./
+<span class="tok-key">RUN</span> npm ci
+<span class="tok-key">COPY</span> . .
+<span class="tok-key">RUN</span> npm run build              <span class="tok-com"># Vite -&gt; /app/dist (CRA -&gt; /app/build)</span>
+
+<span class="tok-com"># --- Stage 2: serve ---</span>
+<span class="tok-key">FROM</span> nginx:1.27-alpine
+<span class="tok-key">COPY</span> --from=build /app/dist /usr/share/nginx/html
+<span class="tok-key">COPY</span> nginx.conf /etc/nginx/conf.d/default.conf
+<span class="tok-key">EXPOSE</span> 80
+<span class="tok-key">CMD</span> [<span class="tok-str">"nginx"</span>, <span class="tok-str">"-g"</span>, <span class="tok-str">"daemon off;"</span>]</pre></div>
+      <div class="code"><div class="code-head"><span>nginx.conf (SPA fallback)</span><button class="copy">Copy</button></div><pre>server {
+  listen 80;
+  location / {
+    root /usr/share/nginx/html;
+    try_files $uri $uri/ /index.html;   <span class="tok-com"># client-side routing</span>
+  }
+}</pre></div>
+      <div class="code"><div class="code-head"><span>Build &amp; run</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> build -t react-app .
+<span class="tok-cmd">docker</span> run -p 8080:80 react-app     <span class="tok-com"># open http://localhost:8080</span></pre></div>
+      <div class="callout tip"><b>Dev mode</b> (hot reload): use a single Node stage + bind mount and run <code class="inline">npm run dev -- --host</code>; use the Nginx multi-stage image for production.</div>
+    </section>
+
+    <!-- FASTAPI DOCKER -->
+    <section id="fastapi-docker">
+      <h2><span class="num"></span> Real-World: Dockerize a FastAPI App</h2>
+      <div class="code"><div class="code-head"><span>fastapi-app/Dockerfile</span><button class="copy">Copy</button></div><pre><span class="tok-key">FROM</span> python:3.12-slim
+<span class="tok-key">WORKDIR</span> /app
+<span class="tok-key">ENV</span> PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+<span class="tok-key">COPY</span> requirements.txt .
+<span class="tok-key">RUN</span> pip install --no-cache-dir -r requirements.txt
+<span class="tok-key">COPY</span> . .
+<span class="tok-key">RUN</span> adduser --disabled-password app &amp;&amp; chown -R app /app
+<span class="tok-key">USER</span> app                     <span class="tok-com"># non-root</span>
+<span class="tok-key">EXPOSE</span> 8000
+<span class="tok-com"># Gunicorn + Uvicorn workers for production</span>
+<span class="tok-key">CMD</span> [<span class="tok-str">"gunicorn"</span>, <span class="tok-str">"main:app"</span>, <span class="tok-str">"-k"</span>, <span class="tok-str">"uvicorn.workers.UvicornWorker"</span>, <span class="tok-str">"-w"</span>, <span class="tok-str">"4"</span>, <span class="tok-str">"-b"</span>, <span class="tok-str">"0.0.0.0:8000"</span>]</pre></div>
+      <div class="code"><div class="code-head"><span>Build &amp; run</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> build -t fastapi-app .
+<span class="tok-cmd">docker</span> run -p 8000:8000 --env-file .env fastapi-app
+<span class="tok-com"># docs at http://localhost:8000/docs</span></pre></div>
+      <div class="callout tip"><b>Slim + no-cache:</b> use <code class="inline">python:3.12-slim</code>, <code class="inline">--no-cache-dir</code>, and a non-root user. For dev, mount code and run <code class="inline">uvicorn main:app --reload --host 0.0.0.0</code>.</div>
+    </section>
+
+    <!-- EXPRESS DOCKER -->
+    <section id="express-docker">
+      <h2><span class="num"></span> Real-World: Dockerize an Express App</h2>
+      <div class="code"><div class="code-head"><span>express-app/Dockerfile</span><button class="copy">Copy</button></div><pre><span class="tok-key">FROM</span> node:20-alpine <span class="tok-key">AS</span> deps
+<span class="tok-key">WORKDIR</span> /app
+<span class="tok-key">COPY</span> package*.json ./
+<span class="tok-key">RUN</span> npm ci --omit=dev          <span class="tok-com"># production deps only</span>
+
+<span class="tok-key">FROM</span> node:20-alpine
+<span class="tok-key">WORKDIR</span> /app
+<span class="tok-key">ENV</span> NODE_ENV=production
+<span class="tok-key">COPY</span> --from=deps /app/node_modules ./node_modules
+<span class="tok-key">COPY</span> . .
+<span class="tok-key">USER</span> node                    <span class="tok-com"># built-in non-root user</span>
+<span class="tok-key">EXPOSE</span> 3000
+<span class="tok-key">CMD</span> [<span class="tok-str">"node"</span>, <span class="tok-str">"server.js"</span>]</pre></div>
+      <div class="code"><div class="code-head"><span>.dockerignore</span><button class="copy">Copy</button></div><pre>node_modules
+npm-debug.log
+.env
+.git
+Dockerfile
+.dockerignore</pre></div>
+      <div class="callout warn"><b>Graceful shutdown:</b> handle <code class="inline">SIGTERM</code> in the app so <code class="inline">docker stop</code> drains connections cleanly (Docker sends SIGTERM, then SIGKILL after 10s).</div>
+    </section>
+
+    <!-- FULLSTACK -->
+    <section id="fullstack">
+      <h2><span class="num"></span> Real-World: Full-Stack with Compose</h2>
+      <p class="lead">React (Nginx) + Express/FastAPI API + Postgres + Redis, wired together and started with one command.</p>
+      <div class="code"><div class="code-head"><span>compose.yaml (full stack)</span><button class="copy">Copy</button></div><pre>services:
+  web:
+    build: ./react-app          <span class="tok-com"># Nginx-served React</span>
+    ports: [<span class="tok-str">"8080:80"</span>]
+    depends_on: [api]
+  api:
+    build: ./express-app        <span class="tok-com"># or ./fastapi-app</span>
+    ports: [<span class="tok-str">"3000:3000"</span>]
+    environment:
+      - DATABASE_URL=postgres://user:pass@db:5432/app
+      - REDIS_URL=redis://cache:6379
+    depends_on:
+      db: { condition: service_healthy }
+      cache: { condition: service_started }
+  db:
+    image: postgres:16
+    environment: { POSTGRES_USER: user, POSTGRES_PASSWORD: pass, POSTGRES_DB: app }
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: [<span class="tok-str">"CMD-SHELL"</span>, <span class="tok-str">"pg_isready -U user"</span>]
+      interval: 5s
+  cache:
+    image: redis:7-alpine
+volumes:
+  pgdata:</pre></div>
+      <div class="realworld"><h4>🌍 One command up</h4><p><code class="inline">docker compose up -d --build</code> builds the React &amp; API images, starts Postgres + Redis with health gating, wires service discovery by name (<code class="inline">db</code>, <code class="inline">cache</code>), and serves the SPA on :8080 talking to the API on :3000 — a complete reproducible environment.</p></div>
+    </section>
+
+    <!-- SECURITY -->
+    <section id="security">
+      <h2><span class="num"></span> Security &amp; Best Practices</h2>
+      <table>
+        <tr><th>Do</th><th>Why</th></tr>
+        <tr><td>Small base (<code>alpine</code>/<code>slim</code>/<code>distroless</code>)</td><td>Smaller attack surface + faster</td></tr>
+        <tr><td>Multi-stage builds</td><td>No build tools in production</td></tr>
+        <tr><td>Non-root <code>USER</code></td><td>Limit blast radius</td></tr>
+        <tr><td>Pin versions (no <code>:latest</code>)</td><td>Reproducible builds</td></tr>
+        <tr><td><code>.dockerignore</code></td><td>Small context, no secret leaks</td></tr>
+        <tr><td>No secrets in image</td><td>Layers are inspectable</td></tr>
+        <tr><td>Scan images (Trivy/Scout)</td><td>Catch CVEs</td></tr>
+        <tr><td>Healthchecks + resource limits</td><td>Reliability &amp; isolation</td></tr>
+      </table>
+    </section>
+
+    <!-- REGISTRY -->
+    <section id="registry">
+      <h2><span class="num"></span> Registry &amp; CI/CD</h2>
+      <div class="code"><div class="code-head"><span>Tag, push, pull</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> tag myapp:1.0 ghcr.io/user/myapp:1.0
+<span class="tok-cmd">docker</span> login ghcr.io
+<span class="tok-cmd">docker</span> push ghcr.io/user/myapp:1.0
+<span class="tok-cmd">docker</span> pull ghcr.io/user/myapp:1.0</pre></div>
+      <div class="callout tip"><b>CI/CD:</b> build + scan + push on each commit (GitHub Actions), tag with the git SHA + <code class="inline">latest</code>, and deploy the immutable image. Use <b>BuildKit</b> caching to speed builds.</div>
+    </section>
+
+    <!-- ORCHESTRATION -->
+    <section id="orchestration">
+      <h2><span class="num"></span> Orchestration (Kubernetes intro)</h2>
+      <p class="lead">Compose is great for one host. For scaling across many nodes with self-healing, rolling updates, and service discovery, use an orchestrator.</p>
+      <table>
+        <tr><th>Concept</th><th>Meaning</th></tr>
+        <tr><td>Pod</td><td>Smallest deployable unit (1+ containers)</td></tr>
+        <tr><td>Deployment</td><td>Declarative replicas + rolling updates</td></tr>
+        <tr><td>Service</td><td>Stable network endpoint / load balancing</td></tr>
+        <tr><td>Ingress</td><td>HTTP routing into the cluster</td></tr>
+        <tr><td>ConfigMap/Secret</td><td>Config &amp; secrets injection</td></tr>
+      </table>
+      <div class="callout"><b>Docker Swarm</b> is the simpler built-in orchestrator; <b>Kubernetes</b> is the industry standard for large-scale, self-healing deployments.</div>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — Image is huge (1.5GB) <span class="tag">Optimization</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Your Node/React image is enormous and slow to deploy.</p>
+        <details class="solution"><summary>Show approach</summary><p>Use a <b>multi-stage build</b> (build with Node, serve static with Nginx), an <b>alpine/slim</b> base, a <b>.dockerignore</b> (exclude node_modules/.git), install prod-only deps (<code class="inline">npm ci --omit=dev</code>), and combine RUN layers. Result: 10× smaller.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Data lost on restart <span class="tag">Volumes</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Your database loses all data when the container restarts.</p>
+        <details class="solution"><summary>Show approach</summary><p>Container filesystems are ephemeral. Mount a <b>named volume</b> at the DB's data path (<code class="inline">-v pgdata:/var/lib/postgresql/data</code>) so data persists across container removal.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — Rebuild reinstalls deps every time <span class="tag">Caching</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Every code change triggers a full <code class="inline">npm install</code>.</p>
+        <details class="solution"><summary>Show approach</summary><p>Copy <code class="inline">package*.json</code> and run install <b>before</b> copying the source, so the deps layer is cached and only busts when dependencies change.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 4 — Containers can't talk to each other <span class="tag">Networking</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> The API can't reach the database container.</p>
+        <details class="solution"><summary>Show approach</summary><p>Put them on the same user-defined network (Compose does this automatically) and connect by <b>service name</b> (<code class="inline">db:5432</code>), not <code class="inline">localhost</code> — each container has its own network namespace.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>Image vs container?</summary><div class="ans"><p>An image is a read-only template (layers); a container is a running instance of an image with a writable top layer.</p></div></details>
+      <details class="qa"><summary>Container vs VM?</summary><div class="ans"><p>Containers share the host kernel (lightweight, fast, MBs); VMs run a full guest OS (heavy, slower, GBs). Containers isolate at the process level.</p></div></details>
+      <details class="qa"><summary>What is a multi-stage build?</summary><div class="ans"><p>Using multiple <code class="inline">FROM</code> stages to build in one and copy only artifacts into a small final image — no build tools shipped to production.</p></div></details>
+      <details class="qa"><summary>How does layer caching work?</summary><div class="ans"><p>Each instruction is a cached layer; if its inputs are unchanged, Docker reuses it. Order instructions from least- to most-frequently-changing (deps before source).</p></div></details>
+      <details class="qa"><summary>CMD vs ENTRYPOINT?</summary><div class="ans"><p><code class="inline">ENTRYPOINT</code> sets the executable; <code class="inline">CMD</code> gives default arguments (overridable at run). Combine them for a fixed command with defaults.</p></div></details>
+      <details class="qa"><summary>Volume vs bind mount?</summary><div class="ans"><p>A named volume is Docker-managed persistent storage (best for DB data); a bind mount maps a host path (best for live code in dev).</p></div></details>
+      <details class="qa"><summary>How do containers communicate?</summary><div class="ans"><p>On a user-defined network they resolve each other by service/container name via Docker's built-in DNS; publish ports to reach the host.</p></div></details>
+      <details class="qa"><summary>How do you reduce image size?</summary><div class="ans"><p>Multi-stage builds, alpine/slim/distroless bases, .dockerignore, prod-only deps, fewer/combined layers, and cleaning caches in the same RUN.</p></div></details>
+      <details class="qa"><summary>What is docker-compose for?</summary><div class="ans"><p>Defining and running multi-container apps from one YAML file (services, networks, volumes, healthchecks) with <code class="inline">docker compose up</code>.</p></div></details>
+      <details class="qa"><summary>Why run as non-root?</summary><div class="ans"><p>To limit damage if the container is compromised — a root process could more easily escalate. Use a dedicated <code class="inline">USER</code>.</p></div></details>
+      <details class="qa"><summary>How do you handle secrets?</summary><div class="ans"><p>Never bake into images (layers are inspectable). Use runtime env vars, <code class="inline">--env-file</code>, BuildKit/Docker secrets, or a secrets manager; keep <code class="inline">.env</code> in <code class="inline">.dockerignore</code>.</p></div></details>
+      <details class="qa"><summary>What is a healthcheck?</summary><div class="ans"><p>A command Docker runs to report container health; orchestrators/Compose use it to gate dependents and restart unhealthy containers.</p></div></details>
+      <details class="qa"><summary>EXPOSE vs -p?</summary><div class="ans"><p><code class="inline">EXPOSE</code> only documents a port; <code class="inline">-p host:container</code> actually publishes it to the host.</p></div></details>
+      <details class="qa"><summary>What is .dockerignore?</summary><div class="ans"><p>Like .gitignore for the build context — excludes files (node_modules, .git, .env) to speed builds and avoid leaking secrets into layers.</p></div></details>
+      <details class="qa"><summary>How do you dockerize a React app?</summary><div class="ans"><p>Multi-stage: build with Node (<code class="inline">npm run build</code>), then serve the static output with Nginx (with an SPA <code class="inline">try_files</code> fallback) in a tiny final image.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Task</th><th>Command</th></tr>
+        <tr><td>Build</td><td><code>docker build -t app .</code></td></tr>
+        <tr><td>Run</td><td><code>docker run -p 80:80 app</code></td></tr>
+        <tr><td>List</td><td><code>docker ps -a</code></td></tr>
+        <tr><td>Logs</td><td><code>docker logs -f c</code></td></tr>
+        <tr><td>Shell in</td><td><code>docker exec -it c sh</code></td></tr>
+        <tr><td>Stop/remove</td><td><code>docker stop c; docker rm c</code></td></tr>
+        <tr><td>Volume</td><td><code>-v name:/path</code></td></tr>
+        <tr><td>Env file</td><td><code>--env-file .env</code></td></tr>
+        <tr><td>Compose up</td><td><code>docker compose up -d --build</code></td></tr>
+        <tr><td>Clean up</td><td><code>docker system prune -af</code></td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🐳 <b>Docker — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Images, Dockerfiles, multi-stage, Compose, real-world React/FastAPI/Express, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
