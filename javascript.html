@@ -160,6 +160,12 @@
     <a href="#dom">DOM &amp; BOM</a>
     <a href="#storage">Storage &amp; Cookies</a>
     <a href="#workers">Web Workers</a>
+    <a class="section-title">Senior JS</a>
+    <a href="#v8">V8 Internals &amp; Memory</a>
+    <a href="#async-adv">Advanced Async Patterns</a>
+    <a href="#descriptors">Object Descriptors</a>
+    <a href="#proxy">Proxy &amp; Reflect</a>
+    <a href="#symbols">Symbols</a>
     <a class="section-title">Engineering</a>
     <a href="#performance">Performance</a>
     <a href="#debugging">Debugging</a>
@@ -492,6 +498,25 @@ Promise.<span class="tok-fn">resolve</span>().<span class="tok-fn">then</span>((
 console.<span class="tok-fn">log</span>(<span class="tok-str">"4"</span>);
 <span class="tok-com">// Output: 1, 4, 3, 2  (sync -> microtasks -> macrotasks)</span></pre></div>
       <div class="callout tip"><b>Key rule:</b> After each macrotask, the event loop drains <em>all</em> microtasks before the next render/macrotask.</div>
+      <h3>Browser vs Node.js event loop</h3>
+      <table>
+        <tr><th>Browser</th><th>Node.js</th></tr>
+        <tr><td>Tasks + microtasks + render steps</td><td>libuv phases: timers → pending → poll → check → close</td></tr>
+        <tr><td>Microtasks: Promises, MutationObserver</td><td>Microtasks: Promises + <code>process.nextTick</code> (highest)</td></tr>
+        <tr><td><code>setTimeout</code></td><td><code>setImmediate</code> runs in the "check" phase</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Node ordering: nextTick vs Promise vs setImmediate</span><button class="copy">Copy</button></div><pre>setImmediate(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"immediate"</span>));      <span class="tok-com">// check phase (macrotask)</span>
+setTimeout(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"timeout"</span>), <span class="tok-num">0</span>);      <span class="tok-com">// timers phase</span>
+Promise.<span class="tok-fn">resolve</span>().<span class="tok-fn">then</span>(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"promise"</span>)); <span class="tok-com">// microtask</span>
+process.<span class="tok-fn">nextTick</span>(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"nextTick"</span>));  <span class="tok-com">// runs before other microtasks</span>
+<span class="tok-com">// Order: nextTick -> promise -> (timeout|immediate depending on context)</span></pre></div>
+      <table>
+        <tr><th>API</th><th>When it runs</th></tr>
+        <tr><td><code>process.nextTick</code></td><td>Before any other microtask (Node-only) — can starve I/O if abused</td></tr>
+        <tr><td><code>queueMicrotask</code></td><td>Microtask queue (standard, browser + Node)</td></tr>
+        <tr><td><code>setImmediate</code></td><td>libuv "check" phase, after poll (Node-only)</td></tr>
+        <tr><td><code>requestAnimationFrame</code></td><td>Before the next paint (browser rendering pipeline)</td></tr>
+      </table>
     </section>
 
     <!-- FETCH -->
@@ -755,6 +780,135 @@ onmessage = (e) =&gt; postMessage(<span class="tok-fn">fib</span>(e.data.n));</p
         <tr><td>Small, single-purpose functions</td><td>God functions</td></tr>
         <tr><td>Guard clauses, early returns</td><td>Deep nesting</td></tr>
         <tr><td>Descriptive names</td><td>Magic numbers/strings</td></tr>
+      </table>
+    </section>
+
+    <!-- V8 INTERNALS -->
+    <section id="v8">
+      <h2><span class="num"></span> V8 Internals &amp; Memory Model</h2>
+      <p class="lead">Senior interviews probe how the engine actually works. V8 (Chrome/Node) compiles, optimizes, and manages memory automatically.</p>
+      <h3>Stack vs Heap</h3>
+      <table>
+        <tr><th>Stack</th><th>Heap</th></tr>
+        <tr><td>Primitives &amp; references, function frames</td><td>Objects, arrays, closures, functions</td></tr>
+        <tr><td>Fixed size, fast (LIFO)</td><td>Dynamic, larger, GC-managed</td></tr>
+      </table>
+      <h3>Optimization: hidden classes &amp; inline caching</h3>
+      <ul>
+        <li><b>Hidden classes</b> — V8 creates an internal "shape" for objects with the same structure so property access is fast. Adding properties in a <em>different order</em> creates new shapes and de-optimizes.</li>
+        <li><b>Inline caching (IC)</b> — V8 caches where a property lives for repeated accesses; monomorphic (one shape) code runs fastest, polymorphic/megamorphic is slower.</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>Keep object shapes stable</span><button class="copy">Copy</button></div><pre><span class="tok-com">// GOOD: same shape -> shared hidden class, fast IC</span>
+<span class="tok-key">function</span> <span class="tok-fn">Point</span>(x, y) { this.x = x; this.y = y; }
+
+<span class="tok-com">// BAD: adding props later / different order -> new hidden classes</span>
+<span class="tok-key">const</span> p = {}; p.y = <span class="tok-num">2</span>; p.x = <span class="tok-num">1</span>; <span class="tok-com">// de-optimizes</span></pre></div>
+      <h3>Garbage collection (generational, mark-and-sweep)</h3>
+      <ul>
+        <li><b>Mark-and-sweep:</b> GC marks all objects reachable from roots, then sweeps (frees) the rest.</li>
+        <li><b>Generational:</b> the heap is split into <b>young</b> (new, collected often &amp; fast — "scavenge") and <b>old</b> (survivors, collected rarely — "mark-compact") generations. Most objects die young.</li>
+      </ul>
+      <div class="callout warn"><b>Memory leaks:</b> lingering timers, global variables, detached DOM held by closures, unbounded caches, and forgotten event listeners keep objects reachable so GC can't free them. Fix with cleanup + <code class="inline">WeakMap</code>/<code class="inline">WeakRef</code>.</div>
+    </section>
+
+    <!-- ADVANCED ASYNC -->
+    <section id="async-adv">
+      <h2><span class="num"></span> Advanced Async Patterns</h2>
+      <div class="code"><div class="code-head"><span>Retry with exponential backoff</span><button class="copy">Copy</button></div><pre><span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">retry</span>(fn, tries = <span class="tok-num">3</span>, delay = <span class="tok-num">300</span>) {
+  <span class="tok-key">for</span> (<span class="tok-key">let</span> i = <span class="tok-num">0</span>; i &lt; tries; i++) {
+    <span class="tok-key">try</span> { <span class="tok-key">return</span> <span class="tok-key">await</span> <span class="tok-fn">fn</span>(); }
+    <span class="tok-key">catch</span> (e) {
+      <span class="tok-key">if</span> (i === tries - <span class="tok-num">1</span>) <span class="tok-key">throw</span> e;
+      <span class="tok-key">await</span> <span class="tok-key">new</span> <span class="tok-fn">Promise</span>(r =&gt; setTimeout(r, delay * <span class="tok-num">2</span> ** i)); <span class="tok-com">// 300, 600, 1200…</span>
+    }
+  }
+}</pre></div>
+      <div class="code"><div class="code-head"><span>Concurrency limiter (pool)</span><button class="copy">Copy</button></div><pre><span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">mapLimit</span>(items, limit, worker) {
+  <span class="tok-key">const</span> results = []; <span class="tok-key">let</span> i = <span class="tok-num">0</span>;
+  <span class="tok-key">const</span> <span class="tok-fn">run</span> = <span class="tok-key">async</span> () =&gt; {
+    <span class="tok-key">while</span> (i &lt; items.length) {
+      <span class="tok-key">const</span> idx = i++;
+      results[idx] = <span class="tok-key">await</span> <span class="tok-fn">worker</span>(items[idx]);
+    }
+  };
+  <span class="tok-key">await</span> Promise.<span class="tok-fn">all</span>(Array.<span class="tok-fn">from</span>({ length: limit }, run)); <span class="tok-com">// N runners</span>
+  <span class="tok-key">return</span> results;
+}</pre></div>
+      <table>
+        <tr><th>Pattern</th><th>Use</th></tr>
+        <tr><td>Parallel (<code>Promise.all</code>)</td><td>Independent requests — fastest</td></tr>
+        <tr><td>Sequential (<code>for await</code>)</td><td>Order matters / dependent steps</td></tr>
+        <tr><td>Concurrency limit</td><td>Avoid overwhelming an API/DB</td></tr>
+        <tr><td>Cancellation (<code>AbortController</code>)</td><td>Stale search / route change</td></tr>
+        <tr><td>Retry + backoff</td><td>Flaky networks / rate limits</td></tr>
+      </table>
+    </section>
+
+    <!-- OBJECT INTERNALS -->
+    <section id="descriptors">
+      <h2><span class="num"></span> Object Internals &amp; Descriptors</h2>
+      <p class="lead">Every property has a <b>descriptor</b> controlling how it behaves.</p>
+      <div class="code"><div class="code-head"><span>Property descriptors</span><button class="copy">Copy</button></div><pre>Object.<span class="tok-fn">defineProperty</span>(obj, <span class="tok-str">"id"</span>, {
+  value: <span class="tok-num">1</span>,
+  writable: <span class="tok-key">false</span>,      <span class="tok-com">// can't reassign</span>
+  enumerable: <span class="tok-key">false</span>,    <span class="tok-com">// hidden from for..in / Object.keys</span>
+  configurable: <span class="tok-key">false</span>   <span class="tok-com">// can't delete or redefine</span>
+});
+Object.<span class="tok-fn">getOwnPropertyDescriptor</span>(obj, <span class="tok-str">"id"</span>);</pre></div>
+      <table>
+        <tr><th>Method</th><th>Effect</th></tr>
+        <tr><td><code>Object.freeze</code></td><td>No add/delete/change (shallow)</td></tr>
+        <tr><td><code>Object.seal</code></td><td>No add/delete, but existing values editable</td></tr>
+        <tr><td><code>Object.preventExtensions</code></td><td>No new properties; existing stay editable/deletable</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Getters &amp; setters</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> temp = {
+  _c: <span class="tok-num">0</span>,
+  <span class="tok-key">get</span> <span class="tok-fn">f</span>() { <span class="tok-key">return</span> this._c * <span class="tok-num">9</span>/<span class="tok-num">5</span> + <span class="tok-num">32</span>; },
+  <span class="tok-key">set</span> <span class="tok-fn">f</span>(v) { this._c = (v - <span class="tok-num">32</span>) * <span class="tok-num">5</span>/<span class="tok-num">9</span>; }
+};</pre></div>
+    </section>
+
+    <!-- PROXY REFLECT -->
+    <section id="proxy">
+      <h2><span class="num"></span> Proxy &amp; Reflect</h2>
+      <p class="lead">A <code class="inline">Proxy</code> wraps an object to intercept operations (get/set/has/delete). <code class="inline">Reflect</code> provides the default behavior for those traps. Frequently asked in senior interviews and the basis of Vue 3 reactivity.</p>
+      <div class="code"><div class="code-head"><span>Validation &amp; reactivity via Proxy</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> user = <span class="tok-key">new</span> <span class="tok-fn">Proxy</span>({}, {
+  <span class="tok-fn">get</span>(target, key) {
+    <span class="tok-key">return</span> Reflect.<span class="tok-fn">get</span>(target, key) ?? <span class="tok-str">`&lt;no ${key}&gt;`</span>;
+  },
+  <span class="tok-fn">set</span>(target, key, value) {
+    <span class="tok-key">if</span> (key === <span class="tok-str">"age"</span> &amp;&amp; <span class="tok-key">typeof</span> value !== <span class="tok-str">"number"</span>)
+      <span class="tok-key">throw</span> <span class="tok-key">new</span> <span class="tok-fn">TypeError</span>(<span class="tok-str">"age must be a number"</span>);
+    <span class="tok-key">return</span> Reflect.<span class="tok-fn">set</span>(target, key, value); <span class="tok-com">// default set + returns true</span>
+  }
+});
+user.age = <span class="tok-num">25</span>;   <span class="tok-com">// ok</span>
+user.name;      <span class="tok-com">// "&lt;no name&gt;"</span></pre></div>
+      <div class="callout"><b>Use cases:</b> reactive frameworks, validation, logging/observability, negative array indices, default values, access control.</div>
+    </section>
+
+    <!-- SYMBOLS -->
+    <section id="symbols">
+      <h2><span class="num"></span> Symbols &amp; Well-Known Symbols</h2>
+      <p class="lead">A <code class="inline">Symbol</code> is a unique, immutable primitive — great for collision-free object keys and customizing built-in behavior.</p>
+      <div class="code"><div class="code-head"><span>Symbols &amp; iterator protocol</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> id = <span class="tok-fn">Symbol</span>(<span class="tok-str">"id"</span>);
+<span class="tok-key">const</span> obj = { [id]: <span class="tok-num">123</span> };   <span class="tok-com">// hidden from Object.keys / JSON</span>
+
+<span class="tok-com">// Well-known symbol: make an object iterable</span>
+<span class="tok-key">const</span> range = {
+  from: <span class="tok-num">1</span>, to: <span class="tok-num">3</span>,
+  [Symbol.iterator]() {
+    <span class="tok-key">let</span> cur = this.from, last = this.to;
+    <span class="tok-key">return</span> { <span class="tok-fn">next</span>: () =&gt; ({ value: cur, done: cur++ &gt; last }) };
+  }
+};
+[...range]; <span class="tok-com">// [1,2,3]</span></pre></div>
+      <table>
+        <tr><th>Well-known symbol</th><th>Customizes</th></tr>
+        <tr><td><code>Symbol.iterator</code></td><td><code>for..of</code>, spread, destructuring</td></tr>
+        <tr><td><code>Symbol.asyncIterator</code></td><td><code>for await..of</code></td></tr>
+        <tr><td><code>Symbol.toPrimitive</code></td><td>Object → primitive coercion</td></tr>
+        <tr><td><code>Symbol.hasInstance</code></td><td><code>instanceof</code> behavior</td></tr>
       </table>
     </section>
 
