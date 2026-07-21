@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete FastAPI handbook — Pydantic, dependency injection, async/ASGI internals, SQLAlchemy, OAuth2/JWT, background tasks, middleware, testing, deployment, and 100+ interview questions." />
+<title>FastAPI — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #059669; --blue-dark: #065f46; --blue-mid: #10b981; --sky: #34d399;
+    --light-blue: #d7f5ea; --light-blue-2: #ecfdf5;
+    --bg: #ffffff; --bg-soft: #f4fdfa; --panel: #ffffff;
+    --text: #0c2e24; --muted: #4b7566; --border: #bfead9;
+    --code-bg: #0a1f1a; --accent: #f59e0b; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(5, 150, 105, 0.10); --shadow-lg: 0 14px 40px rgba(6, 95, 70, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 300px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(16, 185, 129, 0.18), transparent), linear-gradient(160deg, #d5f5e8, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #17402f; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #071812; border-bottom: 1px solid #17402f; font-size: 0.75rem; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #e2f6ee; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #2a6450; color: #6ee7b7; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(52,211,153,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #6f9a89; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #164033; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #164033; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #2b5346; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">⚡ FastAPI Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#setup">Setup &amp; First App</a>
+    <a href="#params">Path &amp; Query Params</a>
+    <a href="#pydantic">Pydantic Models</a>
+    <a href="#validation">Validation</a>
+    <a class="section-title">Core</a>
+    <a href="#di">Dependency Injection</a>
+    <a href="#async">Async &amp; Concurrency</a>
+    <a href="#internals">ASGI Internals</a>
+    <a href="#middleware">Middleware</a>
+    <a href="#errors">Error Handling</a>
+    <a class="section-title">Data &amp; Auth</a>
+    <a href="#db">Database (SQLAlchemy)</a>
+    <a href="#auth">OAuth2 &amp; JWT</a>
+    <a href="#bg">Background Tasks</a>
+    <a class="section-title">Production</a>
+    <a href="#caching">Caching</a>
+    <a href="#observability">Observability</a>
+    <a href="#testing">Testing</a>
+    <a href="#deploy">Deployment</a>
+    <a class="section-title">Interview</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#production">Production Issues</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">FastAPI</span> Hands-On Guide</h1>
+    <p>Pydantic v2, dependency injection, async &amp; ASGI internals, SQLAlchemy, OAuth2/JWT, background tasks, middleware, testing, and 100+ interview questions — the modern Python API handbook.</p>
+    <div class="badges">
+      <span class="badge">Pydantic</span>
+      <span class="badge">Dependency Injection</span>
+      <span class="badge">Async / ASGI</span>
+      <span class="badge">OAuth2 / JWT</span>
+      <span class="badge">SQLAlchemy</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">FastAPI is a modern, high-performance Python web framework built on Starlette (ASGI) and Pydantic. It gives you type-hint-driven validation, automatic OpenAPI docs, and async support.</p>
+      <ul>
+        <li><b>Fast</b> — on par with Node/Go thanks to ASGI + Starlette + Uvicorn.</li>
+        <li><b>Type-safe</b> — Python type hints drive validation &amp; serialization.</li>
+        <li><b>Auto docs</b> — Swagger UI (<code class="inline">/docs</code>) &amp; ReDoc (<code class="inline">/redoc</code>) for free.</li>
+        <li><b>DI system</b> — clean, testable dependency injection.</li>
+      </ul>
+      <div class="callout tip"><b>Interview importance:</b> Pydantic validation, dependency injection, async vs sync, and OAuth2/JWT security are the most-asked FastAPI topics.</div>
+    </section>
+
+    <!-- SETUP -->
+    <section id="setup">
+      <h2><span class="num"></span> Setup &amp; First App</h2>
+      <div class="code"><div class="code-head"><span>main.py</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> fastapi <span class="tok-key">import</span> FastAPI
+
+app = <span class="tok-fn">FastAPI</span>(title=<span class="tok-str">"Shop API"</span>)
+
+<span class="tok-op">@app.get</span>(<span class="tok-str">"/"</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">root</span>():
+    <span class="tok-key">return</span> {<span class="tok-str">"ok"</span>: <span class="tok-key">True</span>}
+
+<span class="tok-com"># run: uvicorn main:app --reload</span></pre></div>
+      <div class="callout"><b>Auto docs</b> appear at <code class="inline">/docs</code> (Swagger) and <code class="inline">/redoc</code> — generated from your type hints and models.</div>
+    </section>
+
+    <!-- PARAMS -->
+    <section id="params">
+      <h2><span class="num"></span> Path &amp; Query Parameters</h2>
+      <div class="code"><div class="code-head"><span>Typed params with validation</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> fastapi <span class="tok-key">import</span> Query, Path
+
+<span class="tok-op">@app.get</span>(<span class="tok-str">"/items/{item_id}"</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">get_item</span>(
+    item_id: int = <span class="tok-fn">Path</span>(ge=<span class="tok-num">1</span>),               <span class="tok-com"># path param, &gt;= 1</span>
+    q: str | None = <span class="tok-fn">Query</span>(<span class="tok-key">None</span>, max_length=<span class="tok-num">50</span>), <span class="tok-com"># optional query</span>
+    limit: int = <span class="tok-fn">Query</span>(<span class="tok-num">10</span>, le=<span class="tok-num">100</span>)
+):
+    <span class="tok-key">return</span> {<span class="tok-str">"item_id"</span>: item_id, <span class="tok-str">"q"</span>: q, <span class="tok-str">"limit"</span>: limit}</pre></div>
+      <div class="callout tip"><b>Type hints = validation.</b> FastAPI parses, validates, and coerces params from the type annotation, returning a clear 422 on bad input.</div>
+    </section>
+
+    <!-- PYDANTIC -->
+    <section id="pydantic">
+      <h2><span class="num"></span> Pydantic Models (v2)</h2>
+      <div class="code"><div class="code-head"><span>Request/response models</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> pydantic <span class="tok-key">import</span> BaseModel, Field, EmailStr
+
+<span class="tok-key">class</span> <span class="tok-fn">UserCreate</span>(BaseModel):
+    name: str = <span class="tok-fn">Field</span>(min_length=<span class="tok-num">1</span>)
+    email: EmailStr
+    age: int = <span class="tok-fn">Field</span>(ge=<span class="tok-num">0</span>, le=<span class="tok-num">120</span>)
+
+<span class="tok-key">class</span> <span class="tok-fn">UserOut</span>(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    model_config = {<span class="tok-str">"from_attributes"</span>: <span class="tok-key">True</span>}  <span class="tok-com"># ORM mode</span>
+
+<span class="tok-op">@app.post</span>(<span class="tok-str">"/users"</span>, response_model=UserOut, status_code=<span class="tok-num">201</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">create</span>(user: UserCreate):
+    <span class="tok-key">return</span> <span class="tok-fn">save</span>(user)</pre></div>
+      <table>
+        <tr><th>Feature</th><th>Purpose</th></tr>
+        <tr><td><code>BaseModel</code></td><td>Schema + validation + serialization</td></tr>
+        <tr><td><code>Field</code></td><td>Constraints, defaults, metadata</td></tr>
+        <tr><td><code>response_model</code></td><td>Shape &amp; filter the response (hide secrets)</td></tr>
+        <tr><td><code>from_attributes</code></td><td>Build from ORM objects (v1: <code>orm_mode</code>)</td></tr>
+      </table>
+    </section>
+
+    <!-- VALIDATION -->
+    <section id="validation">
+      <h2><span class="num"></span> Validation</h2>
+      <div class="code"><div class="code-head"><span>Custom validators (Pydantic v2)</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> pydantic <span class="tok-key">import</span> field_validator, model_validator
+
+<span class="tok-key">class</span> <span class="tok-fn">Signup</span>(BaseModel):
+    password: str
+    confirm: str
+
+    <span class="tok-op">@field_validator</span>(<span class="tok-str">"password"</span>)
+    <span class="tok-op">@classmethod</span>
+    <span class="tok-key">def</span> <span class="tok-fn">strong</span>(cls, v):
+        <span class="tok-key">if</span> <span class="tok-fn">len</span>(v) &lt; <span class="tok-num">8</span>: <span class="tok-key">raise</span> <span class="tok-fn">ValueError</span>(<span class="tok-str">"too short"</span>)
+        <span class="tok-key">return</span> v
+
+    <span class="tok-op">@model_validator</span>(mode=<span class="tok-str">"after"</span>)
+    <span class="tok-key">def</span> <span class="tok-fn">match</span>(self):
+        <span class="tok-key">if</span> self.password != self.confirm: <span class="tok-key">raise</span> <span class="tok-fn">ValueError</span>(<span class="tok-str">"mismatch"</span>)
+        <span class="tok-key">return</span> self</pre></div>
+      <div class="callout"><b>Automatic 422:</b> Validation failures return a structured 422 with field-level error details — no manual checking.</div>
+    </section>
+
+    <!-- DI -->
+    <section id="di">
+      <h2><span class="num"></span> Dependency Injection</h2>
+      <p class="lead">FastAPI's DI system injects shared logic (DB sessions, auth, pagination) into routes — declarative, testable, and cached per request.</p>
+      <div class="code"><div class="code-head"><span>Depends + yield for cleanup</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> fastapi <span class="tok-key">import</span> Depends
+
+<span class="tok-key">def</span> <span class="tok-fn">get_db</span>():
+    db = <span class="tok-fn">SessionLocal</span>()
+    <span class="tok-key">try</span>: <span class="tok-key">yield</span> db          <span class="tok-com"># injected value</span>
+    <span class="tok-key">finally</span>: db.<span class="tok-fn">close</span>()   <span class="tok-com"># cleanup after response</span>
+
+<span class="tok-key">def</span> <span class="tok-fn">pagination</span>(skip: int = <span class="tok-num">0</span>, limit: int = <span class="tok-num">10</span>):
+    <span class="tok-key">return</span> {<span class="tok-str">"skip"</span>: skip, <span class="tok-str">"limit"</span>: limit}
+
+<span class="tok-op">@app.get</span>(<span class="tok-str">"/users"</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">list_users</span>(db=<span class="tok-fn">Depends</span>(get_db), page=<span class="tok-fn">Depends</span>(pagination)):
+    <span class="tok-key">return</span> <span class="tok-fn">query</span>(db, **page)</pre></div>
+      <ul>
+        <li><b>Sub-dependencies</b> — dependencies can depend on other dependencies.</li>
+        <li><b>Caching</b> — the same dependency is resolved once per request.</li>
+        <li><b>Overrides</b> — <code class="inline">app.dependency_overrides</code> makes testing trivial.</li>
+        <li><b>Class dependencies</b> — a callable class works as a dependency too.</li>
+      </ul>
+    </section>
+
+    <!-- ASYNC -->
+    <section id="async">
+      <h2><span class="num"></span> Async &amp; Concurrency</h2>
+      <div class="code"><div class="code-head"><span>async def vs def</span><button class="copy">Copy</button></div><pre><span class="tok-op">@app.get</span>(<span class="tok-str">"/a"</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">a</span>():
+    <span class="tok-key">await</span> async_db.<span class="tok-fn">fetch</span>()   <span class="tok-com"># non-blocking on the event loop</span>
+
+<span class="tok-op">@app.get</span>(<span class="tok-str">"/b"</span>)
+<span class="tok-key">def</span> <span class="tok-fn">b</span>():
+    <span class="tok-key">return</span> blocking_lib.<span class="tok-fn">call</span>()  <span class="tok-com"># runs in a threadpool automatically</span></pre></div>
+      <div class="callout warn"><b>Golden rule:</b> Never call a blocking function inside <code class="inline">async def</code> — it blocks the whole event loop. Use an async library, or a regular <code class="inline">def</code> (FastAPI runs sync routes in a thread pool), or <code class="inline">run_in_executor</code>.</div>
+      <table>
+        <tr><th>Handler</th><th>Runs</th></tr>
+        <tr><td><code>async def</code></td><td>On the event loop — use only non-blocking awaits</td></tr>
+        <tr><td><code>def</code></td><td>In an external threadpool — safe for blocking I/O</td></tr>
+      </table>
+    </section>
+
+    <!-- INTERNALS -->
+    <section id="internals">
+      <h2><span class="num"></span> ASGI Internals</h2>
+      <p class="lead">Understanding the stack helps in senior interviews.</p>
+      <table>
+        <tr><th>Layer</th><th>Role</th></tr>
+        <tr><td><b>Uvicorn/Hypercorn</b></td><td>ASGI server — runs the event loop, handles HTTP/WebSocket</td></tr>
+        <tr><td><b>Starlette</b></td><td>ASGI toolkit — routing, middleware, requests/responses</td></tr>
+        <tr><td><b>FastAPI</b></td><td>Adds validation, DI, OpenAPI on top of Starlette</td></tr>
+        <tr><td><b>Pydantic</b></td><td>Data validation &amp; serialization</td></tr>
+      </table>
+      <ul>
+        <li><b>ASGI</b> (Async Server Gateway Interface) is the async successor to WSGI — supports async, WebSockets, and long-lived connections.</li>
+        <li><b>Workers:</b> run multiple Uvicorn workers (<code class="inline">--workers</code>) or Gunicorn with the Uvicorn worker class to use all cores.</li>
+        <li><b>Lifespan</b> events (<code class="inline">@asynccontextmanager</code>) start/stop resources (DB pools) at boot/shutdown.</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>Lifespan startup/shutdown</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> contextlib <span class="tok-key">import</span> asynccontextmanager
+
+<span class="tok-op">@asynccontextmanager</span>
+<span class="tok-key">async def</span> <span class="tok-fn">lifespan</span>(app):
+    <span class="tok-key">await</span> db.<span class="tok-fn">connect</span>()   <span class="tok-com"># startup</span>
+    <span class="tok-key">yield</span>
+    <span class="tok-key">await</span> db.<span class="tok-fn">disconnect</span>() <span class="tok-com"># shutdown</span>
+
+app = <span class="tok-fn">FastAPI</span>(lifespan=lifespan)</pre></div>
+    </section>
+
+    <!-- MIDDLEWARE -->
+    <section id="middleware">
+      <h2><span class="num"></span> Middleware</h2>
+      <div class="code"><div class="code-head"><span>Custom + CORS</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> fastapi.middleware.cors <span class="tok-key">import</span> CORSMiddleware
+app.<span class="tok-fn">add_middleware</span>(CORSMiddleware, allow_origins=[<span class="tok-str">"https://app.com"</span>])
+
+<span class="tok-op">@app.middleware</span>(<span class="tok-str">"http"</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">timing</span>(request, call_next):
+    start = time.<span class="tok-fn">time</span>()
+    response = <span class="tok-key">await</span> <span class="tok-fn">call_next</span>(request)
+    response.headers[<span class="tok-str">"X-Time"</span>] = <span class="tok-fn">str</span>(time.<span class="tok-fn">time</span>() - start)
+    <span class="tok-key">return</span> response</pre></div>
+    </section>
+
+    <!-- ERRORS -->
+    <section id="errors">
+      <h2><span class="num"></span> Error Handling</h2>
+      <div class="code"><div class="code-head"><span>HTTPException + custom handler</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> fastapi <span class="tok-key">import</span> HTTPException
+<span class="tok-key">raise</span> <span class="tok-fn">HTTPException</span>(status_code=<span class="tok-num">404</span>, detail=<span class="tok-str">"Not found"</span>)
+
+<span class="tok-op">@app.exception_handler</span>(ValueError)
+<span class="tok-key">async def</span> <span class="tok-fn">value_err</span>(request, exc):
+    <span class="tok-key">return</span> <span class="tok-fn">JSONResponse</span>(status_code=<span class="tok-num">400</span>, content={<span class="tok-str">"error"</span>: <span class="tok-fn">str</span>(exc)})</pre></div>
+    </section>
+
+    <!-- DB -->
+    <section id="db">
+      <h2><span class="num"></span> Database (SQLAlchemy)</h2>
+      <div class="code"><div class="code-head"><span>Async SQLAlchemy 2.0</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> sqlalchemy.ext.asyncio <span class="tok-key">import</span> create_async_engine, async_sessionmaker
+
+engine = <span class="tok-fn">create_async_engine</span>(DATABASE_URL)
+Session = <span class="tok-fn">async_sessionmaker</span>(engine)
+
+<span class="tok-key">async def</span> <span class="tok-fn">get_db</span>():
+    <span class="tok-key">async with</span> <span class="tok-fn">Session</span>() <span class="tok-key">as</span> s:
+        <span class="tok-key">yield</span> s
+
+<span class="tok-op">@app.get</span>(<span class="tok-str">"/users/{id}"</span>, response_model=UserOut)
+<span class="tok-key">async def</span> <span class="tok-fn">get_user</span>(id: int, db=<span class="tok-fn">Depends</span>(get_db)):
+    <span class="tok-key">return</span> <span class="tok-key">await</span> db.<span class="tok-fn">get</span>(User, id)</pre></div>
+      <div class="callout tip"><b>Migrations:</b> use <b>Alembic</b> to version schema changes.</div>
+    </section>
+
+    <!-- AUTH -->
+    <section id="auth">
+      <h2><span class="num"></span> OAuth2 &amp; JWT</h2>
+      <div class="code"><div class="code-head"><span>OAuth2 password flow + JWT</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> fastapi.security <span class="tok-key">import</span> OAuth2PasswordBearer
+oauth2 = <span class="tok-fn">OAuth2PasswordBearer</span>(tokenUrl=<span class="tok-str">"token"</span>)
+
+<span class="tok-key">async def</span> <span class="tok-fn">current_user</span>(token: str = <span class="tok-fn">Depends</span>(oauth2)):
+    <span class="tok-key">try</span>:
+        payload = jwt.<span class="tok-fn">decode</span>(token, SECRET, algorithms=[<span class="tok-str">"HS256"</span>])
+    <span class="tok-key">except</span> JWTError:
+        <span class="tok-key">raise</span> <span class="tok-fn">HTTPException</span>(<span class="tok-num">401</span>, <span class="tok-str">"Invalid token"</span>)
+    <span class="tok-key">return</span> <span class="tok-fn">get_user</span>(payload[<span class="tok-str">"sub"</span>])
+
+<span class="tok-op">@app.get</span>(<span class="tok-str">"/me"</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">me</span>(user=<span class="tok-fn">Depends</span>(current_user)):
+    <span class="tok-key">return</span> user</pre></div>
+      <div class="callout"><b>Scopes:</b> OAuth2 scopes + a <code class="inline">Security()</code> dependency implement fine-grained, role/permission-based authorization.</div>
+    </section>
+
+    <!-- BG -->
+    <section id="bg">
+      <h2><span class="num"></span> Background Tasks</h2>
+      <div class="code"><div class="code-head"><span>BackgroundTasks vs Celery</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> fastapi <span class="tok-key">import</span> BackgroundTasks
+
+<span class="tok-op">@app.post</span>(<span class="tok-str">"/signup"</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">signup</span>(user: UserCreate, tasks: BackgroundTasks):
+    <span class="tok-fn">save</span>(user)
+    tasks.<span class="tok-fn">add_task</span>(send_welcome_email, user.email) <span class="tok-com"># after response</span>
+    <span class="tok-key">return</span> {<span class="tok-str">"ok"</span>: <span class="tok-key">True</span>}</pre></div>
+      <div class="callout tip"><b>When to use what:</b> <code class="inline">BackgroundTasks</code> for quick fire-and-forget after the response; <b>Celery/RQ/ARQ + Redis</b> for durable, retryable, distributed jobs.</div>
+    </section>
+
+    <!-- CACHING -->
+    <section id="caching">
+      <h2><span class="num"></span> Caching</h2>
+      <div class="code"><div class="code-head"><span>Redis cache-aside</span><button class="copy">Copy</button></div><pre><span class="tok-key">async def</span> <span class="tok-fn">get_product</span>(id: int):
+    <span class="tok-key">if</span> (c := <span class="tok-key">await</span> redis.<span class="tok-fn">get</span>(f<span class="tok-str">"p:{id}"</span>)):
+        <span class="tok-key">return</span> json.<span class="tok-fn">loads</span>(c)
+    p = <span class="tok-key">await</span> db.<span class="tok-fn">fetch</span>(id)
+    <span class="tok-key">await</span> redis.<span class="tok-fn">set</span>(f<span class="tok-str">"p:{id}"</span>, json.<span class="tok-fn">dumps</span>(p), ex=<span class="tok-num">300</span>)
+    <span class="tok-key">return</span> p</pre></div>
+    </section>
+
+    <!-- OBSERVABILITY -->
+    <section id="observability">
+      <h2><span class="num"></span> Observability</h2>
+      <ul>
+        <li><b>Health/readiness:</b> <code class="inline">/healthz</code> &amp; <code class="inline">/readyz</code> endpoints.</li>
+        <li><b>Metrics:</b> <code class="inline">prometheus-fastapi-instrumentator</code> or OpenTelemetry (latency, error rate, RPS).</li>
+        <li><b>Structured logging</b> with request/correlation IDs via middleware.</li>
+        <li><b>Tracing:</b> OpenTelemetry spans across services.</li>
+      </ul>
+    </section>
+
+    <!-- TESTING -->
+    <section id="testing">
+      <h2><span class="num"></span> Testing</h2>
+      <div class="code"><div class="code-head"><span>TestClient + dependency override</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> fastapi.testclient <span class="tok-key">import</span> TestClient
+app.dependency_overrides[get_db] = fake_db   <span class="tok-com"># swap real DB</span>
+client = <span class="tok-fn">TestClient</span>(app)
+
+<span class="tok-key">def</span> <span class="tok-fn">test_create</span>():
+    r = client.<span class="tok-fn">post</span>(<span class="tok-str">"/users"</span>, json={<span class="tok-str">"name"</span>: <span class="tok-str">"A"</span>, <span class="tok-str">"email"</span>: <span class="tok-str">"a@x.com"</span>, <span class="tok-str">"age"</span>: <span class="tok-num">3</span>})
+    <span class="tok-key">assert</span> r.status_code == <span class="tok-num">201</span></pre></div>
+    </section>
+
+    <!-- DEPLOY -->
+    <section id="deploy">
+      <h2><span class="num"></span> Deployment</h2>
+      <div class="code"><div class="code-head"><span>Gunicorn + Uvicorn workers, Docker</span><button class="copy">Copy</button></div><pre><span class="tok-com"># Multiple workers to use all cores</span>
+gunicorn main:app -k uvicorn.workers.UvicornWorker -w <span class="tok-num">4</span>
+
+<span class="tok-com"># Dockerfile</span>
+<span class="tok-key">FROM</span> python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD [<span class="tok-str">"gunicorn"</span>, <span class="tok-str">"main:app"</span>, <span class="tok-str">"-k"</span>, <span class="tok-str">"uvicorn.workers.UvicornWorker"</span>, <span class="tok-str">"-w"</span>, <span class="tok-str">"4"</span>, <span class="tok-str">"-b"</span>, <span class="tok-str">"0.0.0.0:8000"</span>]</pre></div>
+      <div class="callout tip"><b>Behind a proxy:</b> put nginx/traefik in front for TLS, static files, and load balancing; set <code class="inline">--proxy-headers</code>.</div>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — One slow endpoint stalls all requests <span class="tag">Async</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> An <code class="inline">async def</code> route calls a blocking DB driver and the whole app freezes under load.</p>
+        <details class="solution"><summary>Show approach</summary><p>A blocking call inside <code class="inline">async def</code> blocks the event loop. Use an async driver (asyncpg), switch the route to a normal <code class="inline">def</code> (runs in a threadpool), or wrap the call in <code class="inline">run_in_executor</code>.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Secrets leaking in responses <span class="tag">Pydantic</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> The API returns password hashes.</p>
+        <details class="solution"><summary>Show approach</summary><p>Use a separate <code class="inline">response_model</code> (e.g. <code class="inline">UserOut</code>) that only includes safe fields — FastAPI filters the output to that schema.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — N+1 queries in a list endpoint <span class="tag">DB</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Listing orders with their items is slow.</p>
+        <details class="solution"><summary>Show approach</summary><p>Eager-load relations (<code class="inline">selectinload</code>/<code class="inline">joinedload</code>) instead of lazy loading per row, add indexes, and paginate.</p></details>
+      </div></div>
+    </section>
+
+    <!-- PRODUCTION -->
+    <section id="production">
+      <h2><span class="num"></span> Production Issues</h2>
+      <div class="problem"><div class="p-head">422 errors clients don't understand <span class="tag">Validation</span></div><div class="p-body">
+        <p class="prompt"><b>Report:</b> Clients get cryptic 422s.</p>
+        <details class="solution"><summary>Show fix</summary><p>Add a custom <code class="inline">RequestValidationError</code> handler that reshapes Pydantic errors into your API's error format, and document expected schemas in OpenAPI.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Event loop blocked warnings <span class="tag">Async</span></div><div class="p-body">
+        <p class="prompt"><b>Report:</b> High latency; "coroutine was never awaited" / blocked loop.</p>
+        <details class="solution"><summary>Show fix</summary><p>Find sync/blocking calls in async paths (CPU work, blocking I/O, <code class="inline">time.sleep</code>). Move to async libs or threadpools; never forget <code class="inline">await</code>.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>What makes FastAPI fast?</summary><div class="ans"><p>It's built on Starlette (ASGI) + Uvicorn for async I/O, and uses Pydantic (compiled in v2) for fast validation. Async lets it handle many concurrent connections.</p></div></details>
+      <details class="qa"><summary>async def vs def routes?</summary><div class="ans"><p><code class="inline">async def</code> runs on the event loop (use non-blocking awaits only); plain <code class="inline">def</code> runs in a threadpool, so it's safe for blocking I/O.</p></div></details>
+      <details class="qa"><summary>How does dependency injection work?</summary><div class="ans"><p><code class="inline">Depends(fn)</code> resolves and injects the result; dependencies can nest, are cached per request, support <code class="inline">yield</code> for cleanup, and can be overridden in tests.</p></div></details>
+      <details class="qa"><summary>What is Pydantic's role?</summary><div class="ans"><p>It validates and serializes data from type hints — request bodies, query/path params, and response models — returning structured 422 errors automatically.</p></div></details>
+      <details class="qa"><summary>What is response_model for?</summary><div class="ans"><p>It defines and filters the output schema — hiding internal/sensitive fields and generating accurate OpenAPI docs.</p></div></details>
+      <details class="qa"><summary>What is ASGI vs WSGI?</summary><div class="ans"><p>WSGI is synchronous (Flask/Django classic); ASGI is asynchronous, supporting async views, WebSockets, and long-lived connections — FastAPI is ASGI.</p></div></details>
+      <details class="qa"><summary>How do you secure a FastAPI app?</summary><div class="ans"><p>OAuth2 password flow + JWT via <code class="inline">OAuth2PasswordBearer</code>, scopes for authorization, HTTPS, CORS allow-list, input validation, secrets in env.</p></div></details>
+      <details class="qa"><summary>BackgroundTasks vs Celery?</summary><div class="ans"><p>BackgroundTasks run in-process after the response (quick, non-durable). Celery/ARQ + Redis provide durable, retryable, distributed job processing.</p></div></details>
+      <details class="qa"><summary>How do you handle DB sessions?</summary><div class="ans"><p>A dependency with <code class="inline">yield</code> opens a session and closes it after the response — one session per request, cleaned up reliably.</p></div></details>
+      <details class="qa"><summary>Pydantic v1 vs v2 differences?</summary><div class="ans"><p>v2 is much faster (Rust core), uses <code class="inline">model_config</code>/<code class="inline">from_attributes</code>, <code class="inline">field_validator</code>/<code class="inline">model_validator</code>, and <code class="inline">model_dump()</code> instead of <code class="inline">.dict()</code>.</p></div></details>
+      <details class="qa"><summary>How do you run FastAPI in production?</summary><div class="ans"><p>Gunicorn with Uvicorn workers (multiple processes for cores) behind nginx/traefik for TLS and load balancing, in Docker/Kubernetes with health probes.</p></div></details>
+      <details class="qa"><summary>What is a lifespan event?</summary><div class="ans"><p>An async context manager that runs startup (open DB pool) and shutdown (close resources) logic around the app's lifetime.</p></div></details>
+      <details class="qa"><summary>How do you test FastAPI?</summary><div class="ans"><p><code class="inline">TestClient</code> (httpx) for requests + <code class="inline">dependency_overrides</code> to swap real DB/auth with fakes; pytest for the suite.</p></div></details>
+      <details class="qa"><summary>How do you validate nested/complex bodies?</summary><div class="ans"><p>Compose Pydantic models (models within models, lists of models); FastAPI validates the whole structure and documents it in OpenAPI.</p></div></details>
+      <details class="qa"><summary>How do you add CORS?</summary><div class="ans"><p><code class="inline">app.add_middleware(CORSMiddleware, allow_origins=[...])</code> with explicit origins, methods, headers, and credentials as needed.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Need</th><th>Use</th></tr>
+        <tr><td>Define app</td><td><code>FastAPI()</code></td></tr>
+        <tr><td>Request body</td><td>Pydantic <code>BaseModel</code></td></tr>
+        <tr><td>Validation</td><td>type hints + <code>Field</code></td></tr>
+        <tr><td>Shared logic</td><td><code>Depends()</code></td></tr>
+        <tr><td>DB session</td><td>dependency w/ <code>yield</code></td></tr>
+        <tr><td>Response shape</td><td><code>response_model</code></td></tr>
+        <tr><td>Auth</td><td><code>OAuth2PasswordBearer</code> + JWT</td></tr>
+        <tr><td>Async blocking work</td><td>plain <code>def</code> / executor</td></tr>
+        <tr><td>Docs</td><td><code>/docs</code>, <code>/redoc</code></td></tr>
+        <tr><td>Run</td><td>uvicorn / gunicorn+uvicorn workers</td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>⚡ <b>FastAPI — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Pydantic, DI, async, SQLAlchemy, OAuth2, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
