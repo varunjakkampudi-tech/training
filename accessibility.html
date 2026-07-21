@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete Web Accessibility handbook — WCAG, ARIA, semantic HTML, keyboard navigation, focus management, screen readers, testing, React a11y, and 100+ interview questions." />
+<title>Accessibility — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #2563eb; --blue-dark: #1e3a8a; --blue-mid: #3b82f6; --sky: #60a5fa;
+    --light-blue: #dbeafe; --light-blue-2: #eff6ff;
+    --bg: #ffffff; --bg-soft: #f6f9ff; --panel: #ffffff;
+    --text: #14213d; --muted: #566581; --border: #d3e0f5;
+    --code-bg: #0d1526; --accent: #f59e0b; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(37, 99, 235, 0.10); --shadow-lg: 0 14px 40px rgba(30, 58, 138, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 300px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(59, 130, 246, 0.18), transparent), linear-gradient(160deg, #dfeaff, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #1c2a44; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #0a1120; border-bottom: 1px solid #1c2a44; font-size: 0.75rem; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #e3ecfb; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #2c3f63; color: #93c5fd; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(96,165,250,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #7f92b5; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-tag { color: #7fdfff; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #1e3358; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #1e3358; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #2e4269; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">♿ Accessibility Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#wcag">WCAG &amp; POUR</a>
+    <a href="#semantic">Semantic HTML</a>
+    <a href="#aria">ARIA</a>
+    <a class="section-title">Interaction</a>
+    <a href="#keyboard">Keyboard Navigation</a>
+    <a href="#focus">Focus Management</a>
+    <a href="#screenreaders">Screen Readers</a>
+    <a href="#live">Live Regions</a>
+    <a class="section-title">Content</a>
+    <a href="#forms">Accessible Forms</a>
+    <a href="#images">Images &amp; Media</a>
+    <a href="#contrast">Color &amp; Contrast</a>
+    <a href="#motion">Motion &amp; Zoom</a>
+    <a class="section-title">Engineering</a>
+    <a href="#react">React Accessibility</a>
+    <a href="#testing">Testing</a>
+    <a href="#bestpractices">Best Practices</a>
+    <a class="section-title">Interview</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">Accessibility</span> Hands-On Guide</h1>
+    <p>WCAG &amp; POUR, ARIA, semantic HTML, keyboard navigation, focus management, screen readers, accessible forms, testing, and React a11y — with 100+ interview questions. Build inclusive UIs.</p>
+    <div class="badges">
+      <span class="badge">WCAG</span>
+      <span class="badge">ARIA</span>
+      <span class="badge">Keyboard</span>
+      <span class="badge">Screen Readers</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">Web accessibility (a11y) means building sites everyone can use — including people with visual, motor, auditory, or cognitive disabilities, and those using assistive technology.</p>
+      <ul>
+        <li><b>Who benefits:</b> screen reader users, keyboard-only users, low-vision, color-blind, motor-impaired, and situationally-limited users.</li>
+        <li><b>Why:</b> inclusion, legal compliance (ADA, Section 508, EAA), SEO overlap, and better UX for all.</li>
+      </ul>
+      <div class="callout tip"><b>Interview importance:</b> Semantic HTML, ARIA (and when NOT to use it), keyboard/focus management, and WCAG basics are the most-asked a11y topics.</div>
+    </section>
+
+    <!-- WCAG -->
+    <section id="wcag">
+      <h2><span class="num"></span> WCAG &amp; POUR Principles</h2>
+      <p class="lead">WCAG (Web Content Accessibility Guidelines) is organized around four principles — <b>POUR</b> — with conformance levels A, AA (the common legal target), and AAA.</p>
+      <table>
+        <tr><th>Principle</th><th>Means</th><th>Examples</th></tr>
+        <tr><td><b>Perceivable</b></td><td>Content can be perceived</td><td>Alt text, captions, contrast</td></tr>
+        <tr><td><b>Operable</b></td><td>UI can be operated</td><td>Keyboard access, no traps, enough time</td></tr>
+        <tr><td><b>Understandable</b></td><td>Content &amp; UI are clear</td><td>Labels, consistent nav, error help</td></tr>
+        <tr><td><b>Robust</b></td><td>Works with assistive tech</td><td>Valid HTML, correct ARIA</td></tr>
+      </table>
+      <div class="callout"><b>Target AA:</b> Most laws/contracts require WCAG 2.1/2.2 Level AA — e.g. 4.5:1 text contrast, keyboard operability, visible focus, labels, and captions.</div>
+    </section>
+
+    <!-- SEMANTIC -->
+    <section id="semantic">
+      <h2><span class="num"></span> Semantic HTML (First!)</h2>
+      <p class="lead">The #1 rule: use the right native element. Semantic HTML gives you accessibility (roles, states, keyboard) for free.</p>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>✅ Do</h4>
+          <div class="code"><div class="code-head"><span>native</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;button</span> onclick=<span class="tok-str">"save()"</span><span class="tok-tag">&gt;</span>Save<span class="tok-tag">&lt;/button&gt;</span>
+<span class="tok-tag">&lt;nav&gt;</span> <span class="tok-tag">&lt;main&gt;</span> <span class="tok-tag">&lt;header&gt;</span> <span class="tok-tag">&lt;footer&gt;</span></pre></div>
+        </div>
+        <div class="vs-card b"><h4>❌ Avoid</h4>
+          <div class="code"><div class="code-head"><span>div soup</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;div</span> class=<span class="tok-str">"btn"</span> onclick=<span class="tok-str">"save()"</span><span class="tok-tag">&gt;</span>Save<span class="tok-tag">&lt;/div&gt;</span>
+<span class="tok-com">&lt;!-- not focusable, no role, no Enter/Space --&gt;</span></pre></div>
+        </div>
+      </div>
+      <div class="callout tip"><b>Landmarks:</b> <code class="inline">header</code>, <code class="inline">nav</code>, <code class="inline">main</code>, <code class="inline">aside</code>, <code class="inline">footer</code> let screen-reader users jump between regions. Use one <code class="inline">&lt;h1&gt;</code> and a logical heading order.</div>
+    </section>
+
+    <!-- ARIA -->
+    <section id="aria">
+      <h2><span class="num"></span> ARIA (Roles, States, Properties)</h2>
+      <p class="lead">ARIA adds semantics when native HTML can't. It has three types: <b>roles</b> (what it is), <b>states</b> (current condition), <b>properties</b> (relationships).</p>
+      <div class="code"><div class="code-head"><span>Custom toggle with ARIA</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;button</span> role=<span class="tok-str">"switch"</span> aria-checked=<span class="tok-str">"false"</span> aria-label=<span class="tok-str">"Dark mode"</span><span class="tok-tag">&gt;</span><span class="tok-tag">&lt;/button&gt;</span>
+
+<span class="tok-com">&lt;!-- relationships --&gt;</span>
+<span class="tok-tag">&lt;input</span> aria-describedby=<span class="tok-str">"hint"</span> aria-invalid=<span class="tok-str">"true"</span><span class="tok-tag">&gt;</span>
+<span class="tok-tag">&lt;p</span> id=<span class="tok-str">"hint"</span><span class="tok-tag">&gt;</span>Min 8 characters<span class="tok-tag">&lt;/p&gt;</span></pre></div>
+      <table>
+        <tr><th>Type</th><th>Examples</th></tr>
+        <tr><td>Roles</td><td><code>dialog</code>, <code>tablist</code>, <code>alert</code>, <code>switch</code>, <code>navigation</code></td></tr>
+        <tr><td>States</td><td><code>aria-expanded</code>, <code>aria-checked</code>, <code>aria-selected</code>, <code>aria-hidden</code>, <code>aria-disabled</code></td></tr>
+        <tr><td>Properties</td><td><code>aria-label</code>, <code>aria-labelledby</code>, <code>aria-describedby</code>, <code>aria-controls</code></td></tr>
+      </table>
+      <div class="callout warn"><b>First rule of ARIA:</b> Don't use ARIA if a native element works. Bad ARIA is worse than none. ARIA changes semantics only — it does <em>not</em> add behavior (you still wire keyboard handling yourself).</div>
+    </section>
+
+    <!-- KEYBOARD -->
+    <section id="keyboard">
+      <h2><span class="num"></span> Keyboard Navigation</h2>
+      <table>
+        <tr><th>Key</th><th>Expected</th></tr>
+        <tr><td>Tab / Shift+Tab</td><td>Move between focusable elements</td></tr>
+        <tr><td>Enter / Space</td><td>Activate buttons/links</td></tr>
+        <tr><td>Arrow keys</td><td>Move within a widget (menu, tabs, radio)</td></tr>
+        <tr><td>Esc</td><td>Close dialog/menu</td></tr>
+      </table>
+      <ul>
+        <li>Every interactive element must be reachable &amp; operable by keyboard.</li>
+        <li><code class="inline">tabindex="0"</code> makes a custom element focusable; <code class="inline">-1</code> makes it focusable only programmatically. Avoid positive tabindex.</li>
+        <li>No keyboard traps — users must be able to tab out (except modals, which trap intentionally then release).</li>
+      </ul>
+    </section>
+
+    <!-- FOCUS -->
+    <section id="focus">
+      <h2><span class="num"></span> Focus Management</h2>
+      <div class="code"><div class="code-head"><span>Modal focus trap + restore</span><button class="copy">Copy</button></div><pre><span class="tok-com">// On open: remember trigger, move focus into dialog</span>
+lastFocused = document.activeElement;
+dialog.querySelector(<span class="tok-str">"[autofocus], button"</span>).<span class="tok-fn">focus</span>();
+
+<span class="tok-com">// Trap Tab within the dialog; Esc closes</span>
+<span class="tok-com">// On close: restore focus to the trigger</span>
+lastFocused.<span class="tok-fn">focus</span>();</pre></div>
+      <ul>
+        <li><b>Visible focus:</b> never remove outlines without a replacement (<code class="inline">:focus-visible</code>).</li>
+        <li><b>Route changes (SPA):</b> move focus to the new page's heading and announce it.</li>
+        <li><b>Skip link:</b> a "Skip to content" link as the first focusable element.</li>
+      </ul>
+      <div class="callout warn"><b>Anti-pattern:</b> <code class="inline">outline: none</code> with no alternative — keyboard users lose track of where they are.</div>
+    </section>
+
+    <!-- SCREEN READERS -->
+    <section id="screenreaders">
+      <h2><span class="num"></span> Screen Readers</h2>
+      <table>
+        <tr><th>SR</th><th>Platform</th></tr>
+        <tr><td>NVDA / JAWS</td><td>Windows</td></tr>
+        <tr><td>VoiceOver</td><td>macOS / iOS</td></tr>
+        <tr><td>TalkBack</td><td>Android</td></tr>
+      </table>
+      <ul>
+        <li>They build an <b>accessibility tree</b> from the DOM + ARIA and announce roles/names/states.</li>
+        <li><b>Accessible name</b> comes from: <code class="inline">aria-labelledby</code> → <code class="inline">aria-label</code> → associated <code class="inline">&lt;label&gt;</code> → text content → <code class="inline">title</code>.</li>
+        <li><code class="inline">aria-hidden="true"</code> hides decorative content from SRs; <code class="inline">.sr-only</code> CSS visually hides but keeps it for SRs.</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>Visually-hidden but SR-readable</span><button class="copy">Copy</button></div><pre>.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}</pre></div>
+    </section>
+
+    <!-- LIVE -->
+    <section id="live">
+      <h2><span class="num"></span> Live Regions</h2>
+      <p class="lead">Live regions announce dynamic changes (form errors, toasts, cart updates) without moving focus.</p>
+      <div class="code"><div class="code-head"><span>aria-live</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;div</span> aria-live=<span class="tok-str">"polite"</span><span class="tok-tag">&gt;</span>Saved!<span class="tok-tag">&lt;/div&gt;</span>       <span class="tok-com">&lt;!-- waits for a pause --&gt;</span>
+<span class="tok-tag">&lt;div</span> aria-live=<span class="tok-str">"assertive"</span> role=<span class="tok-str">"alert"</span><span class="tok-tag">&gt;</span>Error!<span class="tok-tag">&lt;/div&gt;</span> <span class="tok-com">&lt;!-- interrupts --&gt;</span></pre></div>
+      <div class="callout tip"><b>Use polite</b> for status updates, <b>assertive</b> only for urgent messages. Keep the region in the DOM; change its text to trigger announcements.</div>
+    </section>
+
+    <!-- FORMS -->
+    <section id="forms">
+      <h2><span class="num"></span> Accessible Forms</h2>
+      <div class="code"><div class="code-head"><span>Labels, errors, grouping</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;label</span> for=<span class="tok-str">"email"</span><span class="tok-tag">&gt;</span>Email<span class="tok-tag">&lt;/label&gt;</span>
+<span class="tok-tag">&lt;input</span> id=<span class="tok-str">"email"</span> type=<span class="tok-str">"email"</span> aria-describedby=<span class="tok-str">"err"</span> aria-invalid=<span class="tok-str">"true"</span> required<span class="tok-tag">&gt;</span>
+<span class="tok-tag">&lt;p</span> id=<span class="tok-str">"err"</span> role=<span class="tok-str">"alert"</span><span class="tok-tag">&gt;</span>Enter a valid email<span class="tok-tag">&lt;/p&gt;</span>
+
+<span class="tok-tag">&lt;fieldset&gt;&lt;legend&gt;</span>Shipping<span class="tok-tag">&lt;/legend&gt;</span> ... <span class="tok-tag">&lt;/fieldset&gt;</span></pre></div>
+      <ul>
+        <li>Every input has a programmatic <b>label</b> (<code class="inline">for</code>/<code class="inline">id</code>, not placeholder-only).</li>
+        <li>Group related fields with <code class="inline">fieldset</code>/<code class="inline">legend</code>.</li>
+        <li>Associate errors with <code class="inline">aria-describedby</code> + <code class="inline">aria-invalid</code>; move focus to the first error on submit.</li>
+      </ul>
+    </section>
+
+    <!-- IMAGES -->
+    <section id="images">
+      <h2><span class="num"></span> Images &amp; Media</h2>
+      <ul>
+        <li><b>Informative images:</b> descriptive <code class="inline">alt</code>. <b>Decorative:</b> <code class="inline">alt=""</code> (empty) so SRs skip them.</li>
+        <li><b>Complex images</b> (charts): short alt + longer description nearby.</li>
+        <li><b>Video/audio:</b> captions (required AA), transcripts, and audio descriptions.</li>
+        <li>Don't convey meaning with <b>color alone</b> or images of text.</li>
+      </ul>
+    </section>
+
+    <!-- CONTRAST -->
+    <section id="contrast">
+      <h2><span class="num"></span> Color &amp; Contrast</h2>
+      <table>
+        <tr><th>Content</th><th>Min ratio (AA)</th></tr>
+        <tr><td>Normal text</td><td>4.5 : 1</td></tr>
+        <tr><td>Large text (≥18.66px bold / 24px)</td><td>3 : 1</td></tr>
+        <tr><td>UI components &amp; graphics</td><td>3 : 1</td></tr>
+      </table>
+      <div class="callout warn"><b>Don't rely on color alone</b> for state (e.g. error = red). Add an icon, text, or pattern so color-blind users get the message.</div>
+    </section>
+
+    <!-- MOTION -->
+    <section id="motion">
+      <h2><span class="num"></span> Motion, Zoom &amp; Touch</h2>
+      <div class="code"><div class="code-head"><span>Respect reduced motion</span><button class="copy">Copy</button></div><pre><span class="tok-op">@media</span> (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}</pre></div>
+      <ul>
+        <li>Support 200% zoom / 320px reflow without loss of content.</li>
+        <li>Touch targets ≥ 24×24px (44px recommended) with spacing.</li>
+        <li>Avoid content that flashes more than 3×/second (seizure risk).</li>
+      </ul>
+    </section>
+
+    <!-- REACT -->
+    <section id="react">
+      <h2><span class="num"></span> React Accessibility</h2>
+      <div class="code"><div class="code-head"><span>a11y in React</span><button class="copy">Copy</button></div><pre><span class="tok-com">// use htmlFor + useId for label association</span>
+<span class="tok-key">const</span> id = <span class="tok-fn">useId</span>();
+<span class="tok-tag">&lt;label</span> htmlFor={id}<span class="tok-tag">&gt;</span>Name<span class="tok-tag">&lt;/label&gt;&lt;input</span> id={id}<span class="tok-tag">/&gt;</span>
+
+<span class="tok-com">// focus management on route change / modal open</span>
+<span class="tok-fn">useEffect</span>(() =&gt; { headingRef.current?.<span class="tok-fn">focus</span>(); }, [route]);
+
+<span class="tok-com">// fragments to avoid extra divs; real buttons/links</span></pre></div>
+      <ul>
+        <li>Use <code class="inline">jsx-a11y</code> ESLint plugin to catch issues at build.</li>
+        <li>Prefer real <code class="inline">&lt;button&gt;</code>/<code class="inline">&lt;a&gt;</code> over clickable divs.</li>
+        <li>Manage focus on mount/unmount of modals, drawers, toasts, and route changes.</li>
+        <li>Portals for modals keep DOM order sensible; trap + restore focus.</li>
+      </ul>
+    </section>
+
+    <!-- TESTING -->
+    <section id="testing">
+      <h2><span class="num"></span> Testing Accessibility</h2>
+      <table>
+        <tr><th>Method</th><th>Tool</th></tr>
+        <tr><td>Automated scan</td><td>axe DevTools, Lighthouse, Pa11y</td></tr>
+        <tr><td>Linting</td><td>eslint-plugin-jsx-a11y</td></tr>
+        <tr><td>Unit tests</td><td>jest-axe, Testing Library (roles)</td></tr>
+        <tr><td>Manual keyboard</td><td>Tab through everything</td></tr>
+        <tr><td>Manual SR</td><td>NVDA / VoiceOver</td></tr>
+        <tr><td>Zoom / contrast</td><td>200% zoom, contrast checkers</td></tr>
+      </table>
+      <div class="callout warn"><b>Reality:</b> Automated tools catch only ~30–40% of issues. Manual keyboard + screen-reader testing is essential.</div>
+    </section>
+
+    <!-- BEST PRACTICES -->
+    <section id="bestpractices">
+      <h2><span class="num"></span> Best Practices</h2>
+      <ul>
+        <li>Semantic HTML first; ARIA only when needed (and correctly).</li>
+        <li>Everything keyboard-operable; visible focus; logical order.</li>
+        <li>Labels for all controls; associate &amp; announce errors.</li>
+        <li>Alt text; captions; don't rely on color alone.</li>
+        <li>AA contrast; respect reduced motion; support zoom.</li>
+        <li>Manage focus for modals &amp; SPA route changes.</li>
+        <li>Test with keyboard + a screen reader, not just automation.</li>
+      </ul>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — Custom dropdown unusable by keyboard <span class="tag">Keyboard</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> A div-based dropdown can't be opened or navigated without a mouse.</p>
+        <details class="solution"><summary>Show approach</summary><p>Use a real <code class="inline">&lt;button&gt;</code> trigger with <code class="inline">aria-expanded</code>; make the listbox <code class="inline">role="listbox"</code> with <code class="inline">option</code>s; handle Arrow/Enter/Esc keys; manage focus and <code class="inline">aria-activedescendant</code>. Better: use a native <code class="inline">&lt;select&gt;</code> or a vetted library.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Modal doesn't trap focus <span class="tag">Focus</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Tabbing in a modal moves focus to the page behind it.</p>
+        <details class="solution"><summary>Show approach</summary><p>Trap Tab within the dialog, set <code class="inline">role="dialog"</code> + <code class="inline">aria-modal="true"</code>, move focus in on open, restore to the trigger on close, and close on Esc. Hide background from SRs with <code class="inline">aria-hidden</code>/inert.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — Form errors not announced <span class="tag">SR</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Screen-reader users don't know a submission failed.</p>
+        <details class="solution"><summary>Show approach</summary><p>Put errors in a <code class="inline">role="alert"</code>/<code class="inline">aria-live</code> region, associate each with its field via <code class="inline">aria-describedby</code> + <code class="inline">aria-invalid</code>, and move focus to the first error or an error summary.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>What are the WCAG POUR principles?</summary><div class="ans"><p>Perceivable, Operable, Understandable, Robust — the four foundations, with conformance levels A, AA (typical target), AAA.</p></div></details>
+      <details class="qa"><summary>When should you use ARIA?</summary><div class="ans"><p>Only when native HTML can't express the semantics. First rule of ARIA: don't use ARIA if a native element works. Bad ARIA is worse than none.</p></div></details>
+      <details class="qa"><summary>Why is semantic HTML important?</summary><div class="ans"><p>Native elements provide roles, states, and keyboard behavior for free, and are announced correctly by screen readers.</p></div></details>
+      <details class="qa"><summary>How does an accessible name get computed?</summary><div class="ans"><p>Order: <code class="inline">aria-labelledby</code> → <code class="inline">aria-label</code> → associated label → text content → <code class="inline">title</code>.</p></div></details>
+      <details class="qa"><summary>tabindex values?</summary><div class="ans"><p><code class="inline">0</code> = focusable in normal order; <code class="inline">-1</code> = focusable only via script; positive = avoid (breaks natural order).</p></div></details>
+      <details class="qa"><summary>How do you make a modal accessible?</summary><div class="ans"><p><code class="inline">role="dialog"</code> + <code class="inline">aria-modal</code>, trap focus, move focus in on open, restore on close, Esc to close, hide the background from SRs.</p></div></details>
+      <details class="qa"><summary>polite vs assertive live regions?</summary><div class="ans"><p>Polite waits for a pause (status); assertive interrupts immediately (urgent errors). Keep the region in the DOM and update its text.</p></div></details>
+      <details class="qa"><summary>What's the minimum contrast ratio?</summary><div class="ans"><p>AA: 4.5:1 for normal text, 3:1 for large text and UI components/graphics.</p></div></details>
+      <details class="qa"><summary>How do you hide content correctly?</summary><div class="ans"><p><code class="inline">aria-hidden="true"</code> hides from SRs (decorative); <code class="inline">.sr-only</code> hides visually but keeps it for SRs; <code class="inline">display:none</code> hides from both.</p></div></details>
+      <details class="qa"><summary>How do you handle focus in a SPA?</summary><div class="ans"><p>On route change, move focus to the new page's heading (and/or announce via a live region) so SR/keyboard users aren't stranded.</p></div></details>
+      <details class="qa"><summary>Placeholder vs label?</summary><div class="ans"><p>A placeholder is not a label — it disappears on input and isn't reliably announced. Always use a real associated <code class="inline">&lt;label&gt;</code>.</p></div></details>
+      <details class="qa"><summary>What is the accessibility tree?</summary><div class="ans"><p>A representation the browser builds from the DOM + ARIA that assistive tech consumes — exposing roles, names, states, and relationships.</p></div></details>
+      <details class="qa"><summary>How do you test accessibility?</summary><div class="ans"><p>Automated (axe/Lighthouse/jest-axe) for coverage, plus manual keyboard walkthrough and a screen reader — automation catches only ~30–40%.</p></div></details>
+      <details class="qa"><summary>How do you support reduced motion?</summary><div class="ans"><p>Honor <code class="inline">prefers-reduced-motion</code> to disable/limit animations for users prone to motion sickness/vestibular issues.</p></div></details>
+      <details class="qa"><summary>What is a skip link?</summary><div class="ans"><p>A "Skip to main content" link that's the first focusable element, letting keyboard users bypass repeated navigation.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Need</th><th>Do</th></tr>
+        <tr><td>Clickable</td><td>Real <code>&lt;button&gt;</code>/<code>&lt;a&gt;</code></td></tr>
+        <tr><td>Label a control</td><td><code>&lt;label for&gt;</code> / <code>aria-label</code></td></tr>
+        <tr><td>Custom focusable</td><td><code>tabindex="0"</code></td></tr>
+        <tr><td>Announce change</td><td><code>aria-live</code></td></tr>
+        <tr><td>Hide decorative</td><td><code>aria-hidden="true"</code></td></tr>
+        <tr><td>SR-only text</td><td><code>.sr-only</code></td></tr>
+        <tr><td>Contrast</td><td>4.5:1 text</td></tr>
+        <tr><td>Focus visible</td><td><code>:focus-visible</code></td></tr>
+        <tr><td>Reduced motion</td><td><code>prefers-reduced-motion</code></td></tr>
+        <tr><td>Lint</td><td>eslint-plugin-jsx-a11y</td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>♿ <b>Accessibility — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. WCAG, ARIA, keyboard, focus, screen readers, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
