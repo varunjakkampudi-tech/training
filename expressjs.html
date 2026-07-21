@@ -146,6 +146,11 @@
     <a href="#logging">Logging</a>
     <a href="#testing">Testing</a>
     <a href="#perf">Performance</a>
+    <a class="section-title">Deep Dive</a>
+    <a href="#internals">Express Internals</a>
+    <a href="#advmw">Advanced Middleware</a>
+    <a href="#streaming">Streaming &amp; SSE</a>
+    <a href="#resilience">Production Resilience</a>
     <a class="section-title">Interview</a>
     <a href="#scenario">Scenario Questions</a>
     <a href="#production">Production Issues</a>
@@ -399,6 +404,79 @@ app.<span class="tok-fn">post</span>(<span class="tok-str">"/avatar"</span>, upl
     </section>
 
     <!-- SCENARIO -->
+    <section id="internals">
+      <h2><span class="num"></span> Express Internals</h2>
+      <h3>Request lifecycle &amp; middleware flow</h3>
+      <ol>
+        <li>Request hits the server → Express matches the method + path.</li>
+        <li>Matching middleware/handlers run <b>in registration order</b>; each calls <code class="inline">next()</code> or responds.</li>
+        <li><code class="inline">next()</code> advances to the next middleware; <code class="inline">next(err)</code> jumps to error middleware; <code class="inline">next("route")</code> skips to the next route.</li>
+        <li>The response is sent; no further middleware runs.</li>
+      </ol>
+      <div class="code"><div class="code-head"><span>next() behavior</span><button class="copy">Copy</button></div><pre>app.<span class="tok-fn">use</span>((req, res, next) =&gt; { <span class="tok-fn">next</span>(); });          <span class="tok-com">// continue</span>
+app.<span class="tok-fn">use</span>((req, res, next) =&gt; { <span class="tok-fn">next</span>(<span class="tok-key">new</span> <span class="tok-fn">Error</span>(<span class="tok-str">"x"</span>)); }); <span class="tok-com">// -> error handler</span>
+app.<span class="tok-fn">get</span>(<span class="tok-str">"/a"</span>, (req, res, next) =&gt; <span class="tok-fn">next</span>(<span class="tok-str">"route"</span>), h2);   <span class="tok-com">// skip h2, next matching route</span></pre></div>
+      <div class="callout warn"><b>Sync vs async:</b> Express 4 auto-catches <em>synchronous</em> throws but not async rejections — wrap async handlers. Express 5 awaits handlers and forwards rejections automatically.</div>
+      <p><b>Router internals:</b> <code class="inline">express.Router()</code> is a mini middleware stack with its own routing table; mounting it (<code class="inline">app.use(path, router)</code>) strips the prefix and delegates matching.</p>
+    </section>
+
+    <section id="advmw">
+      <h2><span class="num"></span> Advanced Middleware Patterns</h2>
+      <div class="code"><div class="code-head"><span>Request-scoped context (AsyncLocalStorage)</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { AsyncLocalStorage } = <span class="tok-fn">require</span>(<span class="tok-str">"async_hooks"</span>);
+<span class="tok-key">const</span> als = <span class="tok-key">new</span> <span class="tok-fn">AsyncLocalStorage</span>();
+
+app.<span class="tok-fn">use</span>((req, res, next) =&gt; {
+  als.<span class="tok-fn">run</span>({ reqId: crypto.<span class="tok-fn">randomUUID</span>() }, next); <span class="tok-com">// context per request</span>
+});
+<span class="tok-com">// anywhere deep in the call chain:</span>
+<span class="tok-key">const</span> { reqId } = als.<span class="tok-fn">getStore</span>(); <span class="tok-com">// no prop-drilling of req</span></pre></div>
+      <div class="code"><div class="code-head"><span>Composition &amp; DI</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Compose reusable middleware</span>
+<span class="tok-key">const</span> chain = (...mws) =&gt; (req, res, next) =&gt;
+  mws.<span class="tok-fn">reduceRight</span>((n, mw) =&gt; () =&gt; <span class="tok-fn">mw</span>(req, res, n), next)();
+
+<span class="tok-com">// Dependency injection: pass services into route factories</span>
+module.exports = (userService) =&gt; {
+  <span class="tok-key">const</span> r = express.<span class="tok-fn">Router</span>();
+  r.<span class="tok-fn">get</span>(<span class="tok-str">"/"</span>, <span class="tok-key">async</span> (req, res) =&gt; res.<span class="tok-fn">json</span>(<span class="tok-key">await</span> userService.<span class="tok-fn">list</span>()));
+  <span class="tok-key">return</span> r;
+};</pre></div>
+      <div class="callout tip"><b>AsyncLocalStorage</b> powers request-scoped logging (correlation IDs), tracing, and tenant context without threading <code class="inline">req</code> everywhere.</div>
+    </section>
+
+    <section id="streaming">
+      <h2><span class="num"></span> Streaming &amp; Server-Sent Events</h2>
+      <div class="code"><div class="code-head"><span>Stream a file without buffering</span><button class="copy">Copy</button></div><pre>app.<span class="tok-fn">get</span>(<span class="tok-str">"/download"</span>, (req, res) =&gt; {
+  fs.<span class="tok-fn">createReadStream</span>(<span class="tok-str">"big.zip"</span>).<span class="tok-fn">pipe</span>(res); <span class="tok-com">// backpressure-aware</span>
+});</pre></div>
+      <div class="code"><div class="code-head"><span>Server-Sent Events (live updates)</span><button class="copy">Copy</button></div><pre>app.<span class="tok-fn">get</span>(<span class="tok-str">"/events"</span>, (req, res) =&gt; {
+  res.<span class="tok-fn">set</span>({ <span class="tok-str">"Content-Type"</span>: <span class="tok-str">"text/event-stream"</span>,
+        <span class="tok-str">"Cache-Control"</span>: <span class="tok-str">"no-cache"</span>, Connection: <span class="tok-str">"keep-alive"</span> });
+  <span class="tok-key">const</span> id = <span class="tok-fn">setInterval</span>(() =&gt; res.<span class="tok-fn">write</span>(<span class="tok-str">`data: ${Date.now()}\n\n`</span>), <span class="tok-num">1000</span>);
+  req.<span class="tok-fn">on</span>(<span class="tok-str">"close"</span>, () =&gt; <span class="tok-fn">clearInterval</span>(id)); <span class="tok-com">// cleanup on disconnect</span>
+});</pre></div>
+      <div class="callout"><b>When to use:</b> SSE for one-way server→client live updates (notifications, progress); WebSockets for bidirectional (chat). Stream large files with <code class="inline">pipe</code> to keep memory flat.</div>
+    </section>
+
+    <section id="resilience">
+      <h2><span class="num"></span> Production Resilience</h2>
+      <div class="code"><div class="code-head"><span>Graceful shutdown with draining</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> server = app.<span class="tok-fn">listen</span>(<span class="tok-num">3000</span>);
+process.<span class="tok-fn">on</span>(<span class="tok-str">"SIGTERM"</span>, () =&gt; {
+  server.<span class="tok-fn">close</span>(<span class="tok-key">async</span> () =&gt; {   <span class="tok-com">// stop accepting, drain in-flight</span>
+    <span class="tok-key">await</span> db.<span class="tok-fn">close</span>();
+    process.<span class="tok-fn">exit</span>(<span class="tok-num">0</span>);
+  });
+  <span class="tok-fn">setTimeout</span>(() =&gt; process.<span class="tok-fn">exit</span>(<span class="tok-num">1</span>), <span class="tok-num">10000</span>).<span class="tok-fn">unref</span>(); <span class="tok-com">// force after 10s</span>
+});</pre></div>
+      <table>
+        <tr><th>Concern</th><th>Practice</th></tr>
+        <tr><td>Behind a proxy</td><td><code>app.set("trust proxy", 1)</code> for correct IP/HTTPS</td></tr>
+        <tr><td>Sticky sessions</td><td>For stateful WS/SSE behind a load balancer</td></tr>
+        <tr><td>Health / readiness</td><td><code>/healthz</code> &amp; <code>/readyz</code> for orchestrators</td></tr>
+        <tr><td>Timeouts</td><td>Server + upstream request timeouts</td></tr>
+      </table>
+    </section>
+
+    <!-- SCENARIO -->
     <section id="scenario">
       <h2><span class="num"></span> Scenario-Based Questions</h2>
       <div class="problem"><div class="p-head">Scenario 1 — Requests hang forever <span class="tag">Middleware</span></div><div class="p-body">
@@ -446,6 +524,17 @@ app.<span class="tok-fn">post</span>(<span class="tok-str">"/avatar"</span>, upl
       <details class="qa"><summary>How do you implement rate limiting?</summary><div class="ans"><p><code class="inline">express-rate-limit</code> per IP/user; back it with Redis for multi-instance deployments.</p></div></details>
       <details class="qa"><summary>What causes "headers already sent"?</summary><div class="ans"><p>Responding more than once. Always <code class="inline">return</code> after sending and don't continue the pipeline afterward.</p></div></details>
       <details class="qa"><summary>How do you do graceful shutdown?</summary><div class="ans"><p>On SIGTERM: <code class="inline">server.close()</code> to stop new connections, drain in-flight requests, close DB, then exit.</p></div></details>
+      <details class="qa"><summary>Explain the request lifecycle in Express.</summary><div class="ans"><p>Match method+path → run matching middleware/handlers in order, each calling <code class="inline">next()</code> or responding → error middleware on <code class="inline">next(err)</code> → response sent, pipeline stops.</p></div></details>
+      <details class="qa"><summary>What does next("route") do?</summary><div class="ans"><p>Skips remaining handlers of the current route and passes control to the next matching route — useful for conditional routing.</p></div></details>
+      <details class="qa"><summary>Sync vs async middleware error handling?</summary><div class="ans"><p>Express 4 catches synchronous throws but not async rejections — wrap async handlers to call <code class="inline">next(err)</code>. Express 5 awaits handlers and forwards rejections automatically.</p></div></details>
+      <details class="qa"><summary>What is AsyncLocalStorage used for?</summary><div class="ans"><p>Request-scoped context (correlation IDs, tenant, user) accessible deep in the call chain without passing <code class="inline">req</code> everywhere — great for logging/tracing.</p></div></details>
+      <details class="qa"><summary>How do you implement Server-Sent Events?</summary><div class="ans"><p>Set <code class="inline">Content-Type: text/event-stream</code>, keep the connection open, <code class="inline">res.write("data: ...\n\n")</code> to push, and clean up on <code class="inline">req.on("close")</code>. One-way server→client.</p></div></details>
+      <details class="qa"><summary>SSE vs WebSockets?</summary><div class="ans"><p>SSE is one-way (server→client) over HTTP, auto-reconnecting, simple. WebSockets are bidirectional, better for chat/gaming. Choose by direction and complexity.</p></div></details>
+      <details class="qa"><summary>Why set "trust proxy"?</summary><div class="ans"><p>Behind a reverse proxy/load balancer, it makes Express read <code class="inline">X-Forwarded-*</code> headers so <code class="inline">req.ip</code> and <code class="inline">req.protocol</code> reflect the real client, which matters for rate limiting and secure cookies.</p></div></details>
+      <details class="qa"><summary>How do you stream a large file?</summary><div class="ans"><p><code class="inline">fs.createReadStream(path).pipe(res)</code> — backpressure-aware, constant memory, instead of reading the whole file into a buffer.</p></div></details>
+      <details class="qa"><summary>How do you compose reusable middleware?</summary><div class="ans"><p>Group related middleware into an array or a composer function and mount them together; use route factories for dependency injection of services.</p></div></details>
+      <details class="qa"><summary>What is req vs res lifecycle for keep-alive?</summary><div class="ans"><p>With HTTP keep-alive the TCP connection is reused across requests; each request still gets fresh <code class="inline">req</code>/<code class="inline">res</code> objects. Clean up per-request resources on <code class="inline">res.on("finish")</code>/<code class="inline">req.on("close")</code>.</p></div></details>
+      <details class="qa"><summary>How do you handle file downloads/uploads without buffering?</summary><div class="ans"><p>Pipe streams end-to-end (<code class="inline">req</code>→storage, storage→<code class="inline">res</code>); for uploads use busboy/multer streaming to S3 rather than memory storage.</p></div></details>
     </section>
 
     <!-- CHEAT SHEET -->
