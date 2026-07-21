@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete Material UI (MUI) handbook — components, theming, sx/styled, layout, responsive breakpoints, dark mode, customization, performance, and 100+ interview questions." />
+<title>Material UI — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #5b21b6; --blue-dark: #3b0f78; --blue-mid: #7c3aed; --sky: #a78bfa;
+    --light-blue: #ede9fe; --light-blue-2: #f6f4ff;
+    --bg: #ffffff; --bg-soft: #faf8ff; --panel: #ffffff;
+    --text: #241246; --muted: #695987; --border: #e3dbf7;
+    --code-bg: #150d29; --accent: #f59e0b; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(91, 33, 182, 0.10); --shadow-lg: 0 14px 40px rgba(59, 15, 120, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 300px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(124, 58, 237, 0.18), transparent), linear-gradient(160deg, #ebe5fd, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #2f2352; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #0f0920; border-bottom: 1px solid #2f2352; font-size: 0.75rem; color: #c4b5fd; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #ece7f9; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #453873; color: #c4b5fd; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(167,139,250,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #897fb0; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-tag { color: #7fdfff; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #322357; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #322357; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #443466; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🎨 Material UI Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#setup">Setup</a>
+    <a href="#components">Components</a>
+    <a href="#layout">Layout</a>
+    <a class="section-title">Styling</a>
+    <a href="#sx">sx Prop</a>
+    <a href="#styled">styled &amp; Overrides</a>
+    <a href="#theme">Theming</a>
+    <a href="#responsive">Responsive &amp; Breakpoints</a>
+    <a href="#dark">Dark Mode</a>
+    <a class="section-title">Building UI</a>
+    <a href="#forms">Forms</a>
+    <a href="#feedback">Feedback &amp; Dialogs</a>
+    <a href="#nav">Navigation</a>
+    <a href="#data">Data Display</a>
+    <a class="section-title">Engineering</a>
+    <a href="#performance">Performance</a>
+    <a href="#a11y">Accessibility</a>
+    <a href="#bestpractices">Best Practices</a>
+    <a class="section-title">Interview</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">Material UI</span> Hands-On Guide</h1>
+    <p>Components, theming, the sx prop &amp; styled API, layout &amp; responsive breakpoints, dark mode, customization, performance, and accessibility — with 100+ interview questions. Build polished React UIs fast.</p>
+    <div class="badges">
+      <span class="badge">Components</span>
+      <span class="badge">Theming</span>
+      <span class="badge">sx / styled</span>
+      <span class="badge">Responsive</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">Material UI (MUI) is a popular React component library implementing Google's Material Design. It gives you accessible, themeable, production-ready components out of the box.</p>
+      <ul>
+        <li><b>Rich components</b> — buttons, inputs, dialogs, tables, navigation, and more.</li>
+        <li><b>Theming</b> — centralized design tokens (colors, typography, spacing).</li>
+        <li><b>Emotion-based styling</b> — the <code class="inline">sx</code> prop &amp; <code class="inline">styled</code> API.</li>
+        <li><b>Accessible</b> — ARIA + keyboard behavior built in.</li>
+      </ul>
+      <div class="callout tip"><b>Interview importance:</b> Theming, the <code class="inline">sx</code> prop vs <code class="inline">styled</code>, responsive breakpoints, and customization/overrides are the most-asked MUI topics.</div>
+    </section>
+
+    <!-- SETUP -->
+    <section id="setup">
+      <h2><span class="num"></span> Setup</h2>
+      <div class="code"><div class="code-head"><span>Install + ThemeProvider</span><button class="copy">Copy</button></div><pre>npm install @mui/material @emotion/react @emotion/styled @mui/icons-material
+
+<span class="tok-key">import</span> { ThemeProvider, createTheme, CssBaseline } <span class="tok-key">from</span> <span class="tok-str">"@mui/material"</span>;
+
+<span class="tok-key">const</span> theme = <span class="tok-fn">createTheme</span>();
+
+<span class="tok-tag">&lt;ThemeProvider</span> theme={theme}<span class="tok-tag">&gt;</span>
+  <span class="tok-tag">&lt;CssBaseline</span> <span class="tok-tag">/&gt;</span>  <span class="tok-com">// normalize + apply theme background</span>
+  <span class="tok-tag">&lt;App</span> <span class="tok-tag">/&gt;</span>
+<span class="tok-tag">&lt;/ThemeProvider&gt;</span></pre></div>
+      <div class="callout"><b>CssBaseline</b> resets browser defaults and applies theme background/typography — like Normalize for MUI.</div>
+    </section>
+
+    <!-- COMPONENTS -->
+    <section id="components">
+      <h2><span class="num"></span> Components</h2>
+      <div class="code"><div class="code-head"><span>Common components</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;Button</span> variant=<span class="tok-str">"contained"</span> color=<span class="tok-str">"primary"</span> startIcon={<span class="tok-tag">&lt;SaveIcon/&gt;</span>}<span class="tok-tag">&gt;</span>Save<span class="tok-tag">&lt;/Button&gt;</span>
+<span class="tok-tag">&lt;TextField</span> label=<span class="tok-str">"Email"</span> variant=<span class="tok-str">"outlined"</span> error helperText=<span class="tok-str">"Required"</span><span class="tok-tag">/&gt;</span>
+<span class="tok-tag">&lt;Card&gt;&lt;CardContent&gt;</span>...<span class="tok-tag">&lt;/CardContent&gt;&lt;/Card&gt;</span>
+<span class="tok-tag">&lt;Chip</span> label=<span class="tok-str">"New"</span> color=<span class="tok-str">"success"</span><span class="tok-tag">/&gt;</span>
+<span class="tok-tag">&lt;Autocomplete</span> options={opts} renderInput={p =&gt; <span class="tok-tag">&lt;TextField</span> {...p}<span class="tok-tag">/&gt;</span>}<span class="tok-tag">/&gt;</span></pre></div>
+      <table>
+        <tr><th>Category</th><th>Components</th></tr>
+        <tr><td>Inputs</td><td>Button, TextField, Select, Checkbox, Switch, Slider, Autocomplete</td></tr>
+        <tr><td>Data display</td><td>Table, List, Card, Chip, Avatar, Typography, Tooltip</td></tr>
+        <tr><td>Feedback</td><td>Dialog, Snackbar, Alert, Backdrop, Progress</td></tr>
+        <tr><td>Navigation</td><td>AppBar, Drawer, Tabs, Menu, Breadcrumbs, Pagination</td></tr>
+        <tr><td>Layout</td><td>Box, Container, Grid, Stack, Paper, Divider</td></tr>
+      </table>
+    </section>
+
+    <!-- LAYOUT -->
+    <section id="layout">
+      <h2><span class="num"></span> Layout (Box, Grid, Stack)</h2>
+      <div class="code"><div class="code-head"><span>Grid v2 + Stack + Box</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;Grid</span> container spacing={<span class="tok-num">2</span>}<span class="tok-tag">&gt;</span>
+  <span class="tok-tag">&lt;Grid</span> size={{ xs: <span class="tok-num">12</span>, md: <span class="tok-num">6</span> }}<span class="tok-tag">&gt;</span>...<span class="tok-tag">&lt;/Grid&gt;</span>
+  <span class="tok-tag">&lt;Grid</span> size={{ xs: <span class="tok-num">12</span>, md: <span class="tok-num">6</span> }}<span class="tok-tag">&gt;</span>...<span class="tok-tag">&lt;/Grid&gt;</span>
+<span class="tok-tag">&lt;/Grid&gt;</span>
+
+<span class="tok-tag">&lt;Stack</span> direction={{ xs: <span class="tok-str">"column"</span>, sm: <span class="tok-str">"row"</span> }} spacing={<span class="tok-num">2</span>}<span class="tok-tag">&gt;</span>...<span class="tok-tag">&lt;/Stack&gt;</span>
+
+<span class="tok-tag">&lt;Box</span> sx={{ p: <span class="tok-num">2</span>, display: <span class="tok-str">"flex"</span>, gap: <span class="tok-num">2</span> }}<span class="tok-tag">&gt;</span>...<span class="tok-tag">&lt;/Box&gt;</span></pre></div>
+      <div class="callout tip"><b>Box</b> is the styling primitive (adds the <code class="inline">sx</code> prop to any element). <b>Stack</b> handles 1D spacing; <b>Grid</b> handles 2D responsive layout; <b>Container</b> centers &amp; max-widths content.</div>
+    </section>
+
+    <!-- SX -->
+    <section id="sx">
+      <h2><span class="num"></span> The sx Prop</h2>
+      <p class="lead">A superset of CSS with theme-aware shorthands — the fastest way to style one-off components.</p>
+      <div class="code"><div class="code-head"><span>sx with theme tokens &amp; breakpoints</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;Box</span> sx={{
+  p: <span class="tok-num">2</span>,                         <span class="tok-com">// theme.spacing(2) = 16px</span>
+  color: <span class="tok-str">"primary.main"</span>,        <span class="tok-com">// theme palette token</span>
+  bgcolor: <span class="tok-str">"grey.100"</span>,
+  borderRadius: <span class="tok-num">2</span>,
+  display: { xs: <span class="tok-str">"none"</span>, md: <span class="tok-str">"block"</span> }, <span class="tok-com">// responsive</span>
+  <span class="tok-str">"&:hover"</span>: { boxShadow: <span class="tok-num">3</span> }         <span class="tok-com">// pseudo-selectors</span>
+}}<span class="tok-tag">/&gt;</span></pre></div>
+      <div class="callout warn"><b>Trade-off:</b> <code class="inline">sx</code> is convenient but generates styles at runtime. For heavily reused components, prefer <code class="inline">styled</code> or theme variants.</div>
+    </section>
+
+    <!-- STYLED -->
+    <section id="styled">
+      <h2><span class="num"></span> styled API &amp; Overrides</h2>
+      <div class="code"><div class="code-head"><span>styled component</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> { styled } <span class="tok-key">from</span> <span class="tok-str">"@mui/material/styles"</span>;
+
+<span class="tok-key">const</span> Fancy = <span class="tok-fn">styled</span>(Button)(({ theme }) =&gt; ({
+  borderRadius: <span class="tok-num">999</span>,
+  padding: theme.<span class="tok-fn">spacing</span>(<span class="tok-num">1</span>, <span class="tok-num">3</span>),
+  background: theme.palette.primary.main
+}));</pre></div>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>sx prop</h4><ul><li>Inline, quick, one-offs</li><li>Runtime cost per render</li></ul></div>
+        <div class="vs-card b"><h4>styled</h4><ul><li>Reusable styled components</li><li>Better for repeated use</li></ul></div>
+      </div>
+      <div class="callout"><b>Legacy note:</b> <code class="inline">makeStyles</code>/<code class="inline">withStyles</code> (JSS) are deprecated (MUI v5+ uses Emotion). Migrate to <code class="inline">sx</code>/<code class="inline">styled</code>.</div>
+    </section>
+
+    <!-- THEME -->
+    <section id="theme">
+      <h2><span class="num"></span> Theming</h2>
+      <div class="code"><div class="code-head"><span>createTheme: palette, typography, components</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> theme = <span class="tok-fn">createTheme</span>({
+  palette: {
+    primary: { main: <span class="tok-str">"#7c3aed"</span> },
+    secondary: { main: <span class="tok-str">"#f59e0b"</span> }
+  },
+  typography: { fontFamily: <span class="tok-str">"Inter, sans-serif"</span>, button: { textTransform: <span class="tok-str">"none"</span> } },
+  shape: { borderRadius: <span class="tok-num">10</span> },
+  components: {
+    MuiButton: {
+      defaultProps: { disableElevation: <span class="tok-key">true</span> },
+      styleOverrides: { root: { fontWeight: <span class="tok-num">600</span> } },
+      variants: [{ props: { variant: <span class="tok-str">"pill"</span> }, style: { borderRadius: <span class="tok-num">999</span> } }]
+    }
+  }
+});</pre></div>
+      <ul>
+        <li><b>defaultProps</b> — set default props for a component globally.</li>
+        <li><b>styleOverrides</b> — override component slot styles.</li>
+        <li><b>variants</b> — define custom variants reusable via <code class="inline">variant="pill"</code>.</li>
+        <li>Access anywhere with <code class="inline">useTheme()</code>.</li>
+      </ul>
+    </section>
+
+    <!-- RESPONSIVE -->
+    <section id="responsive">
+      <h2><span class="num"></span> Responsive &amp; Breakpoints</h2>
+      <table>
+        <tr><th>Key</th><th>Min width</th></tr>
+        <tr><td>xs</td><td>0</td></tr>
+        <tr><td>sm</td><td>600px</td></tr>
+        <tr><td>md</td><td>900px</td></tr>
+        <tr><td>lg</td><td>1200px</td></tr>
+        <tr><td>xl</td><td>1536px</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Responsive values &amp; useMediaQuery</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;Box</span> sx={{ width: { xs: <span class="tok-str">"100%"</span>, md: <span class="tok-num">400</span> } }}<span class="tok-tag">/&gt;</span>
+
+<span class="tok-key">const</span> isMobile = <span class="tok-fn">useMediaQuery</span>(theme =&gt; theme.breakpoints.<span class="tok-fn">down</span>(<span class="tok-str">"md"</span>));</pre></div>
+    </section>
+
+    <!-- DARK -->
+    <section id="dark">
+      <h2><span class="num"></span> Dark Mode</h2>
+      <div class="code"><div class="code-head"><span>Toggle color mode</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> [mode, setMode] = <span class="tok-fn">useState</span>(<span class="tok-str">"light"</span>);
+<span class="tok-key">const</span> theme = <span class="tok-fn">useMemo</span>(() =&gt; <span class="tok-fn">createTheme</span>({ palette: { mode } }), [mode]);
+
+<span class="tok-com">// respect OS preference</span>
+<span class="tok-key">const</span> prefersDark = <span class="tok-fn">useMediaQuery</span>(<span class="tok-str">"(prefers-color-scheme: dark)"</span>);</pre></div>
+      <div class="callout tip"><b>MUI computes</b> appropriate text/background colors per mode automatically when you set <code class="inline">palette.mode</code>. Persist the choice in <code class="inline">localStorage</code>.</div>
+    </section>
+
+    <!-- FORMS -->
+    <section id="forms">
+      <h2><span class="num"></span> Forms</h2>
+      <div class="code"><div class="code-head"><span>Controlled form + React Hook Form</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;TextField</span>
+  label=<span class="tok-str">"Email"</span>
+  {...register(<span class="tok-str">"email"</span>, { required: <span class="tok-key">true</span> })}
+  error={!!errors.email}
+  helperText={errors.email &amp;&amp; <span class="tok-str">"Required"</span>}
+<span class="tok-tag">/&gt;</span></pre></div>
+      <div class="callout tip"><b>Pair MUI</b> with React Hook Form or Formik for validation; use <code class="inline">Controller</code> for components that aren't plain inputs (Select, Autocomplete, Switch).</div>
+    </section>
+
+    <!-- FEEDBACK -->
+    <section id="feedback">
+      <h2><span class="num"></span> Feedback &amp; Dialogs</h2>
+      <div class="code"><div class="code-head"><span>Dialog + Snackbar</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;Dialog</span> open={open} onClose={close}<span class="tok-tag">&gt;</span>
+  <span class="tok-tag">&lt;DialogTitle&gt;</span>Confirm<span class="tok-tag">&lt;/DialogTitle&gt;</span>
+  <span class="tok-tag">&lt;DialogContent&gt;</span>Delete this item?<span class="tok-tag">&lt;/DialogContent&gt;</span>
+  <span class="tok-tag">&lt;DialogActions&gt;&lt;Button</span> onClick={close}<span class="tok-tag">&gt;</span>Cancel<span class="tok-tag">&lt;/Button&gt;&lt;/DialogActions&gt;</span>
+<span class="tok-tag">&lt;/Dialog&gt;</span>
+
+<span class="tok-tag">&lt;Snackbar</span> open={snack} autoHideDuration={<span class="tok-num">3000</span>}<span class="tok-tag">&gt;&lt;Alert</span> severity=<span class="tok-str">"success"</span><span class="tok-tag">&gt;</span>Saved<span class="tok-tag">&lt;/Alert&gt;&lt;/Snackbar&gt;</span></pre></div>
+      <div class="callout"><b>Dialogs</b> handle focus trap &amp; Esc for you (accessible modals). <b>Snackbar</b> for transient notifications; <b>Alert</b> for inline messages.</div>
+    </section>
+
+    <!-- NAV -->
+    <section id="nav">
+      <h2><span class="num"></span> Navigation</h2>
+      <div class="code"><div class="code-head"><span>AppBar + Drawer + Tabs</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;AppBar</span> position=<span class="tok-str">"sticky"</span><span class="tok-tag">&gt;&lt;Toolbar&gt;&lt;Typography</span> variant=<span class="tok-str">"h6"</span><span class="tok-tag">&gt;</span>App<span class="tok-tag">&lt;/Typography&gt;&lt;/Toolbar&gt;&lt;/AppBar&gt;</span>
+
+<span class="tok-tag">&lt;Drawer</span> variant=<span class="tok-str">"permanent"</span><span class="tok-tag">&gt;&lt;List&gt;&lt;ListItemButton&gt;</span>Home<span class="tok-tag">&lt;/ListItemButton&gt;&lt;/List&gt;&lt;/Drawer&gt;</span>
+
+<span class="tok-tag">&lt;Tabs</span> value={tab} onChange={(e,v)=&gt;setTab(v)}<span class="tok-tag">&gt;&lt;Tab</span> label=<span class="tok-str">"One"</span><span class="tok-tag">/&gt;&lt;/Tabs&gt;</span></pre></div>
+    </section>
+
+    <!-- DATA -->
+    <section id="data">
+      <h2><span class="num"></span> Data Display</h2>
+      <ul>
+        <li><b>Table</b> for simple tabular data; <b>MUI X DataGrid</b> for sorting/filtering/pagination/virtualization at scale.</li>
+        <li><b>Typography</b> for consistent text scale; <b>List</b>, <b>Card</b>, <b>Chip</b>, <b>Avatar</b>, <b>Tooltip</b>, <b>Badge</b>.</li>
+      </ul>
+      <div class="callout tip"><b>MUI X</b> (DataGrid, Date Pickers, Charts) is a separate package — the free Community tier covers most needs; Pro/Premium add advanced features.</div>
+    </section>
+
+    <!-- PERFORMANCE -->
+    <section id="performance">
+      <h2><span class="num"></span> Performance</h2>
+      <ul>
+        <li><b>Import per-path</b> is handled automatically in v5 (named imports tree-shake) — avoid deep default imports.</li>
+        <li>Prefer <code class="inline">styled</code>/theme variants over many inline <code class="inline">sx</code> for hot components.</li>
+        <li>Memoize the theme object (don't recreate on every render).</li>
+        <li>Virtualize large lists/tables (DataGrid, react-window).</li>
+        <li>Lazy-load heavy components (Dialog content, DataGrid).</li>
+      </ul>
+      <div class="callout warn"><b>Bundle size:</b> Emotion + MUI adds weight. Tree-shake with named imports, code-split routes, and only import icons you use (<code class="inline">@mui/icons-material/Save</code>).</div>
+    </section>
+
+    <!-- A11Y -->
+    <section id="a11y">
+      <h2><span class="num"></span> Accessibility</h2>
+      <ul>
+        <li>Components ship with ARIA + keyboard behavior (Dialog focus trap, Menu arrow keys).</li>
+        <li>Always label icon-only buttons (<code class="inline">aria-label</code>) and inputs (<code class="inline">label</code>).</li>
+        <li>Don't remove focus outlines; respect theme contrast.</li>
+        <li>Use semantic components (<code class="inline">Button</code>, not clickable <code class="inline">Box</code>).</li>
+      </ul>
+    </section>
+
+    <!-- BEST PRACTICES -->
+    <section id="bestpractices">
+      <h2><span class="num"></span> Best Practices</h2>
+      <ul>
+        <li>Centralize design in the <b>theme</b>; avoid hardcoded colors/spacing.</li>
+        <li><code class="inline">sx</code> for one-offs, <code class="inline">styled</code>/variants for reuse.</li>
+        <li>Use theme tokens (<code class="inline">primary.main</code>, <code class="inline">spacing</code>) not magic numbers.</li>
+        <li>Wrap the app once in <code class="inline">ThemeProvider</code> + <code class="inline">CssBaseline</code>.</li>
+        <li>Tree-shake imports; code-split; memoize the theme.</li>
+        <li>Label icon buttons/inputs; keep accessibility intact.</li>
+      </ul>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — Rebrand all buttons &amp; colors <span class="tag">Theming</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> The whole app must switch to a new brand color and rounded buttons.</p>
+        <details class="solution"><summary>Show approach</summary><p>Change it in one place: update <code class="inline">palette.primary</code> and <code class="inline">components.MuiButton.styleOverrides</code>/<code class="inline">defaultProps</code> in <code class="inline">createTheme</code>. Because components read theme tokens, the whole app updates.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Large table is janky <span class="tag">Performance</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> A 10k-row MUI Table freezes the UI.</p>
+        <details class="solution"><summary>Show approach</summary><p>Use <b>MUI X DataGrid</b> (virtualized) or react-window; server-side pagination/sorting; memoize rows; avoid heavy <code class="inline">sx</code> per cell.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — Bundle too big <span class="tag">Bundle</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> The app ships a huge JS bundle after adding MUI.</p>
+        <details class="solution"><summary>Show approach</summary><p>Use named imports (tree-shaking), import icons by path, code-split routes/heavy components (Dialog, DataGrid) with <code class="inline">React.lazy</code>, and analyze with a bundle analyzer.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>What is Material UI?</summary><div class="ans"><p>A React component library implementing Material Design, with theming, accessible components, and Emotion-based styling (<code class="inline">sx</code>/<code class="inline">styled</code>).</p></div></details>
+      <details class="qa"><summary>sx prop vs styled?</summary><div class="ans"><p><code class="inline">sx</code> is inline, theme-aware styling for one-offs (runtime cost); <code class="inline">styled</code> creates reusable styled components — better for repeated use.</p></div></details>
+      <details class="qa"><summary>How does theming work?</summary><div class="ans"><p><code class="inline">createTheme</code> defines palette/typography/spacing/component overrides; <code class="inline">ThemeProvider</code> supplies it; components and <code class="inline">sx</code> read tokens so a single change re-skins the app.</p></div></details>
+      <details class="qa"><summary>What is CssBaseline?</summary><div class="ans"><p>A component that normalizes browser styles and applies the theme's background/typography — MUI's version of a CSS reset.</p></div></details>
+      <details class="qa"><summary>How do you make MUI responsive?</summary><div class="ans"><p>Use responsive object values in <code class="inline">sx</code>/props (<code class="inline">{ xs, sm, md }</code>), the Grid/Stack breakpoints, and <code class="inline">useMediaQuery</code> for logic.</p></div></details>
+      <details class="qa"><summary>How do you override a component's styles globally?</summary><div class="ans"><p>Via <code class="inline">theme.components.MuiX.styleOverrides</code> (and <code class="inline">defaultProps</code>/<code class="inline">variants</code>) in <code class="inline">createTheme</code>.</p></div></details>
+      <details class="qa"><summary>How do you implement dark mode?</summary><div class="ans"><p>Set <code class="inline">palette.mode</code> to "dark" in the theme (toggle state, memoized theme); optionally follow <code class="inline">prefers-color-scheme</code> and persist the choice.</p></div></details>
+      <details class="qa"><summary>Box vs Container vs Stack vs Grid?</summary><div class="ans"><p>Box = styling primitive; Container = centered max-width wrapper; Stack = 1D spacing; Grid = 2D responsive layout.</p></div></details>
+      <details class="qa"><summary>Why is makeStyles deprecated?</summary><div class="ans"><p>MUI v5 moved from JSS to Emotion; use <code class="inline">sx</code> and <code class="inline">styled</code> instead of <code class="inline">makeStyles</code>/<code class="inline">withStyles</code>.</p></div></details>
+      <details class="qa"><summary>How do you reduce MUI bundle size?</summary><div class="ans"><p>Named imports (tree-shaking), import icons by path, code-split routes/heavy components, and analyze the bundle.</p></div></details>
+      <details class="qa"><summary>How do you integrate forms?</summary><div class="ans"><p>Use React Hook Form/Formik; wrap non-native components (Select, Autocomplete) in a <code class="inline">Controller</code>, and drive <code class="inline">error</code>/<code class="inline">helperText</code> from validation state.</p></div></details>
+      <details class="qa"><summary>How do you create a custom variant?</summary><div class="ans"><p>Add it under <code class="inline">components.MuiButton.variants</code> in the theme, then use <code class="inline">variant="pill"</code>. Declare the type in TS for autocomplete.</p></div></details>
+      <details class="qa"><summary>Table vs DataGrid?</summary><div class="ans"><p>Table is a simple presentational component; MUI X DataGrid adds sorting, filtering, pagination, and virtualization for large datasets.</p></div></details>
+      <details class="qa"><summary>How do you access the theme in a component?</summary><div class="ans"><p><code class="inline">useTheme()</code> hook, or the <code class="inline">theme</code> callback in <code class="inline">sx</code>/<code class="inline">styled</code>.</p></div></details>
+      <details class="qa"><summary>Is MUI accessible by default?</summary><div class="ans"><p>Largely yes — components include ARIA and keyboard support — but you must still label icon buttons/inputs and preserve focus/contrast.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Need</th><th>Use</th></tr>
+        <tr><td>App setup</td><td>ThemeProvider + CssBaseline</td></tr>
+        <tr><td>One-off styles</td><td><code>sx</code> prop</td></tr>
+        <tr><td>Reusable styles</td><td><code>styled()</code></td></tr>
+        <tr><td>Global design</td><td><code>createTheme</code></td></tr>
+        <tr><td>Layout 2D</td><td>Grid</td></tr>
+        <tr><td>Layout 1D</td><td>Stack</td></tr>
+        <tr><td>Responsive</td><td>{ xs, md } / useMediaQuery</td></tr>
+        <tr><td>Dark mode</td><td><code>palette.mode</code></td></tr>
+        <tr><td>Big table</td><td>DataGrid</td></tr>
+        <tr><td>Icons</td><td>@mui/icons-material/X</td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🎨 <b>Material UI — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Components, theming, styling, responsive, performance, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
