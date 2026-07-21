@@ -2093,6 +2093,7 @@
                     <a class="nav-link" href="#module-10"><span class="nav-icon">□</span><span>Module 10</span></a>
                     <a class="nav-link" href="#module-11"><span class="nav-icon">□</span><span>Module 11</span></a>
                     <a class="nav-link" href="#module-12"><span class="nav-icon">⚡</span><span>Hands-On: Lambda &amp; API Gateway</span></a>
+                    <a class="nav-link" href="#module-13"><span class="nav-icon">✉</span><span>Deep Dive: SQS, SNS &amp; Messaging</span></a>
             </nav>
 
             <div class="nav-title">Revision Hub</div>
@@ -7302,7 +7303,7 @@ aws lambda update-function-code --function-name hello \
 
                 <!-- REAL-WORLD SCENARIO 1: SERVERLESS CRUD API -->
                 <div class="card" data-searchable style="margin-top:16px; border: 2px solid #7c3aed; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
-                    <h3 style="color:#b8690a; display:flex; align-items:center; gap:10px;"><span>🌍</span> Real-World 1 — Serverless CRUD API (API Gateway → Lambda → DynamoDB)</h3>
+                    <h3 style="color:#7c3aed; display:flex; align-items:center; gap:10px;"><span>🌍</span> Real-World 1 — Serverless CRUD API (API Gateway → Lambda → DynamoDB)</h3>
                     <div class="text-diagram" style="margin-top:12px;">// createItem Lambda (Node.js) — POST /items
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
@@ -7442,6 +7443,302 @@ sam build &amp;&amp; sam deploy --guided</div>
                             <tr><td>Kinesis</td><td>Poll-based</td><td>Real-time streaming analytics</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- =============================================================
+                 MODULE 13 — MESSAGING & EVENT-DRIVEN DEEP DIVE (SQS, SNS, LAMBDA ESM, API GATEWAY)
+                 ============================================================= -->
+            <section class="section section-anchor" id="module-13" data-searchable>
+                <div class="section-header">
+                    <div>
+                        <span class="module-tag"><span class="icon-dot"></span> Deep Dive</span>
+                        <h2>Module 13 — Messaging &amp; Event-Driven Deep Dive: SQS, SNS, Lambda &amp; API Gateway</h2>
+                        <p>Everything interviewers probe on decoupled, event-driven architecture: SQS (Standard vs FIFO, visibility timeout, long polling, DLQs), SNS (topics, fan-out, filter policies, FIFO), the canonical SNS→SQS fan-out pattern, Lambda event source mapping &amp; concurrency, and advanced API Gateway — with hands-on CLI labs.</p>
+                    </div>
+                    <span class="pill">SQS + SNS + Lambda + API GW</span>
+                </div>
+
+                <!-- SQS DEEP DIVE -->
+                <div class="module-grid" style="margin-top:16px;">
+                    <div class="card" data-searchable>
+                        <h3>Amazon SQS — What &amp; Why</h3>
+                        <p><strong>Definition:</strong> Fully managed message <strong>queue</strong> for decoupling producers from consumers. A producer sends messages; consumers <strong>poll</strong> and process them, then delete them.</p>
+                        <ul>
+                            <li><strong>Decoupling &amp; buffering:</strong> absorb spikes, smooth load.</li>
+                            <li><strong>At-least-once delivery</strong> (Standard); pull-based (consumers poll).</li>
+                            <li><strong>Retention:</strong> 1 min–14 days (default 4 days).</li>
+                            <li><strong>Message size:</strong> up to 256 KB (larger via S3 + Extended Client).</li>
+                        </ul>
+                    </div>
+                    <div class="card" data-searchable>
+                        <h3>Standard vs FIFO Queues</h3>
+                        <ul>
+                            <li><strong>Standard:</strong> nearly unlimited throughput, <strong>best-effort ordering</strong>, <strong>at-least-once</strong> (possible duplicates).</li>
+                            <li><strong>FIFO:</strong> <strong>strict ordering</strong> + <strong>exactly-once</strong> processing; up to 300 msg/s (3000 with batching). Name ends in <code>.fifo</code>.</li>
+                            <li><strong>MessageGroupId:</strong> ordering scope in FIFO.</li>
+                            <li><strong>MessageDeduplicationId:</strong> 5-min dedup window (or content-based).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="split-grid" style="margin-top:16px;">
+                    <div class="card" data-searchable>
+                        <h3>Visibility Timeout</h3>
+                        <p>When a consumer receives a message it becomes <strong>invisible</strong> to others for the visibility-timeout window (default 30s, max 12h). If not deleted in time, it reappears for redelivery.</p>
+                        <p class="subtle">Tune it to be longer than your processing time; extend with <code>ChangeMessageVisibility</code> for long jobs. Too short → duplicate processing.</p>
+                    </div>
+                    <div class="card" data-searchable>
+                        <h3>Short vs Long Polling</h3>
+                        <ul>
+                            <li><strong>Short polling</strong> (default): returns immediately, may return empty even with messages queued.</li>
+                            <li><strong>Long polling</strong> (<code>WaitTimeSeconds</code> 1–20): waits for messages → fewer empty responses, <strong>lower cost</strong>, less latency. Recommended.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card" data-searchable style="margin-top:16px;">
+                    <h3>Dead Letter Queues (DLQ) &amp; Failure Handling</h3>
+                    <div class="text-diagram">Producer ──► Main Queue ──poll──► Consumer
+                     │
+             (received &gt; maxReceiveCount times, still failing)
+                     ▼
+                Dead Letter Queue  ──► alarm / manual replay / analyze</div>
+                    <ul>
+                        <li><strong>Redrive policy:</strong> after <code>maxReceiveCount</code> failed receives, the message moves to the DLQ (isolates "poison" messages).</li>
+                        <li><strong>Delay queues:</strong> postpone delivery of new messages (0–15 min).</li>
+                        <li><strong>Message timers:</strong> per-message delay.</li>
+                        <li>Alarm on DLQ depth; use <strong>redrive</strong> to replay after a fix.</li>
+                    </ul>
+                </div>
+
+                <!-- SNS DEEP DIVE -->
+                <div class="module-grid" style="margin-top:16px;">
+                    <div class="card" data-searchable>
+                        <h3>Amazon SNS — What &amp; Why</h3>
+                        <p><strong>Definition:</strong> Fully managed <strong>pub/sub</strong> messaging. A publisher sends to a <strong>topic</strong>; SNS <strong>pushes</strong> to all subscribers. Push-based (vs SQS pull).</p>
+                        <p><strong>Subscribers (protocols):</strong></p>
+                        <ul>
+                            <li>SQS, Lambda, HTTP/S endpoints</li>
+                            <li>Email / Email-JSON, SMS</li>
+                            <li>Mobile push (APNs, FCM), Kinesis Data Firehose</li>
+                        </ul>
+                    </div>
+                    <div class="card" data-searchable>
+                        <h3>SNS Features</h3>
+                        <ul>
+                            <li><strong>Fan-out:</strong> one publish → many subscribers in parallel.</li>
+                            <li><strong>Message filtering:</strong> subscription <strong>filter policies</strong> on message attributes so each subscriber gets only relevant messages.</li>
+                            <li><strong>FIFO SNS:</strong> ordered + deduplicated (pairs with FIFO SQS).</li>
+                            <li><strong>DLQ per subscription</strong>, delivery retries, message attributes, KMS encryption.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- THE FAN-OUT PATTERN -->
+                <div class="card" data-searchable style="margin-top:16px; border: 2px solid #7c3aed; background: linear-gradient(135deg, #ffffff 0%, #f6f3ff 100%);">
+                    <h3 style="color:#7c3aed; display:flex; align-items:center; gap:10px;"><span>📣</span> The Canonical SNS → SQS Fan-Out Pattern</h3>
+                    <div class="text-diagram" style="margin-top:12px;">                         ┌──► SQS: email-queue ──► Lambda: send email
+   Order Service           │
+   publishes to  ──► SNS ──┼──► SQS: inventory-queue ──► Lambda: update stock
+   "orders" topic          │
+                           └──► SQS: analytics-queue ──► Lambda: record metrics</div>
+                    <p class="subtle"><strong>Why SNS→SQS instead of SNS→Lambda directly?</strong> The SQS buffer gives each consumer independent retries, back-pressure, DLQs, and replay — so one slow/broken consumer never blocks the others or loses events. This is the most-asked event-driven design question.</p>
+                </div>
+
+                <!-- SQS vs SNS COMPARISON -->
+                <div class="table-wrap" style="margin-top:16px;">
+                    <table>
+                        <thead>
+                            <tr><th>Dimension</th><th>SQS</th><th>SNS</th><th>EventBridge</th><th>Kinesis</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Model</td><td>Queue (point-to-point)</td><td>Pub/Sub (fan-out)</td><td>Event bus + rules</td><td>Streaming</td></tr>
+                            <tr><td>Delivery</td><td>Pull (poll)</td><td>Push</td><td>Push</td><td>Pull (shards)</td></tr>
+                            <tr><td>Consumers</td><td>Competing (one processes)</td><td>Many (all get copy)</td><td>Many (rule targets)</td><td>Many (replayable)</td></tr>
+                            <tr><td>Ordering</td><td>FIFO option</td><td>FIFO option</td><td>No</td><td>Per-shard</td></tr>
+                            <tr><td>Retention</td><td>Up to 14 days</td><td>No storage (push)</td><td>Archive/replay</td><td>1–365 days</td></tr>
+                            <tr><td>Best for</td><td>Decoupled work queues</td><td>Broadcast notifications</td><td>Routing SaaS/AWS events</td><td>High-volume analytics</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-note"><strong>One-liner:</strong> SQS = <em>store &amp; process once</em>; SNS = <em>broadcast to many</em>; EventBridge = <em>route by rules</em>; Kinesis = <em>ordered high-volume streams</em>.</div>
+
+                <!-- LAMBDA ESM & CONCURRENCY -->
+                <div class="split-grid" style="margin-top:16px;">
+                    <div class="card" data-searchable>
+                        <h3>Lambda Event Source Mapping (SQS/Streams)</h3>
+                        <ul>
+                            <li><strong>Poller</strong> reads batches and invokes your function (<code>BatchSize</code>, <code>MaximumBatchingWindow</code>).</li>
+                            <li><strong>Partial batch response</strong> (<code>ReportBatchItemFailures</code>): return only the failed message IDs so successes aren't reprocessed.</li>
+                            <li><strong>Scaling:</strong> SQS standard scales pollers automatically with backlog.</li>
+                            <li><strong>FIFO:</strong> concurrency is per <code>MessageGroupId</code> to preserve order.</li>
+                        </ul>
+                    </div>
+                    <div class="card" data-searchable>
+                        <h3>Lambda Concurrency &amp; Destinations</h3>
+                        <ul>
+                            <li><strong>Reserved concurrency:</strong> caps/guarantees a function's parallelism.</li>
+                            <li><strong>Provisioned concurrency:</strong> pre-warms envs (no cold starts).</li>
+                            <li><strong>Async destinations:</strong> on-success / on-failure targets (SQS, SNS, Lambda, EventBridge) — cleaner than a bare DLQ.</li>
+                            <li><strong>Versions &amp; aliases:</strong> immutable versions + alias traffic shifting for safe deploys.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- API GATEWAY ADVANCED -->
+                <div class="card" data-searchable style="margin-top:16px;">
+                    <h3>API Gateway — Advanced Controls</h3>
+                    <div class="module-grid">
+                        <div>
+                            <h4>Traffic &amp; Reliability</h4>
+                            <ul>
+                                <li><strong>Throttling</strong>: account/stage/method rate + burst limits.</li>
+                                <li><strong>Usage plans + API keys</strong>: per-client quotas.</li>
+                                <li><strong>Caching</strong>: cache responses per stage to cut Lambda calls.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Requests &amp; Auth</h4>
+                            <ul>
+                                <li><strong>Request validation</strong> + <strong>mapping templates</strong> (VTL) for non-proxy.</li>
+                                <li><strong>Authorizers</strong>: Cognito, IAM, or Lambda (JWT/custom).</li>
+                                <li><strong>Custom domains</strong>, CORS, WAF, mTLS.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HANDS-ON LAB: SQS + LAMBDA -->
+                <div class="card" data-searchable style="margin-top:16px;">
+                    <h3>🧪 Hands-On Lab 3 — SQS FIFO Queue + Lambda Trigger (CLI)</h3>
+                    <div class="text-diagram"># 1) Create a FIFO queue with content-based dedup
+aws sqs create-queue --queue-name orders.fifo \
+  --attributes FifoQueue=true,ContentBasedDeduplication=true
+
+# 2) Send an ordered message (group preserves order)
+aws sqs send-message --queue-url $URL \
+  --message-body '{"orderId":"1001"}' \
+  --message-group-id orders
+
+# 3) Wire the queue to a Lambda (event source mapping)
+aws lambda create-event-source-mapping \
+  --function-name processOrder \
+  --event-source-arn $QUEUE_ARN \
+  --batch-size 10 \
+  --function-response-types ReportBatchItemFailures
+
+# 4) Add a DLQ redrive policy (after 5 failures)
+aws sqs set-queue-attributes --queue-url $URL --attributes \
+  'RedrivePolicy={"deadLetterTargetArn":"'$DLQ_ARN'","maxReceiveCount":"5"}'</div>
+                </div>
+
+                <!-- HANDS-ON LAB: SNS FAN-OUT -->
+                <div class="card" data-searchable style="margin-top:16px;">
+                    <h3>🧪 Hands-On Lab 4 — SNS Topic with SQS Fan-Out &amp; Filter Policy (CLI)</h3>
+                    <div class="text-diagram"># 1) Create topic + subscribe two SQS queues
+aws sns create-topic --name orders
+aws sns subscribe --topic-arn $TOPIC --protocol sqs --notification-endpoint $EMAIL_Q_ARN
+aws sns subscribe --topic-arn $TOPIC --protocol sqs --notification-endpoint $SHIP_Q_ARN
+
+# 2) Only send "priority" orders to the shipping queue (filter policy)
+aws sns set-subscription-attributes --subscription-arn $SHIP_SUB \
+  --attribute-name FilterPolicy \
+  --attribute-value '{"priority":["high"]}'
+
+# 3) Publish with a message attribute
+aws sns publish --topic-arn $TOPIC \
+  --message '{"orderId":"1001"}' \
+  --message-attributes '{"priority":{"DataType":"String","StringValue":"high"}}'</div>
+                    <p class="subtle">The shipping queue receives only <code>priority=high</code> messages; the email queue receives all. Remember to grant SNS <code>sqs:SendMessage</code> on each queue via its access policy.</p>
+                </div>
+
+                <!-- DECISION TREE -->
+                <div class="card" data-searchable style="margin-top:16px; background:#f9fbff; border-left:5px solid #7c3aed;">
+                    <h3 style="display:flex; align-items:center; gap:10px;"><span>🎯</span> Messaging Service Decision Tree</h3>
+                    <div class="text-diagram" style="margin-top:12px;">Do you need one consumer to process each message (work queue)?
+   └─ YES → SQS  (FIFO if strict order/exactly-once)
+
+Do many independent subscribers each need a copy (broadcast)?
+   └─ YES → SNS  (add SQS per subscriber for buffering/retry = fan-out)
+
+Routing AWS/SaaS events by content to different targets?
+   └─ YES → EventBridge  (rules, schemas, archive/replay)
+
+High-volume ordered stream, multiple readers, replay?
+   └─ YES → Kinesis Data Streams</div>
+                </div>
+
+                <!-- INTERVIEW Q&A -->
+                <div class="qa-stack" style="margin-top:16px;">
+                    <div class="qa-item card" data-searchable>
+                        <h4>SQS vs SNS — core difference?</h4>
+                        <div class="answer">SQS is a pull-based queue where one consumer processes each message (point-to-point decoupling). SNS is push-based pub/sub where every subscriber receives a copy (fan-out/broadcast). They're often combined as SNS→SQS.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>Standard vs FIFO queue?</h4>
+                        <div class="answer">Standard = near-unlimited throughput, best-effort ordering, at-least-once (possible duplicates). FIFO = strict ordering and exactly-once within a MessageGroupId, lower throughput (300/s, 3000 batched), queue name ends in <code>.fifo</code>.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>What is visibility timeout?</h4>
+                        <div class="answer">After a consumer receives a message it's hidden from others for the timeout window. If the consumer doesn't delete it in time, it becomes visible again and is redelivered. Set it longer than processing time to avoid duplicate work.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>Short vs long polling?</h4>
+                        <div class="answer">Short polling returns immediately and may return empty even when messages exist. Long polling (WaitTimeSeconds up to 20) waits for messages, reducing empty receives, cost, and latency. Prefer long polling.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>What is a Dead Letter Queue and when is a message sent there?</h4>
+                        <div class="answer">A DLQ captures messages that fail processing repeatedly. Via the redrive policy, after <code>maxReceiveCount</code> failed receives the message is moved to the DLQ so it stops blocking the main queue; you alarm on it and replay after fixing the bug.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>How do you build fan-out, and why add SQS between SNS and consumers?</h4>
+                        <div class="answer">Publish to an SNS topic and subscribe multiple SQS queues (one per consumer). The SQS buffer gives each consumer independent retries, back-pressure, DLQs, and replay, so a slow or failing consumer can't block others or drop events.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>What is SNS message filtering?</h4>
+                        <div class="answer">A subscription filter policy matches message attributes so each subscriber receives only relevant messages — e.g., route only <code>priority=high</code> events to the shipping queue — avoiding filtering logic in consumers.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>How does Lambda consume from SQS, and how do you avoid reprocessing a whole batch?</h4>
+                        <div class="answer">An event source mapping polls the queue and invokes Lambda with a batch. Enable partial batch response (<code>ReportBatchItemFailures</code>) and return only the failed message IDs so successfully processed messages in the batch aren't retried.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>How do you guarantee ordering end-to-end?</h4>
+                        <div class="answer">Use FIFO SNS → FIFO SQS with a consistent MessageGroupId, and rely on deduplication IDs for exactly-once. Lambda then processes per group serially to preserve order.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>SQS vs Kinesis — when to choose which?</h4>
+                        <div class="answer">SQS for decoupled work queues where each message is processed once and deleted. Kinesis for high-volume ordered streams with multiple independent readers and replay (analytics, clickstream, CDC).</div>
+                    </div>
+                </div>
+
+                <!-- ONE-LINE REVISION -->
+                <div class="split-grid" style="margin-top:16px;">
+                    <div class="card" data-searchable>
+                        <h3>One-Line Revision</h3>
+                        <ul>
+                            <li>SQS → decouple, buffer, process-once (pull)</li>
+                            <li>SNS → fan-out broadcast (push)</li>
+                            <li>SNS→SQS → resilient fan-out with per-consumer retries</li>
+                            <li>FIFO → order + exactly-once</li>
+                            <li>Visibility timeout → hide-while-processing</li>
+                            <li>Long polling → cheaper, fewer empty reads</li>
+                            <li>DLQ → poison-message isolation</li>
+                            <li>Filter policy → per-subscriber routing</li>
+                        </ul>
+                    </div>
+                    <div class="card" data-searchable>
+                        <h3>Memory Trick</h3>
+                        <ul>
+                            <li><strong>SQS</strong> = <strong>S</strong>tore &amp; <strong>Q</strong>ueue</li>
+                            <li><strong>SNS</strong> = <strong>S</strong>end <strong>N</strong>otifications to <strong>S</strong>ubscribers</li>
+                            <li><strong>EventBridge</strong> = connect/route events</li>
+                            <li><strong>Kinesis</strong> = streaming firehose</li>
+                            <li>DLQ = the "dead letter" mailbox</li>
+                            <li>Fan-out = 1 publish → N queues</li>
+                        </ul>
+                    </div>
                 </div>
             </section>
 
