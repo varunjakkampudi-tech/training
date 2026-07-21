@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete Cross-Browser Compatibility handbook — rendering engines, feature detection, polyfills, vendor prefixes, responsive design, CSS/JS quirks, testing, and 100+ interview questions." />
+<title>Cross-Browser Compatibility — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #0d9488; --blue-dark: #115e59; --blue-mid: #14b8a6; --sky: #2dd4bf;
+    --light-blue: #ccfbf1; --light-blue-2: #f0fdfa;
+    --bg: #ffffff; --bg-soft: #f4fefc; --panel: #ffffff;
+    --text: #0f2e2a; --muted: #4c716b; --border: #b9ece3;
+    --code-bg: #08211e; --accent: #f59e0b; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(13, 148, 136, 0.10); --shadow-lg: 0 14px 40px rgba(17, 94, 89, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 320px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.1rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(20, 184, 166, 0.18), transparent), linear-gradient(160deg, #cbf7ee, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.7rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #164039; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #061916; border-bottom: 1px solid #164039; font-size: 0.75rem; color: #5eead4; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #dcf6f0; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #216057; color: #5eead4; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(45,212,191,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #6f978f; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-tag { color: #7fdfff; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #164039; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #164039; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #2c534c; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 1.8rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🌐 Cross-Browser Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#engines">Rendering Engines</a>
+    <a href="#why">Why Bugs Happen</a>
+    <a class="section-title">Detection &amp; Fallbacks</a>
+    <a href="#detection">Feature Detection</a>
+    <a href="#polyfills">Polyfills &amp; Transpiling</a>
+    <a href="#prefixes">Vendor Prefixes</a>
+    <a href="#progressive">Progressive Enhancement</a>
+    <a class="section-title">CSS &amp; Layout</a>
+    <a href="#css">CSS Compatibility</a>
+    <a href="#reset">Reset / Normalize</a>
+    <a href="#responsive">Responsive Design</a>
+    <a class="section-title">JavaScript</a>
+    <a href="#jscompat">JS Compatibility</a>
+    <a href="#events">Events &amp; Quirks</a>
+    <a class="section-title">Quality</a>
+    <a href="#testing">Testing</a>
+    <a href="#tools">Tools</a>
+    <a href="#bestpractices">Best Practices</a>
+    <a class="section-title">Interview</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">Cross-Browser Compatibility</span> Guide</h1>
+    <p>Rendering engines, feature detection, polyfills &amp; transpiling, vendor prefixes, progressive enhancement, responsive design, CSS/JS quirks, testing, and 100+ interview questions — build sites that work everywhere.</p>
+    <div class="badges">
+      <span class="badge">Rendering Engines</span>
+      <span class="badge">Feature Detection</span>
+      <span class="badge">Polyfills</span>
+      <span class="badge">Responsive</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">Cross-browser compatibility means your site works consistently across browsers, versions, devices, and operating systems — despite differences in rendering engines and feature support.</p>
+      <ul>
+        <li><b>Goal:</b> a consistent, functional experience — not pixel-identical everywhere.</li>
+        <li><b>Variables:</b> engine, version, OS, device, viewport, network, settings.</li>
+        <li><b>Strategy:</b> standards + feature detection + graceful fallbacks + testing.</li>
+      </ul>
+      <div class="callout tip"><b>Interview importance:</b> Feature detection vs browser sniffing, polyfills vs transpiling, vendor prefixes, and responsive strategies are the core topics.</div>
+    </section>
+
+    <!-- ENGINES -->
+    <section id="engines">
+      <h2><span class="num"></span> Rendering Engines</h2>
+      <table>
+        <tr><th>Browser</th><th>Engine</th><th>JS Engine</th></tr>
+        <tr><td>Chrome, Edge, Opera, Brave</td><td>Blink</td><td>V8</td></tr>
+        <tr><td>Safari (+ all iOS browsers)</td><td>WebKit</td><td>JavaScriptCore</td></tr>
+        <tr><td>Firefox</td><td>Gecko</td><td>SpiderMonkey</td></tr>
+      </table>
+      <div class="callout warn"><b>iOS reality:</b> Every browser on iOS (Chrome, Firefox included) is required to use <b>WebKit</b> under the hood. "Works in Chrome desktop" ≠ "works in Chrome iOS" — always test Safari/WebKit.</div>
+    </section>
+
+    <!-- WHY -->
+    <section id="why">
+      <h2><span class="num"></span> Why Compatibility Bugs Happen</h2>
+      <ul>
+        <li><b>Different engines</b> implement specs at different times / interpret edge cases differently.</li>
+        <li><b>New features</b> ship first behind flags/prefixes; older browsers lack them.</li>
+        <li><b>Default styles</b> (user-agent stylesheets) differ.</li>
+        <li><b>Bugs &amp; legacy</b> quirks (old IE, Safari date parsing, flexbox gaps).</li>
+        <li><b>Device differences</b> — viewport, DPI, touch, fonts.</li>
+      </ul>
+    </section>
+
+    <!-- DETECTION -->
+    <section id="detection">
+      <h2><span class="num"></span> Feature Detection (not Browser Sniffing)</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>✅ Feature detection</h4>
+          <div class="code"><div class="code-head"><span>test the capability</span><button class="copy">Copy</button></div><pre><span class="tok-key">if</span> (<span class="tok-str">"IntersectionObserver"</span> <span class="tok-key">in</span> window) { <span class="tok-com">/* use it */</span> }
+<span class="tok-key">if</span> (CSS.<span class="tok-fn">supports</span>(<span class="tok-str">"display"</span>, <span class="tok-str">"grid"</span>)) { <span class="tok-com">/* grid */</span> }</pre></div>
+        </div>
+        <div class="vs-card b"><h4>❌ Browser sniffing</h4>
+          <div class="code"><div class="code-head"><span>fragile</span><button class="copy">Copy</button></div><pre><span class="tok-key">if</span> (navigator.userAgent.<span class="tok-fn">includes</span>(<span class="tok-str">"Chrome"</span>)) { ... }
+<span class="tok-com">// breaks constantly; UA strings lie</span></pre></div>
+        </div>
+      </div>
+      <div class="code"><div class="code-head"><span>CSS feature queries</span><button class="copy">Copy</button></div><pre><span class="tok-op">@supports</span> (display: grid) {
+  .layout { display: grid; }
+}
+<span class="tok-op">@supports</span> not (gap: 1rem) {
+  .layout &gt; * { margin: 0.5rem; } <span class="tok-com">/* fallback */</span>
+}</pre></div>
+      <div class="callout tip"><b>Rule:</b> Detect features, not browsers. Use <code class="inline">@supports</code> in CSS and <code class="inline">"x" in window</code> / <code class="inline">CSS.supports()</code> in JS.</div>
+    </section>
+
+    <!-- POLYFILLS -->
+    <section id="polyfills">
+      <h2><span class="num"></span> Polyfills &amp; Transpiling</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Polyfill</h4><p>Adds a <b>missing API</b> at runtime (e.g. <code>fetch</code>, <code>Promise</code>, <code>IntersectionObserver</code>).</p></div>
+        <div class="vs-card b"><h4>Transpile</h4><p>Rewrites <b>new syntax</b> to older syntax at build time (Babel: optional chaining → ES5).</p></div>
+      </div>
+      <div class="code"><div class="code-head"><span>Conditional (only load if needed)</span><button class="copy">Copy</button></div><pre><span class="tok-key">if</span> (!(<span class="tok-str">"fetch"</span> <span class="tok-key">in</span> window)) {
+  <span class="tok-key">await</span> <span class="tok-fn">import</span>(<span class="tok-str">"whatwg-fetch"</span>); <span class="tok-com">// polyfill on demand</span>
+}</pre></div>
+      <table>
+        <tr><th>Tool</th><th>Role</th></tr>
+        <tr><td>Babel</td><td>Transpile syntax; <code>@babel/preset-env</code> by target</td></tr>
+        <tr><td>core-js</td><td>Polyfill built-ins (Promise, Array methods)</td></tr>
+        <tr><td>Browserslist</td><td>Declare supported browsers → drives Babel/Autoprefixer</td></tr>
+        <tr><td>polyfill.io</td><td>Serve only the polyfills a browser needs</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>.browserslistrc</span><button class="copy">Copy</button></div><pre>&gt; 0.5%
+last 2 versions
+not dead
+not IE 11</pre></div>
+    </section>
+
+    <!-- PREFIXES -->
+    <section id="prefixes">
+      <h2><span class="num"></span> Vendor Prefixes</h2>
+      <div class="code"><div class="code-head"><span>Prefixes (usually auto-generated)</span><button class="copy">Copy</button></div><pre>.box {
+  -webkit-user-select: none; <span class="tok-com">/* Safari */</span>
+  user-select: none;
+  -webkit-backdrop-filter: blur(<span class="tok-num">4</span>px); <span class="tok-com">/* Safari */</span>
+  backdrop-filter: blur(<span class="tok-num">4</span>px);
+}</pre></div>
+      <div class="callout tip"><b>Don't hand-write prefixes.</b> Use <b>Autoprefixer</b> (PostCSS) driven by Browserslist — it adds only what your targets need.</div>
+    </section>
+
+    <!-- PROGRESSIVE -->
+    <section id="progressive">
+      <h2><span class="num"></span> Progressive Enhancement &amp; Graceful Degradation</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Progressive Enhancement</h4><p>Start with a baseline that works everywhere, then <b>layer on</b> enhancements where supported.</p></div>
+        <div class="vs-card b"><h4>Graceful Degradation</h4><p>Build for modern browsers, then ensure it <b>still works</b> (reduced) on older ones.</p></div>
+      </div>
+      <div class="callout tip"><b>Prefer progressive enhancement:</b> core content/functionality in HTML first; CSS &amp; JS enhance. If JS fails, the page still works.</div>
+    </section>
+
+    <!-- CSS -->
+    <section id="css">
+      <h2><span class="num"></span> CSS Compatibility</h2>
+      <table>
+        <tr><th>Area</th><th>Watch out</th></tr>
+        <tr><td>Flexbox</td><td>Old gaps, <code>min-width</code> overflow, Safari quirks</td></tr>
+        <tr><td>Grid</td><td>Provide fallbacks for very old browsers</td></tr>
+        <tr><td>Units</td><td><code>vh</code> on mobile Safari (address bar); use <code>dvh</code>/<code>svh</code></td></tr>
+        <tr><td>Custom props</td><td>Widely supported; provide fallbacks for ancient browsers</td></tr>
+        <tr><td>New selectors</td><td><code>:has()</code>, <code>:is()</code> — check support</td></tr>
+        <tr><td>Fonts</td><td><code>font-display: swap</code>; provide formats (woff2 + woff)</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Fallback then override</span><button class="copy">Copy</button></div><pre>.el { height: <span class="tok-num">100</span>vh; }   <span class="tok-com">/* fallback */</span>
+.el { height: <span class="tok-num">100</span>dvh; }  <span class="tok-com">/* modern mobile-safe */</span></pre></div>
+    </section>
+
+    <!-- RESET -->
+    <section id="reset">
+      <h2><span class="num"></span> Reset / Normalize CSS</h2>
+      <p class="lead">Browsers ship different default (user-agent) styles. Normalize/reset makes the baseline consistent.</p>
+      <div class="code"><div class="code-head"><span>Modern baseline</span><button class="copy">Copy</button></div><pre>*, *::before, *::after { box-sizing: border-box; }
+* { margin: <span class="tok-num">0</span>; }
+img, picture, video { max-width: <span class="tok-num">100</span>%; display: block; }
+input, button { font: inherit; }</pre></div>
+      <div class="callout"><b>Normalize.css</b> preserves useful defaults and fixes bugs; a <b>reset</b> strips everything. Modern projects often use a small custom reset.</div>
+    </section>
+
+    <!-- RESPONSIVE -->
+    <section id="responsive">
+      <h2><span class="num"></span> Responsive Design</h2>
+      <div class="code"><div class="code-head"><span>Mobile-first + fluid</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;meta</span> name=<span class="tok-str">"viewport"</span> content=<span class="tok-str">"width=device-width, initial-scale=1"</span><span class="tok-tag">&gt;</span>
+
+.grid { grid-template-columns: <span class="tok-num">1</span>fr; }
+<span class="tok-op">@media</span> (min-width: <span class="tok-num">768</span>px) { .grid { grid-template-columns: repeat(<span class="tok-num">3</span>, <span class="tok-num">1</span>fr); } }
+
+<span class="tok-com">/* fluid without breakpoints */</span>
+.title { font-size: clamp(<span class="tok-num">1.5</span>rem, <span class="tok-num">4</span>vw, <span class="tok-num">3</span>rem); }</pre></div>
+      <ul>
+        <li><b>Mobile-first</b> — <code class="inline">min-width</code> media queries; start small.</li>
+        <li>Fluid type/space with <code class="inline">clamp()</code>; responsive images with <code class="inline">srcset</code>/<code class="inline">sizes</code>.</li>
+        <li>Container queries for component-level responsiveness (check support).</li>
+        <li>Touch targets, hover-not-guaranteed (<code class="inline">@media (hover: hover)</code>).</li>
+      </ul>
+    </section>
+
+    <!-- JS COMPAT -->
+    <section id="jscompat">
+      <h2><span class="num"></span> JavaScript Compatibility</h2>
+      <ul>
+        <li>Transpile modern syntax (Babel + preset-env by Browserslist).</li>
+        <li>Polyfill missing APIs (core-js, fetch, IntersectionObserver, ResizeObserver).</li>
+        <li>Feature-detect before use; provide fallbacks.</li>
+        <li>Ship modern + legacy bundles (<code class="inline">&lt;script type="module"&gt;</code> + <code class="inline">nomodule</code>).</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>module/nomodule pattern</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;script</span> type=<span class="tok-str">"module"</span> src=<span class="tok-str">"modern.js"</span><span class="tok-tag">&gt;&lt;/script&gt;</span>
+<span class="tok-tag">&lt;script</span> nomodule src=<span class="tok-str">"legacy.js"</span><span class="tok-tag">&gt;&lt;/script&gt;</span></pre></div>
+    </section>
+
+    <!-- EVENTS -->
+    <section id="events">
+      <h2><span class="num"></span> Events &amp; Common Quirks</h2>
+      <table>
+        <tr><th>Quirk</th><th>Fix</th></tr>
+        <tr><td>Touch vs mouse vs pointer</td><td>Use Pointer Events; <code>touch-action</code></td></tr>
+        <tr><td>Passive scroll listeners</td><td><code>{ passive: true }</code> for perf</td></tr>
+        <tr><td>Date parsing differences</td><td>Use ISO 8601; a date lib</td></tr>
+        <tr><td>100vh mobile jump</td><td><code>dvh</code>/<code>svh</code></td></tr>
+        <tr><td>Smooth scroll support</td><td>Feature-detect; polyfill</td></tr>
+        <tr><td>Autoplay policies</td><td>Muted + user gesture</td></tr>
+      </table>
+    </section>
+
+    <!-- TESTING -->
+    <section id="testing">
+      <h2><span class="num"></span> Testing Across Browsers</h2>
+      <ul>
+        <li><b>Real devices</b> + emulators for the highest-traffic browsers/OS.</li>
+        <li><b>Cross-browser cloud:</b> BrowserStack, Sauce Labs, LambdaTest.</li>
+        <li><b>Automated:</b> Playwright (Chromium/Firefox/WebKit), Cypress.</li>
+        <li><b>Analytics-driven:</b> support what your users actually use.</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>Playwright runs all 3 engines</span><button class="copy">Copy</button></div><pre>npx playwright test --project=chromium --project=firefox --project=webkit</pre></div>
+    </section>
+
+    <!-- TOOLS -->
+    <section id="tools">
+      <h2><span class="num"></span> Tools &amp; References</h2>
+      <table>
+        <tr><th>Tool</th><th>Use</th></tr>
+        <tr><td>caniuse.com</td><td>Feature support tables</td></tr>
+        <tr><td>MDN compatibility data</td><td>Per-API support</td></tr>
+        <tr><td>Autoprefixer / PostCSS</td><td>Auto vendor prefixes</td></tr>
+        <tr><td>Babel + Browserslist</td><td>Transpile by target</td></tr>
+        <tr><td>Playwright</td><td>Multi-engine E2E</td></tr>
+        <tr><td>BrowserStack</td><td>Real-device testing</td></tr>
+      </table>
+    </section>
+
+    <!-- BEST PRACTICES -->
+    <section id="bestpractices">
+      <h2><span class="num"></span> Best Practices</h2>
+      <ul>
+        <li>Write standards-compliant, semantic HTML/CSS.</li>
+        <li>Feature-detect, never browser-sniff.</li>
+        <li>Progressive enhancement; graceful fallbacks (<code class="inline">@supports</code>).</li>
+        <li>Autoprefixer + Babel driven by Browserslist.</li>
+        <li>Normalize baseline; mobile-first responsive.</li>
+        <li>Test on real WebKit/Safari, not just Chrome.</li>
+        <li>Support browsers your analytics show; don't over-support.</li>
+      </ul>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — Works in Chrome, broken in Safari <span class="tag">CSS/JS</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> A feature works in Chrome but not iOS Safari.</p>
+        <details class="solution"><summary>Show approach</summary><p>Test in real WebKit. Check caniuse for the CSS/JS feature; add prefixes (Autoprefixer), polyfill missing APIs, and use <code class="inline">@supports</code>/feature detection with a fallback. Watch <code class="inline">100vh</code>, date parsing, and backdrop-filter.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Layout breaks on old browsers <span class="tag">CSS</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> CSS Grid layout collapses on an older browser.</p>
+        <details class="solution"><summary>Show approach</summary><p>Wrap grid in <code class="inline">@supports (display:grid)</code> with a fla fallback (flex/float) in the base rule. Progressive enhancement ensures a usable layout everywhere.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — JS error only on one browser <span class="tag">JS</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> A newer JS method throws on an older browser.</p>
+        <details class="solution"><summary>Show approach</summary><p>Transpile with Babel/preset-env and polyfill the missing built-in (core-js). Verify Browserslist targets. Feature-detect before using cutting-edge APIs.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>What is cross-browser compatibility?</summary><div class="ans"><p>Ensuring a site works consistently across browsers, versions, and devices despite differences in engines and feature support.</p></div></details>
+      <details class="qa"><summary>Feature detection vs browser sniffing?</summary><div class="ans"><p>Feature detection tests whether a capability exists (<code class="inline">"x" in window</code>, <code class="inline">CSS.supports</code>, <code class="inline">@supports</code>) — robust. Browser sniffing parses the UA string — fragile and unreliable.</p></div></details>
+      <details class="qa"><summary>Polyfill vs transpiling?</summary><div class="ans"><p>A polyfill adds a missing runtime API; transpiling (Babel) rewrites new syntax to older syntax at build time.</p></div></details>
+      <details class="qa"><summary>What are vendor prefixes and how do you manage them?</summary><div class="ans"><p>Engine-specific property prefixes (<code class="inline">-webkit-</code>, <code class="inline">-moz-</code>). Manage automatically with Autoprefixer driven by Browserslist.</p></div></details>
+      <details class="qa"><summary>Which engines do major browsers use?</summary><div class="ans"><p>Blink (Chrome/Edge/Opera), WebKit (Safari + all iOS browsers), Gecko (Firefox).</p></div></details>
+      <details class="qa"><summary>Why must you test Safari specifically?</summary><div class="ans"><p>WebKit lags/differs on some features, and all iOS browsers use WebKit — so Chrome desktop passing doesn't guarantee iOS works.</p></div></details>
+      <details class="qa"><summary>Progressive enhancement vs graceful degradation?</summary><div class="ans"><p>PE builds a working baseline then layers enhancements; GD builds for modern then ensures it still degrades acceptably. PE is generally preferred.</p></div></details>
+      <details class="qa"><summary>How do you handle the mobile 100vh issue?</summary><div class="ans"><p>Mobile browsers change viewport height with the address bar; use <code class="inline">dvh</code>/<code class="inline">svh</code>/<code class="inline">lvh</code> units (with a <code class="inline">vh</code> fallback).</p></div></details>
+      <details class="qa"><summary>What is Browserslist?</summary><div class="ans"><p>A shared config declaring target browsers; Babel, Autoprefixer, and other tools read it to decide what to transpile/prefix/polyfill.</p></div></details>
+      <details class="qa"><summary>Normalize vs reset CSS?</summary><div class="ans"><p>Reset strips all default styles; Normalize keeps useful defaults and fixes cross-browser bugs. Both create a consistent baseline.</p></div></details>
+      <details class="qa"><summary>How do you deliver modern + legacy JS?</summary><div class="ans"><p><code class="inline">&lt;script type="module"&gt;</code> loads a modern bundle; <code class="inline">nomodule</code> loads a transpiled legacy bundle for older browsers.</p></div></details>
+      <details class="qa"><summary>What is @supports?</summary><div class="ans"><p>A CSS feature query that applies rules only if the browser supports a property/value — enabling fallbacks without JS.</p></div></details>
+      <details class="qa"><summary>How do you decide which browsers to support?</summary><div class="ans"><p>Analytics-driven: support what your users actually use, plus baseline standards; declare it in Browserslist. Avoid over-supporting dead browsers.</p></div></details>
+      <details class="qa"><summary>How do you test across browsers efficiently?</summary><div class="ans"><p>Playwright (Chromium/Firefox/WebKit) for automation, cloud device labs (BrowserStack) for real devices, plus manual spot checks on top browsers.</p></div></details>
+      <details class="qa"><summary>How do you handle unsupported CSS features?</summary><div class="ans"><p>Provide a base fallback then enhance inside <code class="inline">@supports</code>; use Autoprefixer for prefixes; test with caniuse data.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Need</th><th>Do</th></tr>
+        <tr><td>Detect JS feature</td><td><code>"x" in window</code></td></tr>
+        <tr><td>Detect CSS feature</td><td><code>@supports</code> / <code>CSS.supports()</code></td></tr>
+        <tr><td>Old syntax</td><td>Babel transpile</td></tr>
+        <tr><td>Missing API</td><td>Polyfill (core-js)</td></tr>
+        <tr><td>Prefixes</td><td>Autoprefixer</td></tr>
+        <tr><td>Targets</td><td>Browserslist</td></tr>
+        <tr><td>Baseline styles</td><td>Normalize / reset</td></tr>
+        <tr><td>Mobile height</td><td><code>dvh</code></td></tr>
+        <tr><td>Multi-engine tests</td><td>Playwright</td></tr>
+        <tr><td>Support tables</td><td>caniuse.com</td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🌐 <b>Cross-Browser Compatibility — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Engines, feature detection, polyfills, responsive design, testing, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
