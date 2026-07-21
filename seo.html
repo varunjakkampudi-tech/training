@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete SEO handbook — technical SEO, meta tags, structured data, Core Web Vitals, JS/React/Next SEO rendering, crawling & indexing, and 100+ interview questions." />
+<title>SEO — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #d97706; --blue-dark: #92400e; --blue-mid: #f59e0b; --sky: #fbbf24;
+    --light-blue: #fef3c7; --light-blue-2: #fffbeb;
+    --bg: #ffffff; --bg-soft: #fffdf6; --panel: #ffffff;
+    --text: #3a2a10; --muted: #7c6a4d; --border: #f3e2b8;
+    --code-bg: #1c1608; --accent: #2563eb; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(217, 119, 6, 0.10); --shadow-lg: 0 14px 40px rgba(146, 64, 14, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 296px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(245, 158, 11, 0.18), transparent), linear-gradient(160deg, #fdf0d0, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #3a3016; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #120e05; border-bottom: 1px solid #3a3016; font-size: 0.75rem; color: #fcd34d; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #f5eeda; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #5a4a1f; color: #fcd34d; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(251,191,36,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #a8946a; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-tag { color: #7fdfff; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #4a3818; }
+  .callout.tip { border-color: var(--accent); background: #eaf1fe; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #1e50c0; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #4a3818; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #574526; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🔍 SEO Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#how">How Search Works</a>
+    <a href="#crawl">Crawling &amp; Indexing</a>
+    <a href="#robots">robots.txt &amp; Sitemaps</a>
+    <a class="section-title">On-Page</a>
+    <a href="#meta">Meta Tags</a>
+    <a href="#canonical">Canonical &amp; Duplicates</a>
+    <a href="#headings">Headings &amp; Content</a>
+    <a href="#structured">Structured Data</a>
+    <a class="section-title">Technical</a>
+    <a href="#cwv">Core Web Vitals</a>
+    <a href="#rendering">JS SEO &amp; Rendering</a>
+    <a href="#mobile">Mobile &amp; HTTPS</a>
+    <a href="#intl">International SEO</a>
+    <a href="#audit">Technical Audit</a>
+    <a class="section-title">Off-Page</a>
+    <a href="#links">Links &amp; Authority</a>
+    <a href="#bestpractices">Best Practices</a>
+    <a class="section-title">Interview</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">SEO</span> Hands-On Guide</h1>
+    <p>Technical SEO, meta tags, structured data, Core Web Vitals, JS/React/Next rendering (CSR/SSR/SSG/ISR), crawling &amp; indexing, international SEO, and 100+ interview questions — the frontend SEO handbook.</p>
+    <div class="badges">
+      <span class="badge">Technical SEO</span>
+      <span class="badge">Core Web Vitals</span>
+      <span class="badge">Structured Data</span>
+      <span class="badge">JS Rendering</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">SEO (Search Engine Optimization) is the practice of improving a site so search engines can crawl, understand, and rank it, driving organic traffic.</p>
+      <table>
+        <tr><th>Pillar</th><th>Focus</th></tr>
+        <tr><td><b>Technical</b></td><td>Crawlability, indexing, speed, rendering, mobile</td></tr>
+        <tr><td><b>On-page</b></td><td>Content, keywords, meta tags, structure</td></tr>
+        <tr><td><b>Off-page</b></td><td>Backlinks, authority, reputation</td></tr>
+      </table>
+      <div class="callout tip"><b>Interview importance:</b> For frontend/full-stack roles, technical SEO, Core Web Vitals, and JS rendering strategies (CSR vs SSR vs SSG) are the most-asked.</div>
+    </section>
+
+    <!-- HOW -->
+    <section id="how">
+      <h2><span class="num"></span> How Search Works</h2>
+      <ol>
+        <li><b>Crawling</b> — bots (Googlebot) discover URLs via links &amp; sitemaps.</li>
+        <li><b>Rendering</b> — the page is rendered (including JS) to see final content.</li>
+        <li><b>Indexing</b> — content is analyzed and stored in the index.</li>
+        <li><b>Ranking</b> — for a query, results are ordered by hundreds of signals (relevance, authority, UX).</li>
+      </ol>
+      <div class="callout"><b>Key ranking signals:</b> content relevance &amp; quality (E-E-A-T), backlinks, Core Web Vitals/page experience, mobile-friendliness, HTTPS, freshness, and intent match.</div>
+    </section>
+
+    <!-- CRAWL -->
+    <section id="crawl">
+      <h2><span class="num"></span> Crawling &amp; Indexing</h2>
+      <div class="code"><div class="code-head"><span>Control indexing</span><button class="copy">Copy</button></div><pre><span class="tok-com">&lt;!-- Keep a page out of the index --&gt;</span>
+<span class="tok-tag">&lt;meta</span> name=<span class="tok-str">"robots"</span> content=<span class="tok-str">"noindex, follow"</span><span class="tok-tag">&gt;</span>
+
+<span class="tok-com">// HTTP header alternative</span>
+X-Robots-Tag: noindex</pre></div>
+      <table>
+        <tr><th>Directive</th><th>Effect</th></tr>
+        <tr><td><code>index/noindex</code></td><td>Allow/deny indexing</td></tr>
+        <tr><td><code>follow/nofollow</code></td><td>Follow/ignore links</td></tr>
+        <tr><td>Crawl budget</td><td>Limit for large sites — don't waste it on junk URLs</td></tr>
+      </table>
+      <div class="callout warn"><b>Gotcha:</b> <code class="inline">robots.txt Disallow</code> blocks crawling but <em>not</em> indexing (a blocked URL can still appear). To remove from the index, use <code class="inline">noindex</code> and let it be crawled.</div>
+    </section>
+
+    <!-- ROBOTS -->
+    <section id="robots">
+      <h2><span class="num"></span> robots.txt &amp; Sitemaps</h2>
+      <div class="code"><div class="code-head"><span>robots.txt + sitemap.xml</span><button class="copy">Copy</button></div><pre><span class="tok-com"># robots.txt</span>
+User-agent: *
+Disallow: /admin/
+Sitemap: https://site.com/sitemap.xml
+
+<span class="tok-com">&lt;!-- sitemap.xml --&gt;</span>
+<span class="tok-tag">&lt;url&gt;</span>
+  <span class="tok-tag">&lt;loc&gt;</span>https://site.com/page<span class="tok-tag">&lt;/loc&gt;</span>
+  <span class="tok-tag">&lt;lastmod&gt;</span>2026-07-21<span class="tok-tag">&lt;/lastmod&gt;</span>
+<span class="tok-tag">&lt;/url&gt;</span></pre></div>
+      <div class="callout tip"><b>Submit sitemaps</b> in Google Search Console; keep them fresh, under 50k URLs / 50MB, and list only canonical, indexable URLs.</div>
+    </section>
+
+    <!-- META -->
+    <section id="meta">
+      <h2><span class="num"></span> Meta Tags</h2>
+      <div class="code"><div class="code-head"><span>Essential head tags</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;title&gt;</span>Best Running Shoes (2026) | Brand<span class="tok-tag">&lt;/title&gt;</span>       <span class="tok-com"># ~50-60 chars</span>
+<span class="tok-tag">&lt;meta</span> name=<span class="tok-str">"description"</span> content=<span class="tok-str">"..."</span><span class="tok-tag">&gt;</span>            <span class="tok-com"># ~150-160 chars</span>
+<span class="tok-tag">&lt;link</span> rel=<span class="tok-str">"canonical"</span> href=<span class="tok-str">"https://site.com/shoes"</span><span class="tok-tag">&gt;</span>
+<span class="tok-tag">&lt;meta</span> name=<span class="tok-str">"viewport"</span> content=<span class="tok-str">"width=device-width, initial-scale=1"</span><span class="tok-tag">&gt;</span>
+
+<span class="tok-com">&lt;!-- Open Graph / Twitter for social sharing --&gt;</span>
+<span class="tok-tag">&lt;meta</span> property=<span class="tok-str">"og:title"</span> content=<span class="tok-str">"..."</span><span class="tok-tag">&gt;</span>
+<span class="tok-tag">&lt;meta</span> property=<span class="tok-str">"og:image"</span> content=<span class="tok-str">"..."</span><span class="tok-tag">&gt;</span>
+<span class="tok-tag">&lt;meta</span> name=<span class="tok-str">"twitter:card"</span> content=<span class="tok-str">"summary_large_image"</span><span class="tok-tag">&gt;</span></pre></div>
+      <div class="callout warn"><b>Note:</b> The meta <code class="inline">keywords</code> tag is ignored by Google. Title &amp; description drive click-through, not direct ranking, but a compelling description boosts CTR.</div>
+    </section>
+
+    <!-- CANONICAL -->
+    <section id="canonical">
+      <h2><span class="num"></span> Canonical &amp; Duplicate Content</h2>
+      <p class="lead">A <code class="inline">canonical</code> tag tells search engines the preferred URL when the same content is reachable via multiple URLs (params, http/https, trailing slash, pagination).</p>
+      <div class="code"><div class="code-head"><span>Self-referencing canonical</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;link</span> rel=<span class="tok-str">"canonical"</span> href=<span class="tok-str">"https://site.com/product?id=1"</span><span class="tok-tag">&gt;</span>
+<span class="tok-com">&lt;!-- consolidates ranking signals to one URL --&gt;</span></pre></div>
+      <div class="callout tip"><b>Handle:</b> tracking params (<code class="inline">?utm=</code>), www vs non-www, http vs https, and pagination with canonicals + 301 redirects to avoid diluting authority.</div>
+    </section>
+
+    <!-- HEADINGS -->
+    <section id="headings">
+      <h2><span class="num"></span> Headings &amp; Content</h2>
+      <ul>
+        <li><b>One <code class="inline">&lt;h1&gt;</code></b> per page describing the topic; logical <code class="inline">h2/h3</code> hierarchy.</li>
+        <li><b>Semantic HTML</b> (<code class="inline">article</code>, <code class="inline">nav</code>, <code class="inline">main</code>) aids understanding.</li>
+        <li><b>Descriptive alt text</b> on images (also accessibility).</li>
+        <li><b>Search intent</b> — match informational/navigational/transactional intent; write for humans first.</li>
+        <li><b>E-E-A-T</b> — Experience, Expertise, Authoritativeness, Trust.</li>
+      </ul>
+    </section>
+
+    <!-- STRUCTURED -->
+    <section id="structured">
+      <h2><span class="num"></span> Structured Data (Schema.org)</h2>
+      <p class="lead">JSON-LD markup helps engines understand content and unlocks rich results (stars, FAQs, breadcrumbs).</p>
+      <div class="code"><div class="code-head"><span>Product JSON-LD</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;script</span> type=<span class="tok-str">"application/ld+json"</span><span class="tok-tag">&gt;</span>
+{
+  <span class="tok-str">"@context"</span>: <span class="tok-str">"https://schema.org"</span>,
+  <span class="tok-str">"@type"</span>: <span class="tok-str">"Product"</span>,
+  <span class="tok-str">"name"</span>: <span class="tok-str">"Running Shoe"</span>,
+  <span class="tok-str">"aggregateRating"</span>: { <span class="tok-str">"@type"</span>: <span class="tok-str">"AggregateRating"</span>, <span class="tok-str">"ratingValue"</span>: <span class="tok-str">"4.6"</span>, <span class="tok-str">"reviewCount"</span>: <span class="tok-str">"120"</span> },
+  <span class="tok-str">"offers"</span>: { <span class="tok-str">"@type"</span>: <span class="tok-str">"Offer"</span>, <span class="tok-str">"price"</span>: <span class="tok-str">"99.00"</span>, <span class="tok-str">"priceCurrency"</span>: <span class="tok-str">"USD"</span> }
+}
+<span class="tok-tag">&lt;/script&gt;</span></pre></div>
+      <table>
+        <tr><th>Type</th><th>Rich result</th></tr>
+        <tr><td>Product</td><td>Price, rating stars</td></tr>
+        <tr><td>Article/NewsArticle</td><td>Top stories, headline</td></tr>
+        <tr><td>FAQPage</td><td>Expandable Q&amp;A</td></tr>
+        <tr><td>BreadcrumbList</td><td>Breadcrumb trail</td></tr>
+        <tr><td>Organization/LocalBusiness</td><td>Knowledge panel</td></tr>
+      </table>
+      <div class="callout tip"><b>Validate</b> with Google's Rich Results Test &amp; Schema Markup Validator.</div>
+    </section>
+
+    <!-- CWV -->
+    <section id="cwv">
+      <h2><span class="num"></span> Core Web Vitals</h2>
+      <table>
+        <tr><th>Metric</th><th>Measures</th><th>Good</th></tr>
+        <tr><td><b>LCP</b> (Largest Contentful Paint)</td><td>Loading</td><td>&lt; 2.5s</td></tr>
+        <tr><td><b>INP</b> (Interaction to Next Paint)</td><td>Responsiveness</td><td>&lt; 200ms</td></tr>
+        <tr><td><b>CLS</b> (Cumulative Layout Shift)</td><td>Visual stability</td><td>&lt; 0.1</td></tr>
+      </table>
+      <h4>How to improve each</h4>
+      <ul>
+        <li><b>LCP:</b> optimize/preload the hero image, fast server/CDN, reduce render-blocking CSS/JS, <code class="inline">fetchpriority="high"</code>.</li>
+        <li><b>INP:</b> break up long JS tasks, defer non-critical JS, avoid heavy main-thread work, use web workers.</li>
+        <li><b>CLS:</b> set width/height on images/embeds, reserve space for ads, avoid inserting content above existing content, use <code class="inline">font-display: optional/swap</code>.</li>
+      </ul>
+      <div class="callout"><b>Field vs lab:</b> CrUX/Search Console = real-user field data (what ranks); Lighthouse/PageSpeed = lab data (for debugging).</div>
+    </section>
+
+    <!-- RENDERING -->
+    <section id="rendering">
+      <h2><span class="num"></span> JavaScript SEO &amp; Rendering</h2>
+      <p class="lead">Google renders JS, but it's slower and can miss content. Your rendering strategy directly affects indexing.</p>
+      <table>
+        <tr><th>Strategy</th><th>SEO</th><th>Use</th></tr>
+        <tr><td><b>CSR</b> (client-side)</td><td>Weakest — content needs JS execution</td><td>Dashboards, logged-in apps</td></tr>
+        <tr><td><b>SSR</b> (server-side)</td><td>Strong — HTML ready on request</td><td>Dynamic, personalized pages</td></tr>
+        <tr><td><b>SSG</b> (static)</td><td>Strongest + fastest</td><td>Blogs, docs, marketing</td></tr>
+        <tr><td><b>ISR</b> (incremental)</td><td>Strong — static + periodic revalidation</td><td>E-commerce catalogs</td></tr>
+      </table>
+      <div class="callout warn"><b>CSR pitfalls:</b> content behind JS may be delayed/missed; use SSR/SSG (Next.js/Nuxt) or dynamic rendering/prerendering for bots. Ensure links are real <code class="inline">&lt;a href&gt;</code> (not JS-only onClick).</div>
+      <div class="realworld"><h4>🌍 React/Next SEO</h4><p>Use Next.js with <code class="inline">generateMetadata</code>/<code class="inline">next/head</code> for per-page titles/canonicals, SSR/SSG for content pages, <code class="inline">next/image</code> for LCP/CLS, and route-level sitemaps.</p></div>
+    </section>
+
+    <!-- MOBILE -->
+    <section id="mobile">
+      <h2><span class="num"></span> Mobile &amp; HTTPS</h2>
+      <ul>
+        <li><b>Mobile-first indexing:</b> Google uses the mobile version for ranking — ensure parity of content/metadata.</li>
+        <li><b>Responsive design</b> + correct viewport; tap targets &amp; readable fonts.</li>
+        <li><b>HTTPS</b> is a ranking signal and required for many APIs.</li>
+      </ul>
+    </section>
+
+    <!-- INTL -->
+    <section id="intl">
+      <h2><span class="num"></span> International SEO</h2>
+      <div class="code"><div class="code-head"><span>hreflang for languages/regions</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;link</span> rel=<span class="tok-str">"alternate"</span> hreflang=<span class="tok-str">"en-us"</span> href=<span class="tok-str">"https://site.com/us/"</span><span class="tok-tag">&gt;</span>
+<span class="tok-tag">&lt;link</span> rel=<span class="tok-str">"alternate"</span> hreflang=<span class="tok-str">"fr"</span> href=<span class="tok-str">"https://site.com/fr/"</span><span class="tok-tag">&gt;</span>
+<span class="tok-tag">&lt;link</span> rel=<span class="tok-str">"alternate"</span> hreflang=<span class="tok-str">"x-default"</span> href=<span class="tok-str">"https://site.com/"</span><span class="tok-tag">&gt;</span></pre></div>
+      <div class="callout tip"><b>hreflang</b> tells Google which language/region version to show; use consistent, reciprocal tags and a URL structure (subdirectory/subdomain/ccTLD).</div>
+    </section>
+
+    <!-- AUDIT -->
+    <section id="audit">
+      <h2><span class="num"></span> Technical SEO Audit</h2>
+      <table>
+        <tr><th>Check</th><th>Tool</th></tr>
+        <tr><td>Indexing &amp; coverage</td><td>Google Search Console</td></tr>
+        <tr><td>Crawl issues, redirects</td><td>Screaming Frog / Sitebulb</td></tr>
+        <tr><td>Core Web Vitals</td><td>PageSpeed Insights / CrUX</td></tr>
+        <tr><td>Structured data</td><td>Rich Results Test</td></tr>
+        <tr><td>Broken links / 4xx-5xx</td><td>Crawler + logs</td></tr>
+        <tr><td>Duplicate content</td><td>Canonical audit</td></tr>
+      </table>
+      <div class="callout warn"><b>Common issues:</b> noindex left on after launch, blocked JS/CSS in robots.txt, missing canonicals, redirect chains, slow LCP, orphan pages, thin content.</div>
+    </section>
+
+    <!-- LINKS -->
+    <section id="links">
+      <h2><span class="num"></span> Links &amp; Authority (Off-Page)</h2>
+      <ul>
+        <li><b>Backlinks</b> from authoritative sites are a top ranking factor (quality &gt; quantity).</li>
+        <li><b>Internal linking</b> spreads authority and helps crawling; use descriptive anchor text.</li>
+        <li><code class="inline">rel="nofollow"</code>/<code class="inline">sponsored</code>/<code class="inline">ugc</code> for untrusted/paid/user links.</li>
+        <li>Avoid link schemes (buying links) — penalties.</li>
+      </ul>
+    </section>
+
+    <!-- BEST PRACTICES -->
+    <section id="bestpractices">
+      <h2><span class="num"></span> Best Practices</h2>
+      <ul>
+        <li>Unique title + description per page; one <code class="inline">h1</code>; semantic structure.</li>
+        <li>Fast, mobile-first, HTTPS; pass Core Web Vitals.</li>
+        <li>Canonical URLs; clean, descriptive URLs; fix duplicates.</li>
+        <li>XML sitemap + robots.txt; submit to Search Console.</li>
+        <li>Structured data for eligible content.</li>
+        <li>SSR/SSG for content that must rank; real <code class="inline">&lt;a&gt;</code> links.</li>
+        <li>Quality content matching intent (E-E-A-T); earn backlinks.</li>
+      </ul>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — SPA content not indexed <span class="tag">Rendering</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> A React SPA's pages don't appear in Google. Why &amp; how to fix?</p>
+        <details class="solution"><summary>Show approach</summary><p>Content is client-rendered and may not be indexed reliably. Move to SSR/SSG (Next.js), ensure per-route meta/canonical, use real <code class="inline">&lt;a href&gt;</code> links and a sitemap, and verify with Search Console's URL Inspection (rendered HTML).</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Traffic dropped after redesign <span class="tag">Audit</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Organic traffic fell 40% post-launch.</p>
+        <details class="solution"><summary>Show approach</summary><p>Check for accidental <code class="inline">noindex</code>/robots block, changed/missing canonicals, broken 301 redirects from old URLs, removed content, and slower Core Web Vitals. Compare Search Console coverage before/after.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — Poor LCP on product pages <span class="tag">CWV</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> LCP is 5s on mobile.</p>
+        <details class="solution"><summary>Show approach</summary><p>Optimize/compress + preload the hero image (<code class="inline">fetchpriority="high"</code>), use a CDN, remove render-blocking resources, lazy-load below-the-fold, and reduce server response time (TTFB).</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>What are the three pillars of SEO?</summary><div class="ans"><p>Technical (crawl/index/speed), on-page (content/meta/structure), and off-page (backlinks/authority).</p></div></details>
+      <details class="qa"><summary>Crawling vs indexing vs ranking?</summary><div class="ans"><p>Crawling discovers URLs; indexing stores/understands content; ranking orders results for a query by relevance and authority signals.</p></div></details>
+      <details class="qa"><summary>robots.txt vs noindex?</summary><div class="ans"><p><code class="inline">robots.txt</code> blocks crawling (page can still be indexed if linked); <code class="inline">noindex</code> keeps it out of the index but the page must be crawlable to see the tag.</p></div></details>
+      <details class="qa"><summary>What is a canonical tag?</summary><div class="ans"><p>It declares the preferred URL among duplicates, consolidating ranking signals to one page.</p></div></details>
+      <details class="qa"><summary>What are Core Web Vitals?</summary><div class="ans"><p>LCP (loading, &lt;2.5s), INP (responsiveness, &lt;200ms), CLS (visual stability, &lt;0.1) — real-user UX metrics that affect ranking.</p></div></details>
+      <details class="qa"><summary>How do you improve LCP / CLS / INP?</summary><div class="ans"><p>LCP: optimize/preload hero, CDN, cut render-blocking. CLS: size media, reserve space, font-display. INP: break long tasks, defer JS, use workers.</p></div></details>
+      <details class="qa"><summary>CSR vs SSR vs SSG for SEO?</summary><div class="ans"><p>SSG is best (static HTML, fastest), SSR strong (HTML per request), CSR weakest (content needs JS). Use SSR/SSG for pages that must rank.</p></div></details>
+      <details class="qa"><summary>How does Google handle JavaScript?</summary><div class="ans"><p>It crawls, queues for rendering (headless Chromium), then indexes the rendered HTML — slower and imperfect, so critical content shouldn't rely solely on client JS.</p></div></details>
+      <details class="qa"><summary>What is structured data?</summary><div class="ans"><p>Schema.org markup (JSON-LD) describing content to enable rich results (ratings, FAQs, breadcrumbs).</p></div></details>
+      <details class="qa"><summary>What is mobile-first indexing?</summary><div class="ans"><p>Google predominantly uses the mobile version of a page for indexing/ranking — content and metadata must match desktop.</p></div></details>
+      <details class="qa"><summary>What is hreflang?</summary><div class="ans"><p>A tag telling Google which language/region version to serve, preventing duplicate-content issues across localized pages.</p></div></details>
+      <details class="qa"><summary>What is E-E-A-T?</summary><div class="ans"><p>Experience, Expertise, Authoritativeness, Trust — quality signals Google uses, especially for YMYL (your money/your life) topics.</p></div></details>
+      <details class="qa"><summary>301 vs 302 redirect for SEO?</summary><div class="ans"><p>301 (permanent) passes ranking signals to the new URL; 302 (temporary) keeps signals on the original — use 301 for permanent moves.</p></div></details>
+      <details class="qa"><summary>What causes duplicate content and how to fix?</summary><div class="ans"><p>URL params, http/https, www, trailing slashes, printer pages. Fix with canonicals, 301s, consistent internal linking, and parameter handling.</p></div></details>
+      <details class="qa"><summary>How do you diagnose an indexing problem?</summary><div class="ans"><p>Use Search Console URL Inspection (crawled/rendered/indexed state), check robots/noindex, canonicals, sitemaps, and server responses.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Goal</th><th>Do</th></tr>
+        <tr><td>Be indexable</td><td>No stray <code>noindex</code>; crawlable</td></tr>
+        <tr><td>Avoid duplicates</td><td>Canonical + 301</td></tr>
+        <tr><td>Rank JS content</td><td>SSR / SSG</td></tr>
+        <tr><td>Fast loading</td><td>LCP &lt; 2.5s, CDN, preload</td></tr>
+        <tr><td>Stable layout</td><td>CLS &lt; 0.1, size media</td></tr>
+        <tr><td>Rich results</td><td>JSON-LD schema</td></tr>
+        <tr><td>Multi-region</td><td>hreflang</td></tr>
+        <tr><td>Discover URLs</td><td>Sitemap + internal links</td></tr>
+        <tr><td>Monitor</td><td>Search Console + PageSpeed</td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🔍 <b>SEO — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Technical SEO, Core Web Vitals, structured data, JS rendering, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
