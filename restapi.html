@@ -148,6 +148,11 @@
     <a class="section-title">Compare</a>
     <a href="#compare">REST vs GraphQL vs gRPC</a>
     <a href="#bestpractices">Best Practices</a>
+    <a class="section-title">Deep Dive</a>
+    <a href="#http">HTTP Internals</a>
+    <a href="#conditional">Conditional Requests</a>
+    <a href="#resilience">API Resilience</a>
+    <a href="#webhooks">Webhooks &amp; Async</a>
     <a class="section-title">Interview</a>
     <a href="#scenario">Design Scenarios</a>
     <a href="#interview">Interview Questions</a>
@@ -429,6 +434,75 @@ GET /products/42
     </section>
 
     <!-- SCENARIO -->
+    <section id="http">
+      <h2><span class="num"></span> HTTP Internals</h2>
+      <h3>Request lifecycle</h3>
+      <p>DNS resolve → TCP handshake → (TLS handshake) → send request → server processes → response → connection reused or closed.</p>
+      <table>
+        <tr><th>Feature</th><th>What it does</th></tr>
+        <tr><td><b>Keep-Alive</b></td><td>Reuse one TCP connection for many requests (HTTP/1.1 default) — avoids handshake cost</td></tr>
+        <tr><td><b>HTTP/2 multiplexing</b></td><td>Many concurrent streams over one connection; header compression (HPACK); fixes head-of-line blocking at the app layer</td></tr>
+        <tr><td><b>HTTP/3 (QUIC)</b></td><td>Runs over UDP; removes TCP head-of-line blocking; faster connection setup (0-RTT)</td></tr>
+        <tr><td><b>Chunked transfer</b></td><td><code>Transfer-Encoding: chunked</code> streams a response without knowing its length up front</td></tr>
+      </table>
+      <div class="callout tip"><b>Interview point:</b> HTTP/2 multiplexing means you no longer need domain sharding/sprite hacks; one connection carries many parallel requests efficiently.</div>
+    </section>
+
+    <section id="conditional">
+      <h2><span class="num"></span> Conditional Requests &amp; Optimistic Concurrency</h2>
+      <p class="lead">Conditional headers prevent lost updates and save bandwidth by acting only if a precondition holds.</p>
+      <div class="code"><div class="code-head"><span>Prevent lost updates with If-Match (ETag)</span><button class="copy">Copy</button></div><pre>GET /docs/9          -&gt; 200  ETag: "v3"
+
+PUT /docs/9
+If-Match: "v3"       <span class="tok-com"># only update if still version 3</span>
+&lt;- 200 OK            <span class="tok-com"># success, new ETag "v4"</span>
+&lt;- 412 Precondition Failed  <span class="tok-com"># someone else changed it first</span></pre></div>
+      <table>
+        <tr><th>Header</th><th>Use</th></tr>
+        <tr><td><code>If-None-Match</code></td><td>GET returns 304 if unchanged (caching)</td></tr>
+        <tr><td><code>If-Match</code></td><td>Write only if ETag matches (concurrency)</td></tr>
+        <tr><td><code>If-Unmodified-Since</code></td><td>Write only if not changed since a date</td></tr>
+      </table>
+      <div class="callout warn"><b>Lost update problem:</b> Two clients read v3, both write — the second silently overwrites the first. <code class="inline">If-Match</code> makes the stale write fail with 412 instead.</div>
+    </section>
+
+    <section id="resilience">
+      <h2><span class="num"></span> API Resilience</h2>
+      <table>
+        <tr><th>Pattern</th><th>Purpose</th></tr>
+        <tr><td>Timeouts</td><td>Fail fast instead of hanging on a slow dependency</td></tr>
+        <tr><td>Retries + exponential backoff + jitter</td><td>Recover from transient failures without thundering herd</td></tr>
+        <tr><td>Circuit breaker</td><td>Stop calling a failing service; fail fast; auto-recover</td></tr>
+        <tr><td>Idempotent retries</td><td>Safe to retry writes (idempotency keys)</td></tr>
+        <tr><td>Request deduplication</td><td>Drop duplicate in-flight/replayed requests</td></tr>
+        <tr><td>Bulkhead</td><td>Isolate resource pools so one dependency can't sink all</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Client retry with backoff + jitter</span><button class="copy">Copy</button></div><pre><span class="tok-key">for</span> (attempt = <span class="tok-num">0</span>; attempt &lt; <span class="tok-num">3</span>; attempt++) {
+  res = <span class="tok-key">await</span> <span class="tok-fn">call</span>();
+  <span class="tok-key">if</span> (res.ok || res.status &lt; <span class="tok-num">500</span>) <span class="tok-key">break</span>;   <span class="tok-com">// don't retry 4xx</span>
+  <span class="tok-key">await</span> <span class="tok-fn">sleep</span>(<span class="tok-fn">rand</span>() * <span class="tok-num">2</span> ** attempt * <span class="tok-num">100</span>); <span class="tok-com">// backoff + jitter</span>
+}</pre></div>
+      <div class="callout"><b>Honor <code class="inline">Retry-After</code></b> on 429/503 and only retry idempotent/safe operations (or those with an idempotency key).</div>
+    </section>
+
+    <section id="webhooks">
+      <h2><span class="num"></span> Webhooks &amp; Async APIs</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Webhooks (push)</h4><ul><li>Server calls your URL when an event happens</li><li>Real-time, no polling overhead</li><li>Needs a public endpoint + retries</li></ul></div>
+        <div class="vs-card b"><h4>Polling (pull)</h4><ul><li>Client repeatedly asks "any updates?"</li><li>Simple; wasteful; delayed</li><li>Use with cursors/ETags</li></ul></div>
+      </div>
+      <div class="code"><div class="code-head"><span>Verify a webhook signature (HMAC)</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Provider signs the payload; you verify to prevent spoofing</span>
+<span class="tok-key">const</span> expected = hmacSHA256(secret, rawBody);
+<span class="tok-key">if</span> (!timingSafeEqual(expected, req.headers[<span class="tok-str">"x-signature"</span>]))
+  <span class="tok-key">return</span> res.<span class="tok-fn">sendStatus</span>(<span class="tok-num">401</span>);
+<span class="tok-com">// respond 2xx fast; process async; dedupe by event id (idempotent)</span></pre></div>
+      <div class="code"><div class="code-head"><span>Async long-running job (202 + polling)</span><button class="copy">Copy</button></div><pre>POST /reports            -&gt; 202 Accepted  Location: /reports/7/status
+GET  /reports/7/status   -&gt; 200 { state: <span class="tok-str">"processing"</span> }
+GET  /reports/7/status   -&gt; 303 See Other  Location: /reports/7</pre></div>
+      <div class="callout tip"><b>Webhook best practices:</b> verify signatures, respond 2xx quickly (process async), retry with backoff, and make handlers idempotent (dedupe by event ID).</div>
+    </section>
+
+    <!-- SCENARIO -->
     <section id="scenario">
       <h2><span class="num"></span> Design Scenarios</h2>
       <div class="problem"><div class="p-head">Scenario 1 — Design a payments endpoint <span class="tag">Idempotency</span></div><div class="p-body">
@@ -463,6 +537,18 @@ GET /products/42
       <details class="qa"><summary>What is content negotiation?</summary><div class="ans"><p>The client's <code class="inline">Accept</code> header tells the server which representation/version/format to return for the same resource.</p></div></details>
       <details class="qa"><summary>Why is statelessness important?</summary><div class="ans"><p>Each request is self-contained, so any server instance can handle it — enabling horizontal scaling and simpler load balancing.</p></div></details>
       <details class="qa"><summary>How do you handle partial failures / retries?</summary><div class="ans"><p>Idempotent design + idempotency keys, exponential backoff on the client, and clear 4xx/5xx codes with <code class="inline">Retry-After</code> where relevant.</p></div></details>
+      <details class="qa"><summary>HTTP/1.1 vs HTTP/2 vs HTTP/3?</summary><div class="ans"><p>1.1 added Keep-Alive; HTTP/2 multiplexes many streams over one connection with header compression; HTTP/3 runs over QUIC/UDP, removing TCP head-of-line blocking and speeding setup.</p></div></details>
+      <details class="qa"><summary>What is Keep-Alive?</summary><div class="ans"><p>Reusing a single TCP connection for multiple requests to avoid repeated handshakes — default in HTTP/1.1.</p></div></details>
+      <details class="qa"><summary>What is chunked transfer encoding?</summary><div class="ans"><p><code class="inline">Transfer-Encoding: chunked</code> streams a response in pieces without a known total length — used for streaming/generated content.</p></div></details>
+      <details class="qa"><summary>How do you prevent lost updates?</summary><div class="ans"><p>Optimistic concurrency with ETags + <code class="inline">If-Match</code>: a stale write fails with 412 Precondition Failed instead of silently overwriting.</p></div></details>
+      <details class="qa"><summary>If-None-Match vs If-Match?</summary><div class="ans"><p><code class="inline">If-None-Match</code> is for caching (304 if unchanged); <code class="inline">If-Match</code> is for concurrency (write only if the ETag still matches).</p></div></details>
+      <details class="qa"><summary>What is a circuit breaker?</summary><div class="ans"><p>A resilience pattern that stops calling a failing dependency after a threshold (fail fast / fallback), then probes to recover — preventing cascading failures.</p></div></details>
+      <details class="qa"><summary>Why add jitter to backoff?</summary><div class="ans"><p>Randomized delays prevent many clients from retrying in lockstep (thundering herd) and overwhelming a recovering service.</p></div></details>
+      <details class="qa"><summary>Webhooks vs polling?</summary><div class="ans"><p>Webhooks push events to your URL in real time (efficient, needs a public endpoint + signature verification); polling repeatedly asks for updates (simple but wasteful/delayed).</p></div></details>
+      <details class="qa"><summary>How do you secure webhooks?</summary><div class="ans"><p>Verify an HMAC signature over the raw body with a shared secret (timing-safe compare), respond 2xx fast, process async, and dedupe by event ID (idempotent).</p></div></details>
+      <details class="qa"><summary>How do you design a long-running operation?</summary><div class="ans"><p>Return <code class="inline">202 Accepted</code> with a status URL; the client polls the status endpoint, which returns progress and finally 303/200 with the result.</p></div></details>
+      <details class="qa"><summary>How do you dedupe duplicate requests?</summary><div class="ans"><p>Use an idempotency key or event ID; store processed keys and short-circuit repeats, returning the original result.</p></div></details>
+      <details class="qa"><summary>Which errors are safe to retry?</summary><div class="ans"><p>Transient 5xx (500/502/503/504) and 429 (respect <code class="inline">Retry-After</code>). Don't retry 4xx like 400/401/403/404/422 — the request itself is wrong.</p></div></details>
     </section>
 
     <!-- CHEAT SHEET -->
