@@ -2092,6 +2092,7 @@
                     <a class="nav-link" href="#module-9"><span class="nav-icon">□</span><span>Module 9</span></a>
                     <a class="nav-link" href="#module-10"><span class="nav-icon">□</span><span>Module 10</span></a>
                     <a class="nav-link" href="#module-11"><span class="nav-icon">□</span><span>Module 11</span></a>
+                    <a class="nav-link" href="#module-12"><span class="nav-icon">⚡</span><span>Hands-On: Lambda &amp; API Gateway</span></a>
             </nav>
 
             <div class="nav-title">Revision Hub</div>
@@ -7162,6 +7163,285 @@ Developer Commit -> CodePipeline -> ECR -> ECS / EKS / Fargate</p>
                         • <strong>Outposts:</strong> AWS services in your datacenter<br><br>
                         <strong>Key Principle:</strong> Choose based on management complexity you can handle
                     </div>
+                </div>
+            </section>
+
+            <!-- =============================================================
+                 MODULE 12 — HANDS-ON: LAMBDA, API GATEWAY & REAL-WORLD SERVERLESS
+                 ============================================================= -->
+            <section class="section section-anchor" id="module-12" data-searchable>
+                <div class="section-header">
+                    <div>
+                        <span class="module-tag"><span class="icon-dot"></span> Hands-On</span>
+                        <h2>Module 12 — Hands-On: Lambda, API Gateway &amp; Real-World Serverless</h2>
+                        <p>Deep, practical serverless: build and deploy Lambda functions, wire them behind API Gateway, and ship real production patterns — REST APIs, image processing, scheduled jobs, and event fan-out — the way it's actually done in interviews and on the job.</p>
+                    </div>
+                    <span class="pill">Lambda + API Gateway</span>
+                </div>
+
+                <!-- LAMBDA DEEP DIVE -->
+                <div class="module-grid" style="margin-top:16px;">
+                    <div class="card" data-searchable>
+                        <h3>Lambda Anatomy</h3>
+                        <ul>
+                            <li><strong>Handler:</strong> entry function AWS calls with <code>(event, context)</code>.</li>
+                            <li><strong>Runtime:</strong> Node.js, Python, Java, Go, .NET, Ruby, or custom.</li>
+                            <li><strong>Execution role (IAM):</strong> grants the function AWS permissions.</li>
+                            <li><strong>Memory 128 MB–10 GB:</strong> CPU scales with memory.</li>
+                            <li><strong>Timeout:</strong> up to 15 minutes.</li>
+                            <li><strong>Ephemeral <code>/tmp</code>:</strong> 512 MB–10 GB scratch space.</li>
+                        </ul>
+                    </div>
+                    <div class="card" data-searchable>
+                        <h3>Cold Starts &amp; Concurrency</h3>
+                        <ul>
+                            <li><strong>Cold start:</strong> first invoke initializes a new execution environment (extra latency).</li>
+                            <li><strong>Provisioned concurrency:</strong> keeps environments warm for predictable latency.</li>
+                            <li><strong>Reserved concurrency:</strong> caps/guarantees a function's parallel executions.</li>
+                            <li><strong>Init outside the handler:</strong> reuse DB clients/SDK across warm invokes.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="split-grid" style="margin-top:16px;">
+                    <div class="card" data-searchable>
+                        <h3>Lambda Handler — Node.js</h3>
+                        <div class="text-diagram">// index.mjs  (Node.js 20 runtime)
+export const handler = async (event, context) => {
+  const name = event.queryStringParameters?.name || "world";
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: `Hello, ${name}!` })
+  };
+};</div>
+                        <p class="subtle">API Gateway proxy integration expects <code>statusCode</code> + <code>body</code> (stringified).</p>
+                    </div>
+                    <div class="card" data-searchable>
+                        <h3>Lambda Handler — Python</h3>
+                        <div class="text-diagram"># handler.py  (Python 3.12 runtime)
+import json
+
+def handler(event, context):
+    name = (event.get("queryStringParameters") or {}).get("name", "world")
+    return {
+        "statusCode": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps({"message": f"Hello, {name}!"})
+    }</div>
+                    </div>
+                </div>
+
+                <!-- HANDS-ON DEPLOY -->
+                <div class="card" data-searchable style="margin-top:16px;">
+                    <h3>🧪 Hands-On Lab 1 — Deploy a Lambda with the AWS CLI</h3>
+                    <div class="text-diagram"># 1) Zip your code
+zip function.zip index.mjs
+
+# 2) Create an execution role (trust policy allows Lambda to assume it)
+aws iam create-role --role-name hello-role \
+  --assume-role-policy-document file://trust.json
+aws iam attach-role-policy --role-name hello-role \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+# 3) Create the function
+aws lambda create-function --function-name hello \
+  --runtime nodejs20.x --handler index.handler \
+  --role arn:aws:iam::&lt;acct&gt;:role/hello-role \
+  --zip-file fileb://function.zip
+
+# 4) Invoke it
+aws lambda invoke --function-name hello out.json &amp;&amp; cat out.json
+
+# 5) Update code later
+aws lambda update-function-code --function-name hello \
+  --zip-file fileb://function.zip</div>
+                    <p class="subtle">The <code>AWSLambdaBasicExecutionRole</code> policy lets the function write logs to CloudWatch.</p>
+                </div>
+
+                <!-- API GATEWAY DEEP DIVE -->
+                <div class="module-grid" style="margin-top:16px;">
+                    <div class="card" data-searchable>
+                        <h3>API Gateway — Types</h3>
+                        <ul>
+                            <li><strong>HTTP API:</strong> low-latency, low-cost, best for simple Lambda/HTTP proxying (recommended default).</li>
+                            <li><strong>REST API:</strong> full-featured — API keys, request validation, WAF, usage plans, edge-optimized.</li>
+                            <li><strong>WebSocket API:</strong> real-time, bidirectional (chat, live dashboards).</li>
+                        </ul>
+                    </div>
+                    <div class="card" data-searchable>
+                        <h3>API Gateway — Key Features</h3>
+                        <ul>
+                            <li><strong>Lambda proxy integration:</strong> passes the raw request to Lambda, returns its response.</li>
+                            <li><strong>Stages:</strong> deploy versions (<code>dev</code>, <code>prod</code>) with stage variables.</li>
+                            <li><strong>Authorizers:</strong> Cognito, IAM, or Lambda (custom/JWT) auth.</li>
+                            <li><strong>Throttling &amp; usage plans:</strong> rate limits + API keys per client.</li>
+                            <li><strong>CORS, caching, request/response mapping, WAF.</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="comparison-grid" style="margin-top:16px;">
+                    <div class="chart-card" data-searchable>
+                        <h3>HTTP API vs REST API</h3>
+                        <div class="comparison-bars">
+                            <div class="bar-row"><span>HTTP API</span><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span>Cheap/fast</span></div>
+                            <div class="bar-row"><span>REST API</span><div class="bar-track"><div class="bar-fill" style="width:78%"></div></div><span>Full-feature</span></div>
+                            <div class="bar-row"><span>WebSocket</span><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><span>Real-time</span></div>
+                        </div>
+                        <p class="subtle" style="margin-top:8px;">Default to HTTP API; pick REST API when you need API keys/usage plans, request validation, or WAF at the gateway.</p>
+                    </div>
+                    <div class="chart-card" data-searchable>
+                        <h3>Serverless REST API flow</h3>
+                        <p class="text-diagram">Client -> API Gateway (HTTP API)
+      -> Lambda (business logic)
+      -> DynamoDB (data)
+      -> response back to client</p>
+                    </div>
+                </div>
+
+                <!-- REAL-WORLD SCENARIO 1: SERVERLESS CRUD API -->
+                <div class="card" data-searchable style="margin-top:16px; border: 2px solid #ff9900; background: linear-gradient(135deg, #ffffff 0%, #fff7ec 100%);">
+                    <h3 style="color:#b8690a; display:flex; align-items:center; gap:10px;"><span>🌍</span> Real-World 1 — Serverless CRUD API (API Gateway → Lambda → DynamoDB)</h3>
+                    <div class="text-diagram" style="margin-top:12px;">// createItem Lambda (Node.js) — POST /items
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+
+const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({})); // reuse across warm invokes
+
+export const handler = async (event) => {
+  const body = JSON.parse(event.body || "{}");
+  const item = { id: crypto.randomUUID(), ...body, createdAt: Date.now() };
+  await ddb.send(new PutCommand({ TableName: process.env.TABLE, Item: item }));
+  return { statusCode: 201, body: JSON.stringify(item) };
+};</div>
+                    <p class="subtle">Route table: <code>POST /items → createItem</code>, <code>GET /items/{id} → getItem</code>, <code>GET /items → listItems</code>, <code>DELETE /items/{id} → deleteItem</code>. The Lambda's IAM role gets <code>dynamodb:PutItem/GetItem/Query/DeleteItem</code> on that table only (least privilege).</p>
+                </div>
+
+                <!-- REAL-WORLD SCENARIO 2: IMAGE PROCESSING -->
+                <div class="card" data-searchable style="margin-top:16px;">
+                    <h3 style="display:flex; align-items:center; gap:10px;"><span>🖼️</span> Real-World 2 — S3 Image Processing Pipeline</h3>
+                    <div class="text-diagram" style="margin-top:12px;">    EVENT-DRIVEN THUMBNAIL GENERATION
+
+    User uploads image
+          │
+          ↓
+    S3 bucket (uploads/)  ──event──►  Lambda (async invoke)
+                                          │
+                                          ├─ read object from S3
+                                          ├─ resize with Sharp/Pillow
+                                          └─ write thumbnails/  back to S3
+                                          │
+                                          ↓
+                                   (optional) SNS notify / DynamoDB record</div>
+                    <p class="subtle">S3 → Lambda is an <strong>asynchronous</strong> invoke; failures retry twice then go to a <strong>Dead Letter Queue</strong> (SQS/SNS). Put thumbnails in a different prefix/bucket to avoid recursive triggers.</p>
+                </div>
+
+                <!-- REAL-WORLD SCENARIO 3: SCHEDULED + FAN-OUT -->
+                <div class="split-grid" style="margin-top:16px;">
+                    <div class="card" data-searchable>
+                        <h3>⏰ Real-World 3 — Scheduled Jobs</h3>
+                        <p><strong>EventBridge (cron) → Lambda</strong> replaces servers running cron.</p>
+                        <div class="text-diagram">rate(5 minutes)
+cron(0 2 * * ? *)   # daily 02:00 UTC</div>
+                        <p class="subtle">Use for nightly reports, cleanup, health polling, cache warming — no always-on EC2 needed.</p>
+                    </div>
+                    <div class="card" data-searchable>
+                        <h3>📣 Real-World 4 — Event Fan-Out</h3>
+                        <p><strong>SNS → multiple Lambdas / SQS</strong> for parallel processing; <strong>SQS → Lambda</strong> for buffered, decoupled work.</p>
+                        <p class="text-diagram">Order placed -> SNS topic
+   ├─► Lambda: send email
+   ├─► Lambda: update inventory
+   └─► SQS -> Lambda: bill customer</p>
+                    </div>
+                </div>
+
+                <!-- IaC: SAM -->
+                <div class="card" data-searchable style="margin-top:16px;">
+                    <h3>🧱 Hands-On Lab 2 — Deploy the API with AWS SAM (Infrastructure as Code)</h3>
+                    <div class="text-diagram"># template.yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  ItemsTable:
+    Type: AWS::Serverless::SimpleTable
+  CreateItem:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Environment:
+        Variables: { TABLE: !Ref ItemsTable }
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref ItemsTable }
+      Events:
+        Api:
+          Type: HttpApi              # creates API Gateway HTTP API
+          Properties: { Path: /items, Method: POST }
+
+# Deploy
+sam build &amp;&amp; sam deploy --guided</div>
+                    <p class="subtle">SAM/CloudFormation makes the whole stack reproducible: one command provisions the table, function, IAM role, and API Gateway route.</p>
+                </div>
+
+                <!-- BEST PRACTICES -->
+                <div class="card" data-searchable style="margin-top:16px; background:#f9fbff; border-left:5px solid #ff9900;">
+                    <h3 style="display:flex; align-items:center; gap:10px;"><span>✅</span> Serverless Best Practices</h3>
+                    <div style="margin-top:12px; font-size:0.95rem; line-height:1.8;">
+                        • <strong>Least-privilege IAM</strong> per function (scope to the exact resource).<br>
+                        • <strong>Init clients outside the handler</strong> to reuse across warm invokes.<br>
+                        • <strong>Keep functions small &amp; single-purpose;</strong> use Lambda <strong>Layers</strong> for shared deps.<br>
+                        • <strong>Set timeouts &amp; memory deliberately;</strong> more memory = more CPU = often cheaper+faster.<br>
+                        • <strong>Idempotency</strong> for retried async/SQS events (dedupe by key).<br>
+                        • <strong>DLQs + alarms</strong> on errors, throttles, and duration.<br>
+                        • <strong>Provisioned concurrency</strong> for latency-sensitive endpoints.<br>
+                        • <strong>Structured logging + X-Ray</strong> tracing for observability.
+                    </div>
+                </div>
+
+                <!-- Q&A -->
+                <div class="qa-stack" style="margin-top:16px;">
+                    <div class="qa-item card" data-searchable>
+                        <h4>What is a Lambda cold start and how do you reduce it?</h4>
+                        <div class="answer">A cold start is the extra latency when Lambda spins up a new execution environment for an invoke. Reduce it with provisioned concurrency, smaller packages, lighter runtimes, and initializing SDK/DB clients outside the handler so warm invokes reuse them.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>HTTP API vs REST API in API Gateway — which do you pick?</h4>
+                        <div class="answer">Default to HTTP API (cheaper, faster, simpler) for Lambda/HTTP proxying. Choose REST API when you need API keys and usage plans, request/response validation and mapping, edge optimization, or native WAF integration.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>Synchronous vs asynchronous Lambda invocation?</h4>
+                        <div class="answer">Synchronous (API Gateway, ALB) — the caller waits for the response. Asynchronous (S3, SNS, EventBridge) — the event is queued, Lambda retries twice on failure, and failures can route to a DLQ. Poll-based (SQS, streams) — Lambda polls and processes batches.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>How do you secure a serverless API?</h4>
+                        <div class="answer">Use API Gateway authorizers (Cognito/JWT/Lambda or IAM), least-privilege execution roles per function, throttling and usage plans, input validation, secrets in SSM Parameter Store/Secrets Manager (not env vars), and WAF on REST APIs.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>How do you connect Lambda to a VPC database (RDS)?</h4>
+                        <div class="answer">Attach the function to the VPC subnets/security groups. For connection pooling at scale, use RDS Proxy to avoid exhausting DB connections during concurrent invokes. Note VPC-attached Lambdas need NAT/endpoints for outbound AWS API calls.</div>
+                    </div>
+                    <div class="qa-item card" data-searchable>
+                        <h4>When would you NOT use Lambda?</h4>
+                        <div class="answer">Long-running jobs (&gt;15 min), very high sustained throughput where always-on compute is cheaper, workloads needing large in-memory state, or ultra-low-latency needs where cold starts are unacceptable. Consider Fargate/ECS or EC2 instead.</div>
+                    </div>
+                </div>
+
+                <div class="table-wrap" style="margin-top:16px;">
+                    <table>
+                        <thead>
+                            <tr><th>Event Source</th><th>Invoke Type</th><th>Real-World Pattern</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>API Gateway / ALB</td><td>Synchronous</td><td>REST/HTTP APIs, backends for web/mobile</td></tr>
+                            <tr><td>S3</td><td>Asynchronous</td><td>Image/video processing, ETL on upload</td></tr>
+                            <tr><td>SNS</td><td>Asynchronous</td><td>Fan-out notifications, event broadcast</td></tr>
+                            <tr><td>SQS</td><td>Poll-based</td><td>Buffered, decoupled work queues</td></tr>
+                            <tr><td>EventBridge</td><td>Async / Scheduled</td><td>Cron jobs, event routing between services</td></tr>
+                            <tr><td>DynamoDB Streams</td><td>Poll-based</td><td>Change data capture, audit, replication</td></tr>
+                            <tr><td>Kinesis</td><td>Poll-based</td><td>Real-time streaming analytics</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
