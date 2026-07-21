@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete Node.js handbook — architecture, event loop, streams, buffers, cluster, worker threads, security, caching, scaling, Docker, and 100+ interview questions." />
+<title>Node.js — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #3c873a; --blue-dark: #215732; --blue-mid: #68a063; --sky: #8cc84b;
+    --light-blue: #e8f5e0; --light-blue-2: #f3faee;
+    --bg: #ffffff; --bg-soft: #f7fbf4; --panel: #ffffff;
+    --text: #17311b; --muted: #5c7355; --border: #d5e9c8;
+    --code-bg: #10231a; --accent: #f59e0b; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(60, 135, 58, 0.10); --shadow-lg: 0 14px 40px rgba(33, 87, 50, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 296px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(140, 200, 75, 0.18), transparent), linear-gradient(160deg, #e9f6de, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #1e4030; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #0a1912; border-bottom: 1px solid #1e4030; font-size: 0.75rem; color: #9ede6d; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #e4f5da; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #2f5a3f; color: #9ede6d; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(140,200,75,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #7fa383; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #24451f; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #24451f; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #35502e; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🟩 Node.js Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#eventloop">Event Loop &amp; libuv</a>
+    <a href="#modules">Modules &amp; NPM</a>
+    <a class="section-title">Core APIs</a>
+    <a href="#async">Async Patterns</a>
+    <a href="#events">EventEmitter</a>
+    <a href="#streams">Streams &amp; Buffers</a>
+    <a href="#fs">File System</a>
+    <a href="#http">HTTP Server</a>
+    <a class="section-title">Scaling</a>
+    <a href="#cluster">Cluster</a>
+    <a href="#workers">Worker Threads</a>
+    <a href="#caching">Caching &amp; Redis</a>
+    <a class="section-title">Production</a>
+    <a href="#security">Security</a>
+    <a href="#errors">Error Handling</a>
+    <a href="#logging">Logging</a>
+    <a href="#fileupload">File Upload</a>
+    <a href="#testing">Testing</a>
+    <a href="#perf">Performance</a>
+    <a href="#deploy">Docker &amp; Deployment</a>
+    <a class="section-title">Interview</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#prodissues">Production Issues</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">Node.js</span> Hands-On Guide</h1>
+    <p>Architecture, the event loop &amp; libuv, streams, buffers, cluster, worker threads, security, caching, scaling, Docker deployment, and 100+ interview questions — the full backend interview handbook.</p>
+    <div class="badges">
+      <span class="badge">Event Loop</span>
+      <span class="badge">Streams</span>
+      <span class="badge">Cluster</span>
+      <span class="badge">Security</span>
+      <span class="badge">Scaling</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">Node.js is a JavaScript runtime built on Chrome's V8 engine. It's single-threaded, event-driven, and non-blocking — ideal for I/O-heavy, real-time applications.</p>
+      <ul>
+        <li><b>Non-blocking I/O</b> — handles thousands of concurrent connections with one thread.</li>
+        <li><b>Event-driven</b> — callbacks/promises fire when I/O completes.</li>
+        <li><b>Single language</b> — JS on both client and server.</li>
+        <li><b>Huge ecosystem</b> — npm.</li>
+      </ul>
+      <div class="callout warn"><b>Not ideal for:</b> CPU-bound work (image/video processing, heavy computation) — it blocks the event loop. Offload to worker threads or separate services.</div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section id="architecture">
+      <h2><span class="num"></span> Architecture</h2>
+      <table>
+        <tr><th>Layer</th><th>Role</th></tr>
+        <tr><td><b>V8</b></td><td>Compiles &amp; runs JavaScript</td></tr>
+        <tr><td><b>libuv</b></td><td>Event loop + thread pool for async I/O</td></tr>
+        <tr><td><b>Node bindings / C++</b></td><td>Bridge JS ↔ system APIs</td></tr>
+        <tr><td><b>Thread pool</b></td><td>4 threads (default) for fs, crypto, DNS, compression</td></tr>
+      </table>
+      <div class="callout"><b>Key insight:</b> Your JS runs single-threaded, but libuv uses a background thread pool for certain blocking operations (file I/O, crypto), giving async behavior.</div>
+    </section>
+
+    <!-- EVENT LOOP -->
+    <section id="eventloop">
+      <h2><span class="num"></span> Event Loop &amp; libuv Phases</h2>
+      <table>
+        <tr><th>Phase</th><th>Handles</th></tr>
+        <tr><td><b>timers</b></td><td><code>setTimeout</code>, <code>setInterval</code></td></tr>
+        <tr><td><b>pending callbacks</b></td><td>deferred I/O callbacks</td></tr>
+        <tr><td><b>poll</b></td><td>retrieve new I/O events; execute I/O callbacks</td></tr>
+        <tr><td><b>check</b></td><td><code>setImmediate</code></td></tr>
+        <tr><td><b>close</b></td><td>close callbacks (sockets)</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>nextTick &amp; microtasks run between phases</span><button class="copy">Copy</button></div><pre>process.<span class="tok-fn">nextTick</span>(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"nextTick"</span>)); <span class="tok-com">// highest priority</span>
+Promise.<span class="tok-fn">resolve</span>().<span class="tok-fn">then</span>(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"promise"</span>));
+setTimeout(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"timeout"</span>), <span class="tok-num">0</span>);
+setImmediate(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"immediate"</span>));
+<span class="tok-com">// nextTick -> promise -> timeout/immediate (order varies by context)</span></pre></div>
+      <div class="callout warn"><b>Bottleneck:</b> A synchronous CPU-heavy loop blocks the entire event loop — all requests stall. Never do heavy sync work in a request handler.</div>
+    </section>
+
+    <!-- MODULES -->
+    <section id="modules">
+      <h2><span class="num"></span> Modules &amp; NPM</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>CommonJS</h4>
+          <div class="code"><div class="code-head"><span>require</span><button class="copy">Copy</button></div><pre>module.exports = { add };
+<span class="tok-key">const</span> { add } = <span class="tok-fn">require</span>(<span class="tok-str">"./math"</span>);</pre></div>
+        </div>
+        <div class="vs-card b"><h4>ES Modules</h4>
+          <div class="code"><div class="code-head"><span>import</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">const</span> add = ...;
+<span class="tok-key">import</span> { add } <span class="tok-key">from</span> <span class="tok-str">"./math.js"</span>;</pre></div>
+        </div>
+      </div>
+      <table>
+        <tr><th>File</th><th>Purpose</th></tr>
+        <tr><td><code>package.json</code></td><td>Metadata, scripts, deps, <code>"type":"module"</code></td></tr>
+        <tr><td><code>package-lock.json</code></td><td>Exact dependency tree for reproducible installs</td></tr>
+        <tr><td><code>node_modules</code></td><td>Installed packages</td></tr>
+      </table>
+      <div class="callout tip"><b>SemVer:</b> <code class="inline">^1.2.3</code> allows minor+patch, <code class="inline">~1.2.3</code> allows patch only. Commit the lockfile; use <code class="inline">npm ci</code> in CI.</div>
+    </section>
+
+    <!-- ASYNC -->
+    <section id="async">
+      <h2><span class="num"></span> Async Patterns</h2>
+      <div class="code"><div class="code-head"><span>Callbacks → Promises → async/await</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> fs = <span class="tok-fn">require</span>(<span class="tok-str">"fs/promises"</span>);
+
+<span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">read</span>() {
+  <span class="tok-key">try</span> { <span class="tok-key">return</span> <span class="tok-key">await</span> fs.<span class="tok-fn">readFile</span>(<span class="tok-str">"a.txt"</span>, <span class="tok-str">"utf8"</span>); }
+  <span class="tok-key">catch</span> (e) { console.<span class="tok-fn">error</span>(e); }
+}
+
+<span class="tok-com">// Promisify a callback API</span>
+<span class="tok-key">const</span> { promisify } = <span class="tok-fn">require</span>(<span class="tok-str">"util"</span>);
+<span class="tok-key">const</span> sleep = promisify(setTimeout);</pre></div>
+    </section>
+
+    <!-- EVENTS -->
+    <section id="events">
+      <h2><span class="num"></span> EventEmitter</h2>
+      <p class="lead">The pub/sub backbone of Node — streams, HTTP servers, and sockets are all emitters.</p>
+      <div class="code"><div class="code-head"><span>EventEmitter</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> EventEmitter = <span class="tok-fn">require</span>(<span class="tok-str">"events"</span>);
+<span class="tok-key">const</span> bus = <span class="tok-key">new</span> <span class="tok-fn">EventEmitter</span>();
+bus.<span class="tok-fn">on</span>(<span class="tok-str">"order"</span>, (id) =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"got"</span>, id));
+bus.<span class="tok-fn">emit</span>(<span class="tok-str">"order"</span>, <span class="tok-num">42</span>);</pre></div>
+      <div class="callout warn"><b>Watch out:</b> "MaxListenersExceededWarning" signals a leak — you're adding listeners without removing them.</div>
+    </section>
+
+    <!-- STREAMS -->
+    <section id="streams">
+      <h2><span class="num"></span> Streams &amp; Buffers</h2>
+      <p class="lead">Streams process data in chunks instead of loading it all in memory — essential for large files and network data.</p>
+      <table>
+        <tr><th>Type</th><th>Example</th></tr>
+        <tr><td>Readable</td><td><code>fs.createReadStream</code>, HTTP request</td></tr>
+        <tr><td>Writable</td><td><code>fs.createWriteStream</code>, HTTP response</td></tr>
+        <tr><td>Duplex</td><td>TCP socket</td></tr>
+        <tr><td>Transform</td><td>zlib gzip, crypto</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Pipe with backpressure</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { pipeline } = <span class="tok-fn">require</span>(<span class="tok-str">"stream"</span>);
+<span class="tok-fn">pipeline</span>(
+  fs.<span class="tok-fn">createReadStream</span>(<span class="tok-str">"big.log"</span>),
+  zlib.<span class="tok-fn">createGzip</span>(),
+  fs.<span class="tok-fn">createWriteStream</span>(<span class="tok-str">"big.log.gz"</span>),
+  (err) =&gt; err &amp;&amp; console.<span class="tok-fn">error</span>(err)
+);</pre></div>
+      <div class="callout tip"><b>Backpressure:</b> <code class="inline">pipe</code>/<code class="inline">pipeline</code> automatically pause the source when the destination is slow — prevents memory blowups.</div>
+    </section>
+
+    <!-- FS -->
+    <section id="fs">
+      <h2><span class="num"></span> File System</h2>
+      <div class="code"><div class="code-head"><span>Async fs, don't block</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> fs = <span class="tok-fn">require</span>(<span class="tok-str">"fs/promises"</span>);
+<span class="tok-key">await</span> fs.<span class="tok-fn">writeFile</span>(<span class="tok-str">"out.txt"</span>, data);
+<span class="tok-key">const</span> files = <span class="tok-key">await</span> fs.<span class="tok-fn">readdir</span>(<span class="tok-str">"."</span>);
+<span class="tok-com">// Avoid readFileSync in servers — it blocks the event loop</span></pre></div>
+    </section>
+
+    <!-- HTTP -->
+    <section id="http">
+      <h2><span class="num"></span> HTTP Server &amp; Express</h2>
+      <div class="code"><div class="code-head"><span>Core http vs Express</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Core</span>
+<span class="tok-fn">require</span>(<span class="tok-str">"http"</span>).<span class="tok-fn">createServer</span>((req, res) =&gt; {
+  res.<span class="tok-fn">writeHead</span>(<span class="tok-num">200</span>, { <span class="tok-str">"Content-Type"</span>: <span class="tok-str">"application/json"</span> });
+  res.<span class="tok-fn">end</span>(JSON.<span class="tok-fn">stringify</span>({ ok: <span class="tok-key">true</span> }));
+}).<span class="tok-fn">listen</span>(<span class="tok-num">3000</span>);
+
+<span class="tok-com">// Express</span>
+<span class="tok-key">const</span> app = <span class="tok-fn">express</span>();
+app.<span class="tok-fn">get</span>(<span class="tok-str">"/health"</span>, (req, res) =&gt; res.<span class="tok-fn">json</span>({ ok: <span class="tok-key">true</span> }));
+app.<span class="tok-fn">listen</span>(<span class="tok-num">3000</span>);</pre></div>
+      <div class="callout tip"><b>See the Express guide</b> for middleware, routing, validation, and error handling in depth.</div>
+    </section>
+
+    <!-- CLUSTER -->
+    <section id="cluster">
+      <h2><span class="num"></span> Cluster (Multi-Core)</h2>
+      <p class="lead">Node is single-threaded, so a process uses one CPU core. The <code class="inline">cluster</code> module forks workers to use all cores, sharing the same port.</p>
+      <div class="code"><div class="code-head"><span>cluster</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> cluster = <span class="tok-fn">require</span>(<span class="tok-str">"cluster"</span>);
+<span class="tok-key">const</span> os = <span class="tok-fn">require</span>(<span class="tok-str">"os"</span>);
+<span class="tok-key">if</span> (cluster.isPrimary) {
+  os.<span class="tok-fn">cpus</span>().<span class="tok-fn">forEach</span>(() =&gt; cluster.<span class="tok-fn">fork</span>());
+} <span class="tok-key">else</span> {
+  <span class="tok-fn">require</span>(<span class="tok-str">"./server"</span>); <span class="tok-com">// each worker runs the app</span>
+}</pre></div>
+      <div class="callout tip"><b>In production</b> use a process manager like <b>PM2</b> (cluster mode, restarts, logs) instead of hand-rolling clustering.</div>
+    </section>
+
+    <!-- WORKERS -->
+    <section id="workers">
+      <h2><span class="num"></span> Worker Threads (CPU-Bound)</h2>
+      <div class="code"><div class="code-head"><span>Offload heavy compute</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { Worker } = <span class="tok-fn">require</span>(<span class="tok-str">"worker_threads"</span>);
+<span class="tok-key">const</span> w = <span class="tok-key">new</span> <span class="tok-fn">Worker</span>(<span class="tok-str">"./heavy.js"</span>, { workerData: { n: <span class="tok-num">40</span> } });
+w.<span class="tok-fn">on</span>(<span class="tok-str">"message"</span>, (r) =&gt; console.<span class="tok-fn">log</span>(r));</pre></div>
+      <table>
+        <tr><th>Cluster</th><th>Worker Threads</th></tr>
+        <tr><td>Separate processes, scale I/O across cores</td><td>Threads sharing memory, for CPU-bound tasks</td></tr>
+      </table>
+    </section>
+
+    <!-- CACHING -->
+    <section id="caching">
+      <h2><span class="num"></span> Caching &amp; Redis</h2>
+      <div class="code"><div class="code-head"><span>Cache-aside with Redis</span><button class="copy">Copy</button></div><pre><span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">getUser</span>(id) {
+  <span class="tok-key">const</span> cached = <span class="tok-key">await</span> redis.<span class="tok-fn">get</span>(<span class="tok-str">`user:${id}`</span>);
+  <span class="tok-key">if</span> (cached) <span class="tok-key">return</span> JSON.<span class="tok-fn">parse</span>(cached);
+  <span class="tok-key">const</span> user = <span class="tok-key">await</span> db.<span class="tok-fn">findUser</span>(id);
+  <span class="tok-key">await</span> redis.<span class="tok-fn">set</span>(<span class="tok-str">`user:${id}`</span>, JSON.<span class="tok-fn">stringify</span>(user), <span class="tok-str">"EX"</span>, <span class="tok-num">300</span>);
+  <span class="tok-key">return</span> user;
+}</pre></div>
+      <div class="callout"><b>Use Redis for:</b> caching, sessions, rate limiting, pub/sub, queues, distributed locks.</div>
+    </section>
+
+    <!-- SECURITY -->
+    <section id="security">
+      <h2><span class="num"></span> Security</h2>
+      <table>
+        <tr><th>Threat</th><th>Mitigation</th></tr>
+        <tr><td>Auth</td><td>JWT / sessions, bcrypt password hashing</td></tr>
+        <tr><td>Headers</td><td><code>helmet</code></td></tr>
+        <tr><td>CORS</td><td><code>cors</code> with an allow-list</td></tr>
+        <tr><td>Injection</td><td>Parameterized queries, input validation (zod/joi)</td></tr>
+        <tr><td>Brute force</td><td>Rate limiting</td></tr>
+        <tr><td>Secrets</td><td>Env vars / secrets manager, never in git</td></tr>
+        <tr><td>Deps</td><td><code>npm audit</code>, keep updated</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>JWT + refresh</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> token = jwt.<span class="tok-fn">sign</span>({ id }, process.env.SECRET, { expiresIn: <span class="tok-str">"15m"</span> });
+<span class="tok-key">const</span> payload = jwt.<span class="tok-fn">verify</span>(token, process.env.SECRET);
+<span class="tok-com">// Store refresh token in HttpOnly, Secure, SameSite cookie</span></pre></div>
+    </section>
+
+    <!-- ERRORS -->
+    <section id="errors">
+      <h2><span class="num"></span> Error Handling</h2>
+      <div class="code"><div class="code-head"><span>Central handler + global safety nets</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Express error middleware (4 args)</span>
+app.<span class="tok-fn">use</span>((err, req, res, next) =&gt; {
+  logger.<span class="tok-fn">error</span>(err);
+  res.<span class="tok-fn">status</span>(err.status || <span class="tok-num">500</span>).<span class="tok-fn">json</span>({ error: err.message });
+});
+
+process.<span class="tok-fn">on</span>(<span class="tok-str">"unhandledRejection"</span>, (e) =&gt; logger.<span class="tok-fn">error</span>(e));
+process.<span class="tok-fn">on</span>(<span class="tok-str">"uncaughtException"</span>, (e) =&gt; { logger.<span class="tok-fn">error</span>(e); process.<span class="tok-fn">exit</span>(<span class="tok-num">1</span>); });</pre></div>
+      <div class="callout warn"><b>After an uncaughtException</b> the process is in an undefined state — log and restart (let PM2/Docker relaunch it). Don't just resume.</div>
+    </section>
+
+    <!-- LOGGING -->
+    <section id="logging">
+      <h2><span class="num"></span> Logging</h2>
+      <ul>
+        <li>Use structured JSON logs (<code class="inline">pino</code>, <code class="inline">winston</code>) with levels (info/warn/error).</li>
+        <li>Add a request ID (correlation ID) for tracing across services.</li>
+        <li>Never log secrets/PII; ship logs to a central store (ELK, CloudWatch).</li>
+      </ul>
+    </section>
+
+    <!-- FILE UPLOAD -->
+    <section id="fileupload">
+      <h2><span class="num"></span> File Upload</h2>
+      <div class="code"><div class="code-head"><span>Multer</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> upload = <span class="tok-fn">multer</span>({ limits: { fileSize: <span class="tok-num">5</span> * <span class="tok-num">1024</span> * <span class="tok-num">1024</span> } });
+app.<span class="tok-fn">post</span>(<span class="tok-str">"/upload"</span>, upload.<span class="tok-fn">single</span>(<span class="tok-str">"file"</span>), (req, res) =&gt; {
+  <span class="tok-com">// stream to S3; store URL, validate mime type</span>
+  res.<span class="tok-fn">json</span>({ name: req.file.originalname });
+});</pre></div>
+      <div class="callout tip"><b>Best practice:</b> Stream large files to object storage (S3) rather than buffering in memory; validate type/size.</div>
+    </section>
+
+    <!-- TESTING -->
+    <section id="testing">
+      <h2><span class="num"></span> Testing</h2>
+      <div class="code"><div class="code-head"><span>Jest + Supertest</span><button class="copy">Copy</button></div><pre><span class="tok-fn">test</span>(<span class="tok-str">"GET /health"</span>, <span class="tok-key">async</span> () =&gt; {
+  <span class="tok-key">const</span> res = <span class="tok-key">await</span> <span class="tok-fn">request</span>(app).<span class="tok-fn">get</span>(<span class="tok-str">"/health"</span>);
+  <span class="tok-fn">expect</span>(res.status).<span class="tok-fn">toBe</span>(<span class="tok-num">200</span>);
+});</pre></div>
+    </section>
+
+    <!-- PERF -->
+    <section id="perf">
+      <h2><span class="num"></span> Performance &amp; Scaling</h2>
+      <table>
+        <tr><th>Technique</th><th>Benefit</th></tr>
+        <tr><td>Cluster / PM2 / load balancer</td><td>Use all cores; horizontal scale</td></tr>
+        <tr><td>Caching (Redis) + CDN</td><td>Fewer DB hits, faster responses</td></tr>
+        <tr><td>Streaming</td><td>Low memory for big payloads</td></tr>
+        <tr><td>Worker threads</td><td>Keep loop free of CPU work</td></tr>
+        <tr><td>Connection pooling</td><td>Reuse DB connections</td></tr>
+        <tr><td>Compression (gzip/brotli)</td><td>Smaller responses</td></tr>
+        <tr><td>Avoid sync APIs in requests</td><td>Never block the event loop</td></tr>
+      </table>
+    </section>
+
+    <!-- DEPLOY -->
+    <section id="deploy">
+      <h2><span class="num"></span> Docker &amp; Deployment</h2>
+      <div class="code"><div class="code-head"><span>Multi-stage Dockerfile</span><button class="copy">Copy</button></div><pre><span class="tok-key">FROM</span> node:20-alpine <span class="tok-key">AS</span> build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+
+<span class="tok-key">FROM</span> node:20-alpine
+WORKDIR /app
+COPY --from=build /app .
+ENV NODE_ENV=production
+EXPOSE <span class="tok-num">3000</span>
+CMD [<span class="tok-str">"node"</span>, <span class="tok-str">"server.js"</span>]</pre></div>
+      <div class="callout tip"><b>Production checklist:</b> <code class="inline">NODE_ENV=production</code>, health checks, graceful shutdown (SIGTERM), non-root user, <code class="inline">npm ci</code>, small base image, secrets via env.</div>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — API is slow under load <span class="tag">Performance</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Response times spike as traffic grows. How do you diagnose &amp; fix?</p>
+        <details class="solution"><summary>Show approach</summary><p>Profile (clinic.js / <code class="inline">--prof</code>). Check for blocking sync code, missing DB indexes, and N+1 queries. Add caching (Redis), connection pooling, clustering/PM2 across cores, and a load balancer. Move CPU work to worker threads.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Memory keeps growing <span class="tag">Memory</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> RSS climbs until the process crashes. How do you find the leak?</p>
+        <details class="solution"><summary>Show approach</summary><p>Take heap snapshots (<code class="inline">--inspect</code>), compare growth. Common causes: unbounded caches/arrays, event listeners not removed, closures holding references, global state. Fix with limits, cleanup, and WeakMap.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — CPU-bound endpoint blocks everything <span class="tag">Event Loop</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> One report-generation endpoint freezes the whole server.</p>
+        <details class="solution"><summary>Show approach</summary><p>The sync work blocks the single-threaded event loop. Offload to a <b>worker thread</b> or a separate queue/worker service (Bull + Redis), and stream results.</p></details>
+      </div></div>
+    </section>
+
+    <!-- PRODUCTION ISSUES -->
+    <section id="prodissues">
+      <h2><span class="num"></span> Production Issues</h2>
+      <div class="problem"><div class="p-head">Unhandled rejection crashes the app <span class="tag">Bug</span></div><div class="p-body">
+        <p class="prompt"><b>Report:</b> Process exits randomly.</p>
+        <details class="solution"><summary>Show fix</summary><p>Add <code class="inline">.catch</code>/try-catch to every async path, a global <code class="inline">unhandledRejection</code> handler for logging, and run under a supervisor (PM2/Docker) for auto-restart.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">"EADDRINUSE" on deploy <span class="tag">Bug</span></div><div class="p-body">
+        <p class="prompt"><b>Report:</b> Server won't start — port in use.</p>
+        <details class="solution"><summary>Show fix</summary><p>A previous process didn't exit. Implement <b>graceful shutdown</b> on SIGTERM (close server + DB), and ensure the orchestrator waits for exit before restart.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>Is Node.js single-threaded?</summary><div class="ans"><p>Your JS runs on a single thread with an event loop, but libuv uses a background thread pool for some async I/O (fs, crypto, DNS). CPU work should go to worker threads.</p></div></details>
+      <details class="qa"><summary>Explain the event loop phases.</summary><div class="ans"><p>timers → pending callbacks → poll → check (<code class="inline">setImmediate</code>) → close. <code class="inline">process.nextTick</code> and promise microtasks run between phases, nextTick first.</p></div></details>
+      <details class="qa"><summary>setImmediate vs setTimeout vs process.nextTick?</summary><div class="ans"><p><code class="inline">nextTick</code> runs before other microtasks; <code class="inline">setImmediate</code> runs in the check phase; <code class="inline">setTimeout(0)</code> in the timers phase. nextTick can starve I/O if overused.</p></div></details>
+      <details class="qa"><summary>What are streams and why use them?</summary><div class="ans"><p>Interfaces to process data in chunks (readable/writable/duplex/transform), enabling low memory for large files/network data with automatic backpressure.</p></div></details>
+      <details class="qa"><summary>Cluster vs worker threads?</summary><div class="ans"><p>Cluster forks separate processes to scale I/O across cores (shared port). Worker threads share memory and are for CPU-bound tasks within a process.</p></div></details>
+      <details class="qa"><summary>How do you handle errors in async code?</summary><div class="ans"><p>try/catch with async/await, <code class="inline">.catch</code> on promises, Express error middleware, and global <code class="inline">unhandledRejection</code>/<code class="inline">uncaughtException</code> handlers (log + restart).</p></div></details>
+      <details class="qa"><summary>What is middleware?</summary><div class="ans"><p>Functions <code class="inline">(req, res, next)</code> that run in order to parse, authenticate, log, or handle errors before/around route handlers.</p></div></details>
+      <details class="qa"><summary>How do you secure a Node API?</summary><div class="ans"><p>helmet headers, CORS allow-list, input validation, parameterized queries, JWT/bcrypt auth, rate limiting, HTTPS, secrets in env, <code class="inline">npm audit</code>.</p></div></details>
+      <details class="qa"><summary>package.json vs package-lock.json?</summary><div class="ans"><p><code class="inline">package.json</code> declares dependencies with ranges; the lockfile pins the exact resolved tree for reproducible installs (<code class="inline">npm ci</code>).</p></div></details>
+      <details class="qa"><summary>How do you scale a Node app?</summary><div class="ans"><p>Cluster/PM2 across cores, horizontal scaling behind a load balancer, caching (Redis)/CDN, stateless services, connection pooling, and offloading CPU/async jobs to queues.</p></div></details>
+      <details class="qa"><summary>What is backpressure?</summary><div class="ans"><p>When a writable stream can't keep up with a readable source; <code class="inline">pipe</code>/<code class="inline">pipeline</code> pause the source to avoid unbounded memory growth.</p></div></details>
+      <details class="qa"><summary>Callback hell — how to avoid?</summary><div class="ans"><p>Use promises and async/await, modularize functions, and <code class="inline">Promise.all</code> for parallelism.</p></div></details>
+      <details class="qa"><summary>What is the difference between exports and module.exports?</summary><div class="ans"><p><code class="inline">module.exports</code> is the actual exported object; <code class="inline">exports</code> is a reference to it. Reassigning <code class="inline">exports</code> breaks the link — assign to <code class="inline">module.exports</code>.</p></div></details>
+      <details class="qa"><summary>How do you do graceful shutdown?</summary><div class="ans"><p>Listen for SIGTERM/SIGINT, stop accepting new connections (<code class="inline">server.close</code>), drain in-flight requests, close DB/Redis, then exit.</p></div></details>
+      <details class="qa"><summary>What is the thread pool used for?</summary><div class="ans"><p>libuv's pool (default 4, <code class="inline">UV_THREADPOOL_SIZE</code>) runs blocking ops like file I/O, DNS, crypto, and compression off the main thread.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Need</th><th>Use</th></tr>
+        <tr><td>Async file read</td><td><code>fs/promises.readFile</code></td></tr>
+        <tr><td>Big file processing</td><td>Streams + <code>pipeline</code></td></tr>
+        <tr><td>Use all cores</td><td>cluster / PM2</td></tr>
+        <tr><td>CPU-heavy task</td><td>worker_threads</td></tr>
+        <tr><td>Cache</td><td>Redis (EX ttl)</td></tr>
+        <tr><td>Auth</td><td>JWT + bcrypt</td></tr>
+        <tr><td>Headers security</td><td>helmet</td></tr>
+        <tr><td>Env config</td><td>dotenv + process.env</td></tr>
+        <tr><td>Reproducible install</td><td>npm ci + lockfile</td></tr>
+        <tr><td>Prod run</td><td>PM2 / Docker + SIGTERM</td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🟩 <b>Node.js — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Architecture, event loop, streams, scaling, security, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
