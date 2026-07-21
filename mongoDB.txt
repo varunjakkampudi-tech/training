@@ -1,0 +1,285 @@
+Issues with MySQL
+1) RDBMS
+2) Scalablity - Huge data and Multiple tables
+3) Flexibility - Fixed data structure and more time to design the database
+4) ACID properties - Atomicity, Consistency, Isolation, Durability
+5) SQL - Structured Query Language
+6) Performance issues (JOINS use high CPU)
+7) Tables
+8) row and column
+
+MongoDB
+1) NoSQL
+2) Scalability - Huge data and Multiple documents
+3) Flexibility - Dynamic data structure and less time to design the database
+4) ACID properties - Atomicity, Consistency, Isolation, Durability
+5) MongoDB - NoSQL database
+6) Performance
+7) collection
+8) document and field
+9) JSON data type (Restful API), data types -> BSON (Binary JSON)
+
+Data Types
+1) String
+2) Boolean
+3) Date
+4) Object
+5) Array
+6) Null
+7) Integer
+8) Timestamp
+9) ObjectId
+10) Binary
+11) Data
+12) Double (float)
+
+Database
+1) show dbs or show databases- list all databases
+2) use database - select database or create
+3) db - current database
+4) delete database - delete database
+5) db.dropDatabase() - delete database
+
+Collections
+1) show collections - list all collections
+2) db.createCollection() - create collection
+3) db.collection.drop() - delete collection
+
+CRUD
+Create - C
+1) db.collection.insert({}) - insert one document
+2) db.collection.insertMany([]) - insert multiple documents
+Example:
+db.collection.insertMany([
+    { name: "John", age: 25 },
+    { name: "Jane", age: 30 }
+])
+
+Read - R
+1) db.collection.find() - find all documents
+2) db.collection.findOne() - find one document
+3) db.collection.find().pretty() - pretty print the result
+4) db.collection.find().sort() - sort the result
+Example: db.products.find().sort({ "stock": -1 }); 
+5) db.collection.find().limit(2) - limit the result (show only 2)
+6) db.collection.find().skip(2) - skip the result (show only after 2)
+7) db.collection.find().count() or db.collection.find().itcount() - count the result 
+8) projection - which field need to be shown
+Example:
+db.collection.find({}, { name: 1 }) - show only name field
+
+Update - U
+1) db.collection.updateOne() or db.collection.update() - update one document
+2) db.collection.updateMany() - update multiple documents
+3) db.collection.update() - update one document
+4) upsert - create a row if not exists or update if exists
+5) $set
+db.collection.updateOne({"_id": 1}, { $set: {"name": "Product 4"} }, {upsert: true}) 
+6) $inc
+db.collection.updateOne({"_id": 1}, { $inc: {"name": "Product 2"} }, {upsert: true}) - increment by 2
+7) $rename
+db.collection.updateOne({"_id": 1}, { $rename: {"since": "on live since"} }, {upsert: true}) - increment by 2
+8) $unset
+db.products.updateOne(
+  { "_id": 1 },
+  { $unset: { "details": "" } } // The value here (e.g., "") doesn't matter.
+);
+9) $currentDate
+db.products.updateOne(
+  { "_id": 1 },
+  { $currentDate: { "lastModified": true } }
+);
+10) $addToSet: Adds distinct elements to an array
+db.products.updateOne({ "_id": 1 }, { $addToSet: { "tags": "durable" } });
+db.products.updateOne({ "_id": 1 }, { $addToSet: { "tags": "popular" } });
+11) $pop: Removes the first or last element of an array
+db.products.updateOne(
+  { "_id": 1 },
+  { $pop: { "ratings": 1 } }
+);
+12) $pull: Removes all elements from an array that match the query
+db.products.updateOne(
+  { "_id": 1 },
+  { $pull: { "ratings": 9 } }
+);
+13) $push: Adds an element to an array
+db.products.updateOne(
+  { "_id": 1 },
+  { $push: { "ratings": 9 } }
+);
+
+Delete - D
+1) db.collection.deleteOne() - delete one document
+2) db.collection.deleteMany() - delete multiple documents
+3) db.collection.remove() - delete one document
+Example:
+db.collection.deleteOne({"name": "John"});
+
+Query Opearation
+1) Comparison
+    1) $eq - equal
+    2) $ne - not equal
+    3) $gt - greater than
+    4) $lt - less than
+    5) $gte - greater than or equal to
+    6) $lte - less than or equal to
+    7) $in - in array
+    
+2) Logical
+    1) $and - and
+    2) $or - or
+    3) $not - not
+    4) $nor - nor
+
+3) Element
+    1) $elemMatch - match element in array
+    2) $match - similar to Find
+
+4) Array
+    1) $in - in array
+    2) $nin - not in array
+    3) $all - all element in array
+    4) $size - size of array
+    
+5) Evalution
+    1) $regex - regular expression
+    2) $type - data type
+    3) $mod - modulus
+    4) $text - Performs a text search
+    5) $where - Uses a JavaScript expression to match documents
+
+Nested Queries
+1) $and or , 
+Example: 
+    db.collection.find({"name": "product 1", "price": {"$gt": 10}});
+
+    db.products.find({$and : [
+        {"name": "product 1"},
+        {"price": {"$gt": 10}}
+    ]});
+2) $or
+ db.products.find({$or : [
+    {"name": "product 1"},
+    {"price": {"$gt": 10}}
+ ]})
+3) $in
+db.products.find({$or : [
+    {"rating": 3},  
+    {"rating": 4},    ->    db.products.find({"rating": {$in: [3, 4, 5]}});
+    {"rating": 5},
+ ]})
+4) $nin
+db.products.find({"rating": {$nin: [3, 4, 5]}});
+
+Query Array
+1) db.products.find({"tags": "sale"}); -> tags is an array and mongodb search sale inside and array and give result
+2) db.products.find({"tags": ["sale"]}); -> tags is an array and mongodb search tag with only sale inside and array
+3) $all
+db.products.find({"tags": { $all: ["sale", "discount"]}}); -> search for tags which have both sale and discount in an array
+
+Aggregation Pipelines
+1) Aggregation pipelines can be used to perform complex queries, group data, perform calculations, and more.
+2) Aggregation pipelines can have one or more "stages". The order of these stages are important. Each stage acts upon the results of the previous stage.
+3) $sort, $group, $count, $limit, $match, $project, $addField, $out, $lookup
+Example:
+db.posts.aggregate([
+  // Stage 1: Only find documents that have more than 1 like
+  {
+    $match: { likes: { $gt: 1 } }
+  },
+  // Stage 2: Group documents by category and sum each categories likes
+  {
+    $group: { _id: "$category", totalLikes: { $sum: "$likes" } }
+  }
+])
+4) $match
+db.products.aggregate([{$match: {"name": "Product 4"}}]); -> find all documents with name Product 4
+5) $count
+db.products.aggregate([{$match: {"name": "Product 4"}}, {$count: "Total products with name 'product 4'"}]) -> count all documents with name Product 4
+6) $sort
+db.products.aggregate([ { $match: {"name": "Product 4", "price": { $gt: 20}}}, { $sort : { "price" : 1}}]) -> ascending
+db.products.aggregate([ { $match: {"name": "Product 4", "price": { $gt: 20}}}, { $sort : { "price" : -1}}]) -> decending
+7) $group - This aggregation stage groups documents by the unique _id expression provided.
+db.products.aggregate([{ $group: { "_id": "$name" }}]) -> return the distinct values from the name field.
+8) $limit - This aggregation stage limits the number of documents passed to the next stage.
+db.movies.aggregate([ { $limit: 1 } ])
+9) $project
+db.products.aggregate([ { $match: {"name": "Product 4", "price": { $gt: 20}}}, { $sort : { "price" : -1}}, {$project: {"_id": 1}}])
+
+db.restaurants.aggregate([
+  {
+    $project: {
+      "name": 1,
+      "cuisine": 1,
+      "address": 1
+    }
+  },
+  {
+    $limit: 5
+  }
+])
+10) $addFields
+db.products.aggregate([ { $match: {"name": "Product 4", "price": { $gt: 20}}}, {$addFields: {"Full Name": "$name"}}, { $sort : { "price" : -1}}])
+11) $out - This aggregation stage writes the returned documents from the aggregation pipeline to a collection.
+db.products.aggregate([ { $match: {"name": "Product 4", "price": { $gt: 20}}}, {$addFields: {"Full Name": "$name"}}, { $sort : { "price" : -1}}, {$out: "out collection"}])
+12) $lookup - This aggregation stage performs a left outer join with another collection.
+There are four required fields:
+from: The collection to use for lookup in the same database
+localField: The field in the primary collection that can be used as a unique identifier in the from collection.
+foreignField: The field in the from collection that can be used as a unique identifier in the primary collection.
+as: The name of the new field that will contain the matching documents from the from collection.
+Example:
+db.comments.aggregate([
+  {
+    $lookup: {
+      from: "movies",
+      localField: "movie_id",
+      foreignField: "_id",
+      as: "movie_details",
+    },
+  },
+  {
+    $limit: 1
+  }
+])
+
+1) Validation- Schema validation rules can be created in order to ensure that all documents in a collection share a similar structure.
+Example: 
+db.createCollection("posts", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: [ "title", "body" ],
+      properties: {
+        title: {
+          bsonType: "string",
+          description: "Title of post - Required."
+        },
+        body: {
+          bsonType: "string",
+          description: "Body of post - Required."
+        },
+        category: {
+          bsonType: "string",
+          description: "Category of post - Optional."
+        },
+        likes: {
+          bsonType: "int",
+          description: "Post like count. Must be an integer - Optional."
+        },
+        tags: {
+          bsonType: ["string"],
+          description: "Must be an array of strings - Optional."
+        },
+        date: {
+          bsonType: "date",
+          description: "Must be a date - Optional."
+        }
+      }
+    }
+  }
+})
+
+Notes
+1) BSON - Binary Serialization Of N-like documents
+2) Nested documents - documents within documents

@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="A complete, hands-on MongoDB guide — CRUD, query operators, aggregation pipelines, indexing, schema design, transactions, real-world scenarios, problems with solutions, and interview questions." />
+<title>MongoDB — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #1976d2;
+    --blue-dark: #0d47a1;
+    --blue-mid: #2196f3;
+    --sky: #64b5f6;
+    --light-blue: #e3f2fd;
+    --light-blue-2: #f0f7ff;
+    --bg: #ffffff;
+    --bg-soft: #f6fafe;
+    --panel: #ffffff;
+    --text: #12283a;
+    --muted: #5a7184;
+    --border: #d6e6f5;
+    --code-bg: #0f2540;
+    --accent: #f9a825;
+    --danger: #e53935;
+    --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(25, 118, 210, 0.10);
+    --shadow-lg: 0 14px 40px rgba(13, 71, 161, 0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    display: flex;
+  }
+
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- Sidebar ---------- */
+  #sidebar {
+    width: 288px;
+    background: linear-gradient(180deg, #ffffff, var(--light-blue-2));
+    border-right: 1px solid var(--border);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    padding: 24px 0 40px;
+    flex-shrink: 0;
+  }
+  #sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 22px 18px;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--blue-dark);
+  }
+  #sidebar .brand svg { flex-shrink: 0; }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font-size: 0.85rem;
+    outline: none;
+  }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a {
+    display: block;
+    padding: 7px 22px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    border-left: 3px solid transparent;
+    transition: all 0.15s ease;
+  }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title {
+    margin-top: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.7rem;
+    color: var(--blue);
+    font-weight: 800;
+    pointer-events: none;
+  }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+
+  /* ---------- Main ---------- */
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+
+  header.hero {
+    padding: 74px 48px 58px;
+    background:
+      radial-gradient(900px 380px at 82% -10%, rgba(33, 150, 243, 0.18), transparent),
+      linear-gradient(160deg, #e8f3ff, #ffffff);
+    border-bottom: 1px solid var(--border);
+  }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 740px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge {
+    background: var(--light-blue);
+    border: 1px solid var(--sky);
+    color: var(--blue-dark);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num {
+    font-size: 0;
+    background: linear-gradient(135deg, var(--blue-mid), var(--blue));
+    color: #fff;
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 800; flex-shrink: 0;
+    box-shadow: var(--shadow);
+  }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+
+  code.inline {
+    background: var(--light-blue);
+    color: var(--blue-dark);
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 0.88em;
+    border: 1px solid var(--border);
+  }
+
+  /* Code blocks */
+  .code {
+    position: relative;
+    background: var(--code-bg);
+    border: 1px solid #163a5f;
+    border-radius: 10px;
+    margin: 14px 0;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .code .code-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px;
+    background: #0a1c33;
+    border-bottom: 1px solid #163a5f;
+    font-size: 0.75rem; color: #9fc3e8;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .code pre {
+    margin: 0; padding: 16px 18px; overflow-x: auto;
+    font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+    font-size: 0.86rem; line-height: 1.6; color: #e6f0fb;
+  }
+  .code .copy {
+    cursor: pointer; background: transparent;
+    border: 1px solid #2a5486; color: #9fc3e8;
+    border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s;
+  }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(100,181,246,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+
+  /* Syntax tokens */
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #6f97bf; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+
+  /* Callouts */
+  .callout {
+    border-left: 4px solid var(--blue-mid);
+    background: var(--light-blue-2);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    color: #24435c;
+  }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+
+  /* Real-world box */
+  .realworld {
+    background: linear-gradient(160deg, #ffffff, var(--light-blue-2));
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--sky);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 18px 0;
+    box-shadow: var(--shadow);
+  }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+
+  /* Problem/solution */
+  .problem {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 18px 0;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    background: #fff;
+  }
+  .problem .p-head {
+    background: linear-gradient(135deg, var(--blue), var(--blue-mid));
+    color: #fff; padding: 12px 18px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .problem .p-head .tag {
+    margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22);
+    padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #24435c; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary {
+    cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+
+  /* Interview Q */
+  details.qa {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin: 10px 0;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  details.qa summary {
+    cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark);
+    list-style: none; display: flex; align-items: center; gap: 10px;
+    background: var(--light-blue-2);
+  }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #33506a; }
+  details.qa .ans p:first-child { margin-top: 0; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+
+  /* Comparison cards */
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.mysql { border-top: 4px solid #f29111; }
+  .vs-card.mongo { border-top: 4px solid var(--green); }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="#2196f3"><path d="M12 2c1.5 4 5 6.5 5 11 0 3.5-2.2 6.5-5 9-2.8-2.5-5-5.5-5-9C7 8.5 10.5 6 12 2z"/></svg>
+    MongoDB Guide
+  </div>
+  <div class="search">
+    <input type="text" id="navSearch" placeholder="Filter topics…" />
+  </div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Introduction</a>
+    <a href="#sql-vs-nosql">SQL vs MongoDB</a>
+    <a href="#datatypes">BSON Data Types</a>
+    <a class="section-title">Basics</a>
+    <a href="#databases">Databases</a>
+    <a href="#collections">Collections</a>
+    <a class="section-title">CRUD</a>
+    <a href="#create">Create</a>
+    <a href="#read">Read</a>
+    <a href="#update">Update</a>
+    <a href="#delete">Delete</a>
+    <a class="section-title">Querying</a>
+    <a href="#operators">Query Operators</a>
+    <a href="#nested">Nested Queries</a>
+    <a href="#arrays">Array Queries</a>
+    <a href="#aggregation">Aggregation Pipeline</a>
+    <a class="section-title">Performance</a>
+    <a href="#indexes">Indexes</a>
+    <a href="#performance">Performance &amp; Cost</a>
+    <a class="section-title">Schema &amp; Modeling</a>
+    <a href="#validation">Schema Validation</a>
+    <a href="#datamodel">Data Modeling &amp; Patterns</a>
+    <a class="section-title">Distributed Systems</a>
+    <a href="#transactions">Transactions</a>
+    <a href="#replication">Replication</a>
+    <a href="#sharding">Sharding</a>
+    <a href="#cap">CAP Theorem</a>
+    <a class="section-title">Internals &amp; Advanced</a>
+    <a href="#bson">BSON Internals</a>
+    <a href="#agg-advanced">Advanced Aggregation</a>
+    <a href="#explain">explain() &amp; Plans</a>
+    <a href="#ttl">TTL Indexes</a>
+    <a class="section-title">Specialized</a>
+    <a href="#timeseries">Time Series</a>
+    <a href="#gridfs">GridFS</a>
+    <a href="#changestreams">Change Streams</a>
+    <a class="section-title">Security &amp; Ops</a>
+    <a href="#security">Security</a>
+    <a href="#backup">Backup &amp; Restore</a>
+    <a href="#atlas">Atlas</a>
+    <a href="#compass">Compass</a>
+    <a class="section-title">Backend &amp; Design</a>
+    <a href="#systemdesign">System Design</a>
+    <a href="#node">Node.js CRUD API</a>
+    <a href="#production">Production Checklist</a>
+    <a href="#mistakes">Common Mistakes</a>
+    <a href="#connect">Drivers &amp; Connect</a>
+    <a href="#middleware">Mongoose (ODM)</a>
+    <a class="section-title">Practice</a>
+    <a href="#problems">Problems &amp; Solutions</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">MongoDB</span> Hands-On Guide</h1>
+    <p>A full reference &amp; interview handbook — CRUD, aggregation, indexing, data-modeling patterns, Mongoose, transactions, replication, sharding, CAP, time-series, GridFS, change streams, security, Atlas, system design, and 60+ interview questions. Every topic with runnable code, real-world scenarios, and bottleneck fixes.</p>
+    <div class="badges">
+      <span class="badge">NoSQL</span>
+      <span class="badge">Aggregation</span>
+      <span class="badge">Data Modeling</span>
+      <span class="badge">Mongoose</span>
+      <span class="badge">Sharding</span>
+      <span class="badge">System Design</span>
+      <span class="badge">Atlas</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num">1</span> Introduction</h2>
+      <p class="lead">MongoDB is an open-source, document-oriented <b>NoSQL</b> database that stores data as flexible, JSON-like documents.</p>
+      <p>Instead of tables, rows, and columns, MongoDB organizes data into <b>collections</b> of <b>documents</b>. Each document is a set of key–value pairs stored physically as <b>BSON</b> (Binary JSON), which extends JSON with extra types like <code class="inline">Date</code>, <code class="inline">ObjectId</code>, and <code class="inline">Binary</code>.</p>
+      <table>
+        <tr><th>SQL Term</th><th>MongoDB Term</th></tr>
+        <tr><td>Database</td><td>Database</td></tr>
+        <tr><td>Table</td><td>Collection</td></tr>
+        <tr><td>Row / Record</td><td>Document</td></tr>
+        <tr><td>Column</td><td>Field</td></tr>
+        <tr><td>JOIN</td><td><code>$lookup</code> / embedding</td></tr>
+        <tr><td>Primary Key</td><td><code>_id</code> (ObjectId)</td></tr>
+      </table>
+      <div class="callout tip"><b>Note:</b> BSON = <b>Binary JSON</b> — a binary-encoded serialization of JSON-like documents that enables fast traversal and rich data types not available in plain JSON.</div>
+    </section>
+
+    <!-- SQL VS NOSQL -->
+    <section id="sql-vs-nosql">
+      <h2><span class="num">2</span> SQL (MySQL) vs MongoDB</h2>
+      <p class="lead">Why teams move from relational databases to MongoDB — and the trade-offs involved.</p>
+      <div class="vs-grid">
+        <div class="vs-card mysql">
+          <h4>⚙️ MySQL (RDBMS)</h4>
+          <ul>
+            <li><b>Relational</b> — data split across normalized tables</li>
+            <li><b>Fixed schema</b> — structure defined up front, slower to change</li>
+            <li><b>Vertical scaling</b> — harder to scale out</li>
+            <li><b>JOINs</b> are powerful but CPU-heavy at scale</li>
+            <li>Strong <b>ACID</b> guarantees</li>
+            <li>Uses <b>SQL</b> (Structured Query Language)</li>
+          </ul>
+        </div>
+        <div class="vs-card mongo">
+          <h4>🍃 MongoDB (NoSQL)</h4>
+          <ul>
+            <li><b>Document-oriented</b> — related data can live together</li>
+            <li><b>Dynamic schema</b> — flexible, fast to evolve</li>
+            <li><b>Horizontal scaling</b> via sharding</li>
+            <li>Avoids costly JOINs by <b>embedding</b> data</li>
+            <li>ACID at document level; multi-doc transactions since 4.0</li>
+            <li>Rich query API + aggregation framework</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout"><b>ACID</b> = <b>A</b>tomicity, <b>C</b>onsistency, <b>I</b>solation, <b>D</b>urability. MongoDB provides these at the single-document level by default, and across multiple documents using transactions.</div>
+      <div class="realworld">
+        <h4>🌍 Real-world scenario</h4>
+        <p>An <b>e-commerce catalog</b> where products have wildly different attributes (a laptop has RAM/CPU, a shirt has size/color) fits MongoDB's flexible documents better than dozens of sparse SQL columns or complex join tables.</p>
+      </div>
+    </section>
+
+    <!-- DATA TYPES -->
+    <section id="datatypes">
+      <h2><span class="num">3</span> BSON Data Types</h2>
+      <p class="lead">MongoDB stores documents as BSON, which supports these common types.</p>
+      <table>
+        <tr><th>Type</th><th>Example</th><th>Use</th></tr>
+        <tr><td>String</td><td><code>"Laptop"</code></td><td>Text</td></tr>
+        <tr><td>Integer</td><td><code>NumberInt(25)</code></td><td>Whole numbers (32/64-bit)</td></tr>
+        <tr><td>Double</td><td><code>899.99</code></td><td>Floating point</td></tr>
+        <tr><td>Boolean</td><td><code>true</code></td><td>true / false</td></tr>
+        <tr><td>Date</td><td><code>ISODate("2026-07-21")</code></td><td>Timestamps</td></tr>
+        <tr><td>Object</td><td><code>{ city: "NY" }</code></td><td>Embedded document</td></tr>
+        <tr><td>Array</td><td><code>["red","blue"]</code></td><td>Lists</td></tr>
+        <tr><td>Null</td><td><code>null</code></td><td>Absence of value</td></tr>
+        <tr><td>ObjectId</td><td><code>ObjectId("...")</code></td><td>Unique 12-byte <code>_id</code></td></tr>
+        <tr><td>Timestamp</td><td><code>Timestamp()</code></td><td>Internal replication use</td></tr>
+        <tr><td>Binary</td><td><code>BinData()</code></td><td>Raw bytes / files</td></tr>
+        <tr><td>Decimal128</td><td><code>NumberDecimal("9.99")</code></td><td>High-precision money</td></tr>
+      </table>
+      <div class="callout tip"><b>Tip:</b> Use <code class="inline">Decimal128</code> (not Double) for currency to avoid floating-point rounding errors.</div>
+    </section>
+
+    <!-- DATABASES -->
+    <section id="databases">
+      <h2><span class="num">4</span> Databases</h2>
+      <div class="code"><div class="code-head"><span>mongosh</span><button class="copy">Copy</button></div><pre><span class="tok-com">// List all databases</span>
+<span class="tok-fn">show</span> dbs           <span class="tok-com">// or: show databases</span>
+
+<span class="tok-com">// Switch to (or lazily create) a database</span>
+<span class="tok-key">use</span> shop
+
+<span class="tok-com">// Show the current database</span>
+db
+
+<span class="tok-com">// Delete the current database</span>
+db.<span class="tok-fn">dropDatabase</span>()</pre></div>
+      <div class="callout warn"><b>Careful:</b> A database only physically appears once it contains a document/collection. <code class="inline">use shop</code> alone won't show in <code class="inline">show dbs</code>.</div>
+    </section>
+
+    <!-- COLLECTIONS -->
+    <section id="collections">
+      <h2><span class="num">5</span> Collections</h2>
+      <div class="code"><div class="code-head"><span>mongosh</span><button class="copy">Copy</button></div><pre><span class="tok-com">// List collections in the current DB</span>
+<span class="tok-fn">show</span> collections
+
+<span class="tok-com">// Explicitly create a collection</span>
+db.<span class="tok-fn">createCollection</span>(<span class="tok-str">"products"</span>)
+
+<span class="tok-com">// Drop (delete) a collection</span>
+db.products.<span class="tok-fn">drop</span>()</pre></div>
+      <p>Collections are also created <b>implicitly</b> the first time you insert into them, so <code class="inline">createCollection</code> is only needed when you want options like validation or capped collections.</p>
+    </section>
+
+    <!-- CREATE -->
+    <section id="create">
+      <h2><span class="num">6</span> Create (Insert)</h2>
+      <div class="code"><div class="code-head"><span>Insert one</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">insertOne</span>({
+  name: <span class="tok-str">"Laptop"</span>,
+  price: <span class="tok-num">899.99</span>,
+  stock: <span class="tok-num">10</span>,
+  tags: [<span class="tok-str">"sale"</span>, <span class="tok-str">"electronics"</span>]
+})</pre></div>
+      <div class="code"><div class="code-head"><span>Insert many</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">insertMany</span>([
+  { name: <span class="tok-str">"Mouse"</span>,    price: <span class="tok-num">29.99</span>,  stock: <span class="tok-num">100</span> },
+  { name: <span class="tok-str">"Keyboard"</span>, price: <span class="tok-num">79.99</span>,  stock: <span class="tok-num">40</span>  },
+  { name: <span class="tok-str">"Monitor"</span>,  price: <span class="tok-num">249.99</span>, stock: <span class="tok-num">15</span>  }
+])</pre></div>
+      <div class="callout tip"><b>Tip:</b> If you don't supply an <code class="inline">_id</code>, MongoDB auto-generates a unique <code class="inline">ObjectId</code>. Use <code class="inline">{ ordered: false }</code> in <code class="inline">insertMany</code> so one bad doc doesn't abort the batch.</div>
+      <div class="realworld">
+        <h4>🌍 Real-world scenario</h4>
+        <p>A <b>signup flow</b> uses <code class="inline">insertOne</code> to create a user; a nightly <b>data import</b> job uses <code class="inline">insertMany</code> with <code class="inline">{ ordered: false }</code> for resilient bulk loading.</p>
+      </div>
+    </section>
+
+    <!-- READ -->
+    <section id="read">
+      <h2><span class="num">7</span> Read (Find)</h2>
+      <div class="code"><div class="code-head"><span>Basic reads</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">find</span>()                 <span class="tok-com">// all documents</span>
+db.products.<span class="tok-fn">findOne</span>({ name: <span class="tok-str">"Laptop"</span> })  <span class="tok-com">// first match</span>
+db.products.<span class="tok-fn">find</span>().<span class="tok-fn">pretty</span>()        <span class="tok-com">// formatted output</span></pre></div>
+
+      <h3>Sorting, limiting, skipping, counting</h3>
+      <div class="code"><div class="code-head"><span>Cursor methods</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">find</span>().<span class="tok-fn">sort</span>({ stock: <span class="tok-op">-1</span> })   <span class="tok-com">// 1 = asc, -1 = desc</span>
+db.products.<span class="tok-fn">find</span>().<span class="tok-fn">limit</span>(<span class="tok-num">2</span>)           <span class="tok-com">// only 2 docs</span>
+db.products.<span class="tok-fn">find</span>().<span class="tok-fn">skip</span>(<span class="tok-num">2</span>)            <span class="tok-com">// skip first 2 (pagination)</span>
+db.products.<span class="tok-fn">countDocuments</span>()          <span class="tok-com">// count results</span></pre></div>
+
+      <h3>Projection — choosing fields</h3>
+      <div class="code"><div class="code-head"><span>Projection</span><button class="copy">Copy</button></div><pre><span class="tok-com">// 1 = include, 0 = exclude</span>
+db.products.<span class="tok-fn">find</span>({}, { name: <span class="tok-num">1</span>, price: <span class="tok-num">1</span>, _id: <span class="tok-num">0</span> })</pre></div>
+      <div class="callout"><b>Pagination pattern:</b> for large collections prefer <b>range-based</b> paging (<code class="inline">_id &gt; lastSeenId</code>) — <code class="inline">skip</code> gets slow on big offsets.</div>
+    </section>
+
+    <!-- UPDATE -->
+    <section id="update">
+      <h2><span class="num">8</span> Update</h2>
+      <div class="code"><div class="code-head"><span>Update basics</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">updateOne</span>(
+  { _id: <span class="tok-num">1</span> },                    <span class="tok-com">// filter</span>
+  { <span class="tok-op">$set</span>: { name: <span class="tok-str">"Product 4"</span> } }   <span class="tok-com">// update</span>
+)
+
+db.products.<span class="tok-fn">updateMany</span>(
+  { stock: { <span class="tok-op">$lt</span>: <span class="tok-num">5</span> } },
+  { <span class="tok-op">$set</span>: { status: <span class="tok-str">"low"</span> } }
+)</pre></div>
+      <div class="callout tip"><b>Upsert:</b> Add <code class="inline">{ upsert: true }</code> as a third argument to <b>insert if no match exists</b>, otherwise update.</div>
+
+      <h3>Field update operators</h3>
+      <table>
+        <tr><th>Operator</th><th>Purpose</th></tr>
+        <tr><td><code>$set</code></td><td>Set a field's value</td></tr>
+        <tr><td><code>$inc</code></td><td>Increment / decrement a number</td></tr>
+        <tr><td><code>$rename</code></td><td>Rename a field</td></tr>
+        <tr><td><code>$unset</code></td><td>Remove a field</td></tr>
+        <tr><td><code>$currentDate</code></td><td>Set field to current date</td></tr>
+        <tr><td><code>$mul</code></td><td>Multiply a field's value</td></tr>
+        <tr><td><code>$min</code> / <code>$max</code></td><td>Update only if smaller / larger</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Field operators</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">updateOne</span>({ _id: <span class="tok-num">1</span> }, { <span class="tok-op">$inc</span>: { stock: <span class="tok-op">-2</span> } })       <span class="tok-com">// sell 2 units</span>
+db.products.<span class="tok-fn">updateOne</span>({ _id: <span class="tok-num">1</span> }, { <span class="tok-op">$rename</span>: { since: <span class="tok-str">"liveSince"</span> } })
+db.products.<span class="tok-fn">updateOne</span>({ _id: <span class="tok-num">1</span> }, { <span class="tok-op">$unset</span>: { details: <span class="tok-str">""</span> } })  <span class="tok-com">// value ignored</span>
+db.products.<span class="tok-fn">updateOne</span>({ _id: <span class="tok-num">1</span> }, { <span class="tok-op">$currentDate</span>: { lastModified: <span class="tok-key">true</span> } })</pre></div>
+
+      <h3>Array update operators</h3>
+      <table>
+        <tr><th>Operator</th><th>Purpose</th></tr>
+        <tr><td><code>$push</code></td><td>Append an element</td></tr>
+        <tr><td><code>$addToSet</code></td><td>Append only if not already present</td></tr>
+        <tr><td><code>$pop</code></td><td>Remove first (<code>-1</code>) or last (<code>1</code>)</td></tr>
+        <tr><td><code>$pull</code></td><td>Remove all elements matching a condition</td></tr>
+        <tr><td><code>$each</code></td><td>Push / add multiple elements at once</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Array operators</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">updateOne</span>({ _id: <span class="tok-num">1</span> }, { <span class="tok-op">$push</span>: { ratings: <span class="tok-num">9</span> } })
+db.products.<span class="tok-fn">updateOne</span>({ _id: <span class="tok-num">1</span> }, { <span class="tok-op">$addToSet</span>: { tags: <span class="tok-str">"durable"</span> } })
+db.products.<span class="tok-fn">updateOne</span>({ _id: <span class="tok-num">1</span> }, { <span class="tok-op">$pop</span>: { ratings: <span class="tok-num">1</span> } })   <span class="tok-com">// remove last</span>
+db.products.<span class="tok-fn">updateOne</span>({ _id: <span class="tok-num">1</span> }, { <span class="tok-op">$pull</span>: { ratings: <span class="tok-num">9</span> } })  <span class="tok-com">// remove all 9s</span></pre></div>
+      <div class="realworld">
+        <h4>🌍 Real-world scenario</h4>
+        <p><b>Inventory:</b> <code class="inline">$inc: { stock: -1 }</code> per purchase. <b>Likes:</b> <code class="inline">$addToSet</code> stops a user liking twice. <b>Activity feed:</b> <code class="inline">$push</code> + <code class="inline">$slice</code> keeps only the latest N events.</p>
+      </div>
+    </section>
+
+    <!-- DELETE -->
+    <section id="delete">
+      <h2><span class="num">9</span> Delete</h2>
+      <div class="code"><div class="code-head"><span>Delete</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">deleteOne</span>({ name: <span class="tok-str">"John"</span> })       <span class="tok-com">// first match</span>
+db.products.<span class="tok-fn">deleteMany</span>({ stock: { <span class="tok-op">$eq</span>: <span class="tok-num">0</span> } })  <span class="tok-com">// all matches</span>
+db.products.<span class="tok-fn">deleteMany</span>({})                     <span class="tok-com">// ⚠️ deletes everything</span></pre></div>
+      <div class="callout warn"><b>Danger:</b> <code class="inline">deleteMany({})</code> with an empty filter removes <b>every document</b>. Always double-check the filter.</div>
+    </section>
+
+    <!-- OPERATORS -->
+    <section id="operators">
+      <h2><span class="num">10</span> Query Operators</h2>
+      <h3>Comparison</h3>
+      <table>
+        <tr><th>Operator</th><th>Meaning</th><th>Example</th></tr>
+        <tr><td><code>$eq</code></td><td>equal</td><td><code>{ price: { $eq: 10 } }</code></td></tr>
+        <tr><td><code>$ne</code></td><td>not equal</td><td><code>{ price: { $ne: 10 } }</code></td></tr>
+        <tr><td><code>$gt</code> / <code>$gte</code></td><td>greater (or equal)</td><td><code>{ price: { $gt: 100 } }</code></td></tr>
+        <tr><td><code>$lt</code> / <code>$lte</code></td><td>less (or equal)</td><td><code>{ price: { $lte: 50 } }</code></td></tr>
+        <tr><td><code>$in</code> / <code>$nin</code></td><td>in / not in a list</td><td><code>{ rating: { $in: [3,4,5] } }</code></td></tr>
+      </table>
+      <h3>Logical</h3>
+      <div class="code"><div class="code-head"><span>Logical operators</span><button class="copy">Copy</button></div><pre><span class="tok-op">$and</span>, <span class="tok-op">$or</span>, <span class="tok-op">$not</span>, <span class="tok-op">$nor</span>
+
+db.products.<span class="tok-fn">find</span>({ <span class="tok-op">$or</span>: [
+  { name: <span class="tok-str">"product 1"</span> },
+  { price: { <span class="tok-op">$gt</span>: <span class="tok-num">10</span> } }
+]})</pre></div>
+      <h3>Element & Evaluation</h3>
+      <table>
+        <tr><th>Operator</th><th>Purpose</th></tr>
+        <tr><td><code>$exists</code></td><td>Field is present</td></tr>
+        <tr><td><code>$type</code></td><td>Field is of a BSON type</td></tr>
+        <tr><td><code>$regex</code></td><td>Pattern / substring match</td></tr>
+        <tr><td><code>$mod</code></td><td>Modulo match</td></tr>
+        <tr><td><code>$text</code></td><td>Full-text search (needs text index)</td></tr>
+        <tr><td><code>$expr</code></td><td>Use aggregation expressions in queries</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Evaluation examples</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">find</span>({ name: { <span class="tok-op">$regex</span>: <span class="tok-str">/laptop/i</span> } })   <span class="tok-com">// case-insensitive</span>
+db.products.<span class="tok-fn">find</span>({ discount: { <span class="tok-op">$exists</span>: <span class="tok-key">true</span> } })
+db.products.<span class="tok-fn">find</span>({ price: { <span class="tok-op">$type</span>: <span class="tok-str">"double"</span> } })</pre></div>
+    </section>
+
+    <!-- NESTED -->
+    <section id="nested">
+      <h2><span class="num">11</span> Nested & Combined Queries</h2>
+      <div class="code"><div class="code-head"><span>Implicit AND</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Multiple fields = implicit AND</span>
+db.products.<span class="tok-fn">find</span>({ name: <span class="tok-str">"product 1"</span>, price: { <span class="tok-op">$gt</span>: <span class="tok-num">10</span> } })
+
+<span class="tok-com">// Explicit $and</span>
+db.products.<span class="tok-fn">find</span>({ <span class="tok-op">$and</span>: [
+  { name: <span class="tok-str">"product 1"</span> },
+  { price: { <span class="tok-op">$gt</span>: <span class="tok-num">10</span> } }
+]})</pre></div>
+      <div class="code"><div class="code-head"><span>$in replaces repeated $or · dot notation</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">find</span>({ rating: { <span class="tok-op">$in</span>: [<span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>] } })
+db.products.<span class="tok-fn">find</span>({ rating: { <span class="tok-op">$nin</span>: [<span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>] } })
+
+<span class="tok-com">// Query fields inside embedded documents</span>
+db.users.<span class="tok-fn">find</span>({ <span class="tok-str">"address.city"</span>: <span class="tok-str">"New York"</span> })</pre></div>
+    </section>
+
+    <!-- ARRAYS -->
+    <section id="arrays">
+      <h2><span class="num">12</span> Querying Arrays</h2>
+      <div class="code"><div class="code-head"><span>Array matching</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Match if "sale" is ONE OF the elements</span>
+db.products.<span class="tok-fn">find</span>({ tags: <span class="tok-str">"sale"</span> })
+
+<span class="tok-com">// Match ONLY the exact array [ "sale" ]</span>
+db.products.<span class="tok-fn">find</span>({ tags: [<span class="tok-str">"sale"</span>] })
+
+<span class="tok-com">// Must contain BOTH values ($all)</span>
+db.products.<span class="tok-fn">find</span>({ tags: { <span class="tok-op">$all</span>: [<span class="tok-str">"sale"</span>, <span class="tok-str">"discount"</span>] } })
+
+<span class="tok-com">// Array size + combined element conditions</span>
+db.products.<span class="tok-fn">find</span>({ tags: { <span class="tok-op">$size</span>: <span class="tok-num">3</span> } })
+db.orders.<span class="tok-fn">find</span>({ items: { <span class="tok-op">$elemMatch</span>: { qty: { <span class="tok-op">$gt</span>: <span class="tok-num">1</span> }, price: { <span class="tok-op">$lt</span>: <span class="tok-num">50</span> } } } })</pre></div>
+      <div class="callout"><code class="inline">$elemMatch</code> matters when <b>a single array element must satisfy multiple conditions at once</b> — not just any elements individually.</div>
+    </section>
+
+    <!-- AGGREGATION -->
+    <section id="aggregation">
+      <h2><span class="num">13</span> Aggregation Pipeline</h2>
+      <p class="lead">A pipeline transforms documents through an ordered series of <b>stages</b>; each stage's output feeds the next — like an assembly line.</p>
+      <div class="code"><div class="code-head"><span>Pipeline example</span><button class="copy">Copy</button></div><pre>db.posts.<span class="tok-fn">aggregate</span>([
+  <span class="tok-com">// Stage 1: keep only popular posts</span>
+  { <span class="tok-op">$match</span>: { likes: { <span class="tok-op">$gt</span>: <span class="tok-num">1</span> } } },
+  <span class="tok-com">// Stage 2: group by category, summing likes</span>
+  { <span class="tok-op">$group</span>: { _id: <span class="tok-str">"$category"</span>, totalLikes: { <span class="tok-op">$sum</span>: <span class="tok-str">"$likes"</span> } } },
+  <span class="tok-com">// Stage 3: highest totals first</span>
+  { <span class="tok-op">$sort</span>: { totalLikes: <span class="tok-op">-1</span> } }
+])</pre></div>
+      <h3>Common stages</h3>
+      <table>
+        <tr><th>Stage</th><th>What it does</th></tr>
+        <tr><td><code>$match</code></td><td>Filter documents (like <code>find</code>)</td></tr>
+        <tr><td><code>$group</code></td><td>Group & aggregate (<code>$sum</code>, <code>$avg</code>, <code>$max</code>…)</td></tr>
+        <tr><td><code>$sort</code></td><td>Order results</td></tr>
+        <tr><td><code>$project</code></td><td>Reshape / pick fields</td></tr>
+        <tr><td><code>$addFields</code></td><td>Add computed fields</td></tr>
+        <tr><td><code>$limit</code> / <code>$skip</code></td><td>Paginate</td></tr>
+        <tr><td><code>$count</code></td><td>Count documents</td></tr>
+        <tr><td><code>$unwind</code></td><td>Flatten an array into multiple docs</td></tr>
+        <tr><td><code>$lookup</code></td><td>Left outer join with another collection</td></tr>
+        <tr><td><code>$out</code> / <code>$merge</code></td><td>Write results to a collection</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>$group + $sort</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Average price per category, richest first</span>
+db.products.<span class="tok-fn">aggregate</span>([
+  { <span class="tok-op">$group</span>: { _id: <span class="tok-str">"$category"</span>, avgPrice: { <span class="tok-op">$avg</span>: <span class="tok-str">"$price"</span> }, n: { <span class="tok-op">$sum</span>: <span class="tok-num">1</span> } } },
+  { <span class="tok-op">$sort</span>: { avgPrice: <span class="tok-op">-1</span> } }
+])</pre></div>
+      <h3>$lookup — joining collections</h3>
+      <div class="code"><div class="code-head"><span>$lookup</span><button class="copy">Copy</button></div><pre>db.comments.<span class="tok-fn">aggregate</span>([
+  { <span class="tok-op">$lookup</span>: {
+      from:         <span class="tok-str">"movies"</span>,        <span class="tok-com">// collection to join</span>
+      localField:   <span class="tok-str">"movie_id"</span>,     <span class="tok-com">// field in comments</span>
+      foreignField: <span class="tok-str">"_id"</span>,          <span class="tok-com">// field in movies</span>
+      as:           <span class="tok-str">"movie_details"</span>  <span class="tok-com">// output array field</span>
+  }},
+  { <span class="tok-op">$limit</span>: <span class="tok-num">1</span> }
+])</pre></div>
+      <div class="realworld">
+        <h4>🌍 Real-world scenario</h4>
+        <p><b>Sales dashboard:</b> <code class="inline">$match</code> this month's orders → <code class="inline">$unwind</code> line items → <code class="inline">$group</code> revenue by product → <code class="inline">$sort</code> top sellers → <code class="inline">$lookup</code> product names → <code class="inline">$merge</code> into a <code class="inline">reports</code> collection for BI.</p>
+      </div>
+    </section>
+
+    <!-- INDEXES -->
+    <section id="indexes">
+      <h2><span class="num">14</span> Indexes</h2>
+      <p class="lead">Indexes make queries fast by avoiding full collection scans — the single biggest performance lever in MongoDB.</p>
+      <div class="code"><div class="code-head"><span>Index management</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">createIndex</span>({ name: <span class="tok-num">1</span> })                <span class="tok-com">// single field</span>
+db.products.<span class="tok-fn">createIndex</span>({ category: <span class="tok-num">1</span>, price: <span class="tok-op">-1</span> }) <span class="tok-com">// compound</span>
+db.products.<span class="tok-fn">createIndex</span>({ email: <span class="tok-num">1</span> }, { unique: <span class="tok-key">true</span> })
+db.products.<span class="tok-fn">createIndex</span>({ description: <span class="tok-str">"text"</span> })     <span class="tok-com">// full-text</span>
+
+db.products.<span class="tok-fn">getIndexes</span>()
+db.products.<span class="tok-fn">find</span>({ name: <span class="tok-str">"Laptop"</span> }).<span class="tok-fn">explain</span>(<span class="tok-str">"executionStats"</span>)</pre></div>
+
+      <h3>Index types</h3>
+      <table>
+        <tr><th>Type</th><th>Definition</th><th>Best for</th></tr>
+        <tr><td>Single field</td><td><code>{ name: 1 }</code></td><td>Equality / sort on one field</td></tr>
+        <tr><td>Compound</td><td><code>{ category: 1, price: -1 }</code></td><td>Multi-field filters + sort</td></tr>
+        <tr><td>Multikey</td><td><code>{ tags: 1 }</code></td><td>Indexing array fields</td></tr>
+        <tr><td>Text</td><td><code>{ body: "text" }</code></td><td>Full-text search</td></tr>
+        <tr><td>Hashed</td><td><code>{ userId: "hashed" }</code></td><td>Even sharding distribution</td></tr>
+        <tr><td>TTL</td><td><code>{ createdAt: 1 }, { expireAfterSeconds }</code></td><td>Auto-expiring data (sessions, logs)</td></tr>
+        <tr><td>Partial</td><td><code>{ partialFilterExpression }</code></td><td>Index only a subset → smaller/cheaper</td></tr>
+        <tr><td>Unique</td><td><code>{ email: 1 }, { unique: true }</code></td><td>Enforce no duplicates</td></tr>
+      </table>
+
+      <h3>Covered queries (fastest possible)</h3>
+      <div class="code"><div class="code-head"><span>Covered query</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Index includes every field the query needs (filter + projection)</span>
+db.users.<span class="tok-fn">createIndex</span>({ email: <span class="tok-num">1</span>, name: <span class="tok-num">1</span> })
+
+<span class="tok-com">// Served ENTIRELY from the index — never touches the documents</span>
+db.users.<span class="tok-fn">find</span>({ email: <span class="tok-str">"a@x.com"</span> }, { name: <span class="tok-num">1</span>, _id: <span class="tok-num">0</span> })</pre></div>
+      <div class="callout tip"><b>ESR rule</b> for compound indexes: order fields as <b>E</b>quality → <b>S</b>ort → <b>R</b>ange.</div>
+      <div class="callout warn"><b>Trade-off:</b> Indexes speed reads but slow writes and use RAM/storage. Index what you actually query — every extra index is paid for on every insert/update.</div>
+    </section>
+
+    <!-- PERFORMANCE & COST -->
+    <section id="performance">
+      <h2><span class="num">15</span> Performance Bottlenecks &amp; Cost Optimization</h2>
+      <p class="lead">How to diagnose slow queries, remove the common bottlenecks, and cut your database bill — the levers that matter in production.</p>
+
+      <h3>Diagnose first — <code class="inline">explain()</code></h3>
+      <div class="code"><div class="code-head"><span>Read the query plan</span><button class="copy">Copy</button></div><pre>db.orders.<span class="tok-fn">find</span>({ status: <span class="tok-str">"paid"</span> }).<span class="tok-fn">explain</span>(<span class="tok-str">"executionStats"</span>)
+
+<span class="tok-com">// Look at:</span>
+<span class="tok-com">//   stage: COLLSCAN  -> BAD (full scan, add an index)</span>
+<span class="tok-com">//   stage: IXSCAN    -> GOOD (using an index)</span>
+<span class="tok-com">//   totalDocsExamined vs nReturned -> want these close</span></pre></div>
+
+      <h3>Common bottlenecks &amp; fixes</h3>
+      <table>
+        <tr><th>Bottleneck</th><th>Symptom</th><th>Fix</th></tr>
+        <tr><td>Missing index</td><td><code>COLLSCAN</code>, high CPU</td><td>Add a matching index (ESR order)</td></tr>
+        <tr><td>Unbounded array growth</td><td>Docs approach 16&nbsp;MB, slow reads</td><td>Bucket data or reference instead of embed</td></tr>
+        <tr><td>Large <code>skip()</code> paging</td><td>Deep pages get slower</td><td>Range-based paging (<code>_id &gt; lastId</code>)</td></tr>
+        <tr><td>N+1 queries</td><td>Many round-trips per request</td><td><code>$lookup</code> or embed related data</td></tr>
+        <tr><td>Returning whole docs</td><td>High network / RAM use</td><td>Projection — fetch only needed fields</td></tr>
+        <tr><td>Working set &gt; RAM</td><td>Constant disk reads, page faults</td><td>Add RAM, index smarter, or shard</td></tr>
+        <tr><td>Poor shard key</td><td>One "hot" shard, uneven load</td><td>High-cardinality / hashed shard key</td></tr>
+        <tr><td>Over-indexing</td><td>Slow writes, high storage cost</td><td>Drop unused indexes (<code>$indexStats</code>)</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Find unused indexes to drop</span><button class="copy">Copy</button></div><pre>db.orders.<span class="tok-fn">aggregate</span>([{ <span class="tok-op">$indexStats</span>: {} }])
+<span class="tok-com">// accesses.ops === 0  -> index is unused -> drop it to save writes & storage</span>
+db.orders.<span class="tok-fn">dropIndex</span>(<span class="tok-str">"staleIndex_1"</span>)</pre></div>
+
+      <div class="realworld">
+        <h4>🌍 Real use cases — better performance</h4>
+        <ul>
+          <li><b>Login by email:</b> a unique index on <code class="inline">email</code> turns a full scan into an instant index lookup.</li>
+          <li><b>Product listing page:</b> compound index <code class="inline">{ category: 1, price: -1 }</code> serves "filter by category, sort by price" in one indexed pass.</li>
+          <li><b>Dashboard counts:</b> pre-aggregate with <code class="inline">$merge</code> into a summary collection nightly instead of scanning millions of rows per page load.</li>
+          <li><b>Autocomplete:</b> a text (or Atlas Search) index answers prefix queries in milliseconds.</li>
+        </ul>
+      </div>
+
+      <h3>Cutting cost (budget)</h3>
+      <p class="lead">Database spend is driven by <b>storage</b>, <b>RAM/compute (tier)</b>, and <b>data transfer</b>. Reduce all three:</p>
+      <table>
+        <tr><th>Lever</th><th>How</th><th>Saves</th></tr>
+        <tr><td>TTL indexes</td><td>Auto-delete logs/sessions/OTPs after N seconds</td><td>Storage (no manual cleanup jobs)</td></tr>
+        <tr><td>Archive cold data</td><td>Atlas Online Archive / move to cheap tier</td><td>Storage + RAM on hot cluster</td></tr>
+        <tr><td>Projections</td><td>Return only needed fields</td><td>Network egress + RAM</td></tr>
+        <tr><td>Drop unused indexes</td><td><code>$indexStats</code> audit</td><td>Storage + faster (cheaper) writes</td></tr>
+        <tr><td>Right-size the tier</td><td>Match RAM to working set, not peak guess</td><td>Compute cost</td></tr>
+        <tr><td>Compression</td><td>WiredTiger (snappy/zstd) on by default</td><td>Storage</td></tr>
+        <tr><td>Smaller field names</td><td>Field names are stored per document</td><td>Storage at huge scale</td></tr>
+        <tr><td>Read from secondaries</td><td>Offload analytics reads</td><td>Avoids upsizing the primary</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>TTL index — auto-expire &amp; save storage</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Delete session docs 1 hour after createdAt — no cron job needed</span>
+db.sessions.<span class="tok-fn">createIndex</span>(
+  { createdAt: <span class="tok-num">1</span> },
+  { expireAfterSeconds: <span class="tok-num">3600</span> }
+)</pre></div>
+      <div class="callout tip"><b>Rule:</b> Measure, don't guess. Use <code class="inline">explain()</code>, the Atlas <b>Performance Advisor</b>, and <code class="inline">$indexStats</code> to make data-driven changes — then verify each change actually improved the plan.</div>
+    </section>
+
+    <!-- VALIDATION -->
+    <section id="validation">
+      <h2><span class="num">16</span> Schema Validation</h2>
+      <p class="lead">Even though MongoDB is schema-flexible, you can enforce structure with JSON Schema rules.</p>
+      <div class="code"><div class="code-head"><span>$jsonSchema validator</span><button class="copy">Copy</button></div><pre>db.<span class="tok-fn">createCollection</span>(<span class="tok-str">"posts"</span>, {
+  validator: {
+    <span class="tok-op">$jsonSchema</span>: {
+      bsonType: <span class="tok-str">"object"</span>,
+      required: [<span class="tok-str">"title"</span>, <span class="tok-str">"body"</span>],
+      properties: {
+        title: { bsonType: <span class="tok-str">"string"</span>, description: <span class="tok-str">"Required string"</span> },
+        body:  { bsonType: <span class="tok-str">"string"</span>, description: <span class="tok-str">"Required string"</span> },
+        likes: { bsonType: <span class="tok-str">"int"</span>,    description: <span class="tok-str">"Optional integer"</span> },
+        tags:  { bsonType: [<span class="tok-str">"string"</span>], description: <span class="tok-str">"Optional string array"</span> }
+      }
+    }
+  }
+})</pre></div>
+    </section>
+
+    <!-- DATA MODELING -->
+    <section id="datamodel">
+      <h2><span class="num">17</span> Data Modeling &amp; Schema Design</h2>
+      <p class="lead">The most important skill in MongoDB. Good models make queries fast and simple; bad ones cause slow queries, huge documents, and pain. "Data that is accessed together should be stored together."</p>
+
+      <h3>Embedding vs Referencing</h3>
+      <div class="vs-grid">
+        <div class="vs-card mongo">
+          <h4>📎 Embedding (nesting)</h4>
+          <ul>
+            <li>Store related data inside the parent document</li>
+            <li><b>Pro:</b> one read fetches everything — fastest</li>
+            <li><b>Pro:</b> atomic single-document updates</li>
+            <li><b>Con:</b> can duplicate data; risks the 16&nbsp;MB limit</li>
+            <li>Best for one-to-one &amp; one-to-few "contains"</li>
+          </ul>
+        </div>
+        <div class="vs-card mysql">
+          <h4>🔗 Referencing (linking)</h4>
+          <ul>
+            <li>Store an <code>_id</code> pointing to another document</li>
+            <li><b>Pro:</b> no duplication; small documents</li>
+            <li><b>Pro:</b> unbounded growth is safe</li>
+            <li><b>Con:</b> needs extra queries / <code>$lookup</code></li>
+            <li>Best for one-to-many &amp; many-to-many</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout"><b>Decision rule:</b> Embed if the data is read together, bounded in size, and mostly updated together. Reference if it grows without limit, is large, or is shared across many parents.</div>
+
+      <h3>Relationship types</h3>
+      <h4>One-to-One — embed</h4>
+      <div class="code"><div class="code-head"><span>User + profile embedded</span><button class="copy">Copy</button></div><pre>{
+  _id: ObjectId, name: <span class="tok-str">"Aria"</span>,
+  profile: { bio: <span class="tok-str">"Dev"</span>, avatar: <span class="tok-str">"a.png"</span> }  <span class="tok-com">// 1:1 -> embed</span>
+}</pre></div>
+      <h4>One-to-Many — embed if "few", reference if "many"</h4>
+      <div class="code"><div class="code-head"><span>Post with few comments (embed) vs many (reference)</span><button class="copy">Copy</button></div><pre><span class="tok-com">// One-to-FEW: embed</span>
+{ _id: ObjectId, title: <span class="tok-str">"Hello"</span>, comments: [ { user, text } ] }
+
+<span class="tok-com">// One-to-MANY (unbounded): reference from the "many" side</span>
+<span class="tok-com">// comments collection</span>
+{ _id: ObjectId, postId: ObjectId, user: <span class="tok-str">"..."</span>, text: <span class="tok-str">"..."</span> }</pre></div>
+      <h4>Many-to-Many — array of references</h4>
+      <div class="code"><div class="code-head"><span>Students ↔ Courses</span><button class="copy">Copy</button></div><pre><span class="tok-com">// student holds course ids (and/or vice-versa)</span>
+{ _id: ObjectId, name: <span class="tok-str">"Sam"</span>, courseIds: [ ObjectId, ObjectId ] }</pre></div>
+
+      <h3>Schema design patterns (senior interview favorites)</h3>
+      <table>
+        <tr><th>Pattern</th><th>Problem it solves</th><th>How</th></tr>
+        <tr><td><b>Bucket</b></td><td>Unbounded time-series/IoT arrays</td><td>Group many readings into one doc per hour/day</td></tr>
+        <tr><td><b>Attribute</b></td><td>Many rare/variable fields to index</td><td>Store as array of <code>{ k, v }</code> pairs, index <code>k</code>&amp;<code>v</code></td></tr>
+        <tr><td><b>Subset</b></td><td>Huge related lists but only need a few</td><td>Embed the top-N; keep the rest referenced</td></tr>
+        <tr><td><b>Outlier</b></td><td>A few docs are far larger than the rest</td><td>Flag outliers; overflow to a side collection</td></tr>
+        <tr><td><b>Extended Reference</b></td><td>Repeated <code>$lookup</code> for a few fields</td><td>Copy the few needed fields into the parent</td></tr>
+        <tr><td><b>Computed</b></td><td>Expensive repeated calculations</td><td>Pre-compute &amp; store (e.g. <code>likeCount</code>)</td></tr>
+        <tr><td><b>Tree</b></td><td>Hierarchies (categories, org charts)</td><td>Parent refs, child refs, or materialized paths</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Bucket pattern — sensor data</span><button class="copy">Copy</button></div><pre>{
+  sensorId: <span class="tok-str">"s-1"</span>,
+  hour: ISODate(<span class="tok-str">"2026-07-21T10:00:00Z"</span>),
+  count: <span class="tok-num">60</span>,
+  readings: [ { t: <span class="tok-str">"10:00"</span>, v: <span class="tok-num">21.3</span> }, { t: <span class="tok-str">"10:01"</span>, v: <span class="tok-num">21.4</span> } ]
+}  <span class="tok-com">// 60 readings in ONE doc instead of 60 docs</span></pre></div>
+      <div class="code"><div class="code-head"><span>Attribute pattern — variable product specs</span><button class="copy">Copy</button></div><pre>{
+  name: <span class="tok-str">"Laptop"</span>,
+  specs: [ { k: <span class="tok-str">"ram"</span>, v: <span class="tok-str">"16GB"</span> }, { k: <span class="tok-str">"cpu"</span>, v: <span class="tok-str">"i7"</span> } ]
+}  <span class="tok-com">// one index on specs.k + specs.v covers ALL attributes</span></pre></div>
+      <div class="code"><div class="code-head"><span>Tree pattern — categories (materialized path)</span><button class="copy">Copy</button></div><pre>{ _id: <span class="tok-str">"electronics"</span>,        path: <span class="tok-str">","</span> }
+{ _id: <span class="tok-str">"laptops"</span>, parent: <span class="tok-str">"electronics"</span>, path: <span class="tok-str">",electronics,"</span> }
+<span class="tok-com">// find all descendants of electronics:</span>
+db.categories.<span class="tok-fn">find</span>({ path: { <span class="tok-op">$regex</span>: <span class="tok-str">/,electronics,/</span> } })</pre></div>
+      <div class="realworld">
+        <h4>🌍 Real-world scenario</h4>
+        <p><b>E-commerce order:</b> embed the line items (read together, bounded) but use an <b>extended reference</b> to copy just <code>productName</code> + <code>price</code> into each item — so rendering an order never needs a <code>$lookup</code>, and product edits don't rewrite history.</p>
+      </div>
+      <div class="callout warn"><b>Anti-pattern:</b> Unbounded arrays (e.g. embedding every comment forever) eventually hit the 16&nbsp;MB limit and slow every read. Use referencing or the bucket/subset pattern instead.</div>
+    </section>
+
+    <!-- TRANSACTIONS -->
+    <section id="transactions">
+      <h2><span class="num">18</span> Transactions</h2>
+      <p class="lead">Multi-document ACID transactions (v4.0+, sharded in v4.2+) let several operations across documents/collections succeed or fail together. Require a replica set.</p>
+      <h3>The four building blocks</h3>
+      <table>
+        <tr><th>Step</th><th>Purpose</th></tr>
+        <tr><td><code>startSession()</code></td><td>Create a session that groups the operations</td></tr>
+        <tr><td><code>startTransaction()</code></td><td>Begin the transaction on that session</td></tr>
+        <tr><td><code>commitTransaction()</code></td><td>Persist all changes atomically</td></tr>
+        <tr><td><code>abortTransaction()</code></td><td>Roll everything back on any error</td></tr>
+      </table>
+      <h3>Real banking example — transfer money</h3>
+      <div class="code"><div class="code-head"><span>Atomic transfer with rollback</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> session = client.<span class="tok-fn">startSession</span>();
+<span class="tok-key">try</span> {
+  session.<span class="tok-fn">startTransaction</span>();
+  <span class="tok-key">const</span> accounts = client.<span class="tok-fn">db</span>(<span class="tok-str">"bank"</span>).<span class="tok-fn">collection</span>(<span class="tok-str">"accounts"</span>);
+
+  <span class="tok-com">// 1) Debit A only if it has enough balance (guard!)</span>
+  <span class="tok-key">const</span> debit = <span class="tok-key">await</span> accounts.<span class="tok-fn">updateOne</span>(
+    { _id: <span class="tok-str">"A"</span>, balance: { <span class="tok-op">$gte</span>: <span class="tok-num">100</span> } },
+    { <span class="tok-op">$inc</span>: { balance: <span class="tok-op">-100</span> } },
+    { session }
+  );
+  <span class="tok-key">if</span> (debit.modifiedCount === <span class="tok-num">0</span>) <span class="tok-key">throw</span> <span class="tok-key">new</span> <span class="tok-fn">Error</span>(<span class="tok-str">"Insufficient funds"</span>);
+
+  <span class="tok-com">// 2) Credit B</span>
+  <span class="tok-key">await</span> accounts.<span class="tok-fn">updateOne</span>({ _id: <span class="tok-str">"B"</span> }, { <span class="tok-op">$inc</span>: { balance: <span class="tok-num">100</span> } }, { session });
+
+  <span class="tok-key">await</span> session.<span class="tok-fn">commitTransaction</span>();   <span class="tok-com">// both succeed together</span>
+} <span class="tok-key">catch</span> (e) {
+  <span class="tok-key">await</span> session.<span class="tok-fn">abortTransaction</span>();    <span class="tok-com">// neither happens</span>
+  <span class="tok-key">throw</span> e;
+} <span class="tok-key">finally</span> {
+  <span class="tok-key">await</span> session.<span class="tok-fn">endSession</span>();
+}</pre></div>
+      <div class="callout tip"><b>Best practice:</b> Keep transactions short, touch as few documents as possible, and prefer a single atomic update where you can — single-document writes are already atomic and far cheaper than a transaction.</div>
+      <div class="callout warn"><b>Bottleneck:</b> Long-running transactions hold locks and can abort under write conflicts. Don't do slow work (HTTP calls, heavy loops) inside a transaction.</div>
+    </section>
+
+    <!-- REPLICATION -->
+    <section id="replication">
+      <h2><span class="num">19</span> Replication (High Availability)</h2>
+      <p class="lead">A <b>replica set</b> is a group of <code class="inline">mongod</code> nodes holding the same data, giving you redundancy and automatic failover.</p>
+      <table>
+        <tr><th>Role</th><th>Responsibility</th></tr>
+        <tr><td><b>Primary</b></td><td>Receives all writes; the single source of truth</td></tr>
+        <tr><td><b>Secondary</b></td><td>Replicates the primary's oplog; can serve reads</td></tr>
+        <tr><td><b>Arbiter</b></td><td>Votes in elections but holds no data (tie-breaker)</td></tr>
+      </table>
+      <h3>Election</h3>
+      <p>If the primary becomes unreachable, the remaining members hold an <b>election</b> and promote a secondary to primary — usually within a few seconds. Drivers detect the new primary and reconnect automatically, so the app keeps running.</p>
+      <div class="code"><div class="code-head"><span>Read preference &amp; write concern</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Read from secondaries to offload analytics</span>
+db.orders.<span class="tok-fn">find</span>().<span class="tok-fn">readPref</span>(<span class="tok-str">"secondaryPreferred"</span>)
+
+<span class="tok-com">// Wait until a majority of nodes acknowledge the write (durable)</span>
+db.orders.<span class="tok-fn">insertOne</span>(doc, { writeConcern: { w: <span class="tok-str">"majority"</span>, j: <span class="tok-key">true</span> } })</pre></div>
+      <table>
+        <tr><th>Setting</th><th>Options</th><th>Meaning</th></tr>
+        <tr><td><b>Write concern</b></td><td><code>w:1</code>, <code>w:"majority"</code>, <code>j:true</code></td><td>How many nodes / journal must ack a write</td></tr>
+        <tr><td><b>Read preference</b></td><td><code>primary</code>, <code>secondaryPreferred</code>, <code>nearest</code></td><td>Which node serves reads</td></tr>
+      </table>
+      <div class="callout tip"><b>Interview point:</b> <code class="inline">w:"majority"</code> + read concern <code class="inline">"majority"</code> gives you strong consistency; reading from secondaries with <code class="inline">w:1</code> can return slightly stale data (eventual consistency).</div>
+    </section>
+
+    <!-- SHARDING -->
+    <section id="sharding">
+      <h2><span class="num">20</span> Sharding (Horizontal Scaling)</h2>
+      <p class="lead">Sharding splits one large collection across multiple servers so you can scale beyond a single machine's storage and write throughput.</p>
+      <table>
+        <tr><th>Component</th><th>Role</th></tr>
+        <tr><td><b>Shard</b></td><td>A replica set holding a subset of the data</td></tr>
+        <tr><td><b>Shard key</b></td><td>Field(s) that decide which shard a doc lives on</td></tr>
+        <tr><td><b>Chunk</b></td><td>A contiguous range of shard-key values (default 128&nbsp;MB)</td></tr>
+        <tr><td><b>Balancer</b></td><td>Moves chunks between shards to keep them even</td></tr>
+        <tr><td><b>mongos</b></td><td>Query router the app connects to</td></tr>
+        <tr><td><b>Config servers</b></td><td>Store cluster metadata (chunk → shard map)</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Enable sharding</span><button class="copy">Copy</button></div><pre>sh.<span class="tok-fn">enableSharding</span>(<span class="tok-str">"shop"</span>)
+<span class="tok-com">// hashed key -> even write distribution</span>
+sh.<span class="tok-fn">shardCollection</span>(<span class="tok-str">"shop.orders"</span>, { customerId: <span class="tok-str">"hashed"</span> })</pre></div>
+      <h3>Choosing a shard key</h3>
+      <ul>
+        <li><b>High cardinality</b> — many distinct values so data can split finely.</li>
+        <li><b>Low frequency</b> — no single value dominates (avoids a "hot" chunk).</li>
+        <li><b>Non-monotonic</b> — avoid ever-increasing keys (like timestamps) that send all new writes to one shard. Use hashed keys instead.</li>
+      </ul>
+      <div class="callout warn"><b>Bottleneck — shard imbalance / hot partition:</b> A poor shard key concentrates traffic on one shard while others idle. Fix with a hashed or compound key that spreads writes evenly.</div>
+    </section>
+
+    <!-- CAP -->
+    <section id="cap">
+      <h2><span class="num">21</span> CAP Theorem</h2>
+      <p class="lead">A distributed system can guarantee only <b>two of three</b>: Consistency, Availability, Partition tolerance. Since network partitions are unavoidable, real systems choose between C and A during a partition.</p>
+      <table>
+        <tr><th>Letter</th><th>Meaning</th></tr>
+        <tr><td><b>C</b> — Consistency</td><td>Every read sees the most recent write</td></tr>
+        <tr><td><b>A</b> — Availability</td><td>Every request gets a (non-error) response</td></tr>
+        <tr><td><b>P</b> — Partition tolerance</td><td>The system keeps working despite network splits</td></tr>
+      </table>
+      <div class="callout"><b>Where MongoDB sits:</b> MongoDB is <b>CP</b> by default — during a partition it favors consistency (only the primary accepts writes; a minority side steps down). You can tune toward availability with read preferences and write concerns, trading off freshness.</div>
+    </section>
+
+    <!-- BSON INTERNALS -->
+    <section id="bson">
+      <h2><span class="num">22</span> BSON Internals &amp; ObjectId</h2>
+      <p class="lead">BSON (Binary JSON) is how MongoDB stores documents on disk and on the wire.</p>
+      <h3>Why BSON over JSON?</h3>
+      <ul>
+        <li><b>Faster</b> — length-prefixed fields allow skipping without parsing every byte.</li>
+        <li><b>Typed</b> — supports <code class="inline">Date</code>, <code class="inline">ObjectId</code>, <code class="inline">Decimal128</code>, <code class="inline">Binary</code>, <code class="inline">int</code>/<code class="inline">long</code> that JSON lacks.</li>
+        <li><b>Traversable</b> — designed for efficient indexing and partial reads.</li>
+      </ul>
+      <h3>ObjectId structure (12 bytes)</h3>
+      <table>
+        <tr><th>Bytes</th><th>Part</th><th>Purpose</th></tr>
+        <tr><td>4</td><td>Timestamp</td><td>Creation time (seconds since epoch) — roughly sortable</td></tr>
+        <tr><td>5</td><td>Random value</td><td>Unique per machine/process</td></tr>
+        <tr><td>3</td><td>Counter</td><td>Incrementing, seeded randomly — avoids collisions</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Use the embedded timestamp</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> id = <span class="tok-key">new</span> ObjectId();
+id.<span class="tok-fn">getTimestamp</span>();   <span class="tok-com">// Date the document was created</span>
+<span class="tok-com">// Sorting by _id ≈ sorting by creation time</span>
+db.events.<span class="tok-fn">find</span>().<span class="tok-fn">sort</span>({ _id: <span class="tok-op">-1</span> }).<span class="tok-fn">limit</span>(<span class="tok-num">10</span>)  <span class="tok-com">// newest 10</span></pre></div>
+    </section>
+
+    <!-- ADVANCED AGGREGATION -->
+    <section id="agg-advanced">
+      <h2><span class="num">23</span> Advanced Aggregation</h2>
+      <p class="lead">Beyond <code class="inline">$match</code>/<code class="inline">$group</code> — the power stages that show up in analytics and senior interviews.</p>
+      <table>
+        <tr><th>Stage</th><th>What it does</th></tr>
+        <tr><td><code>$facet</code></td><td>Run several sub-pipelines in parallel (multi-metric dashboards)</td></tr>
+        <tr><td><code>$bucket</code></td><td>Group docs into user-defined ranges (histograms)</td></tr>
+        <tr><td><code>$bucketAuto</code></td><td>Auto-compute evenly distributed buckets</td></tr>
+        <tr><td><code>$graphLookup</code></td><td>Recursive lookups (org charts, social graphs)</td></tr>
+        <tr><td><code>$setWindowFields</code></td><td>Window functions — running totals, moving averages, rank</td></tr>
+        <tr><td><code>$replaceRoot</code> / <code>$replaceWith</code></td><td>Promote a sub-document to the top level</td></tr>
+        <tr><td><code>$unionWith</code></td><td>Combine results from another collection</td></tr>
+        <tr><td><code>$densify</code></td><td>Fill gaps in a numeric/date sequence</td></tr>
+        <tr><td><code>$fill</code></td><td>Fill missing field values (carry-forward/linear)</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>$facet — dashboard in one query</span><button class="copy">Copy</button></div><pre>db.orders.<span class="tok-fn">aggregate</span>([{
+  <span class="tok-op">$facet</span>: {
+    totalRevenue: [ { <span class="tok-op">$group</span>: { _id: <span class="tok-key">null</span>, v: { <span class="tok-op">$sum</span>: <span class="tok-str">"$amount"</span> } } } ],
+    topProducts:  [ { <span class="tok-op">$sortByCount</span>: <span class="tok-str">"$product"</span> }, { <span class="tok-op">$limit</span>: <span class="tok-num">5</span> } ],
+    byStatus:     [ { <span class="tok-op">$group</span>: { _id: <span class="tok-str">"$status"</span>, n: { <span class="tok-op">$sum</span>: <span class="tok-num">1</span> } } } ]
+  }
+}])</pre></div>
+      <div class="code"><div class="code-head"><span>$setWindowFields — running total</span><button class="copy">Copy</button></div><pre>db.sales.<span class="tok-fn">aggregate</span>([{
+  <span class="tok-op">$setWindowFields</span>: {
+    partitionBy: <span class="tok-str">"$region"</span>,
+    sortBy: { date: <span class="tok-num">1</span> },
+    output: { runningTotal: { <span class="tok-op">$sum</span>: <span class="tok-str">"$amount"</span>,
+      window: { documents: [ <span class="tok-str">"unbounded"</span>, <span class="tok-str">"current"</span> ] } } }
+  }
+}])</pre></div>
+      <div class="code"><div class="code-head"><span>$graphLookup — employee → all managers</span><button class="copy">Copy</button></div><pre>db.employees.<span class="tok-fn">aggregate</span>([{
+  <span class="tok-op">$graphLookup</span>: {
+    from: <span class="tok-str">"employees"</span>,
+    startWith: <span class="tok-str">"$managerId"</span>,
+    connectFromField: <span class="tok-str">"managerId"</span>,
+    connectToField: <span class="tok-str">"_id"</span>,
+    as: <span class="tok-str">"managementChain"</span>
+  }
+}])</pre></div>
+      <div class="callout tip"><b>Memory:</b> Each stage has a 100&nbsp;MB limit. For big sorts/groups add <code class="inline">{ allowDiskUse: true }</code>.</div>
+    </section>
+
+    <!-- EXPLAIN -->
+    <section id="explain">
+      <h2><span class="num">24</span> explain() &amp; Query Plans</h2>
+      <p class="lead">The tool that tells you exactly how MongoDB runs a query — essential for tuning.</p>
+      <div class="code"><div class="code-head"><span>Three verbosity modes</span><button class="copy">Copy</button></div><pre>db.orders.<span class="tok-fn">find</span>({ status: <span class="tok-str">"paid"</span> }).<span class="tok-fn">explain</span>(<span class="tok-str">"queryPlanner"</span>)      <span class="tok-com">// chosen plan</span>
+db.orders.<span class="tok-fn">find</span>({ status: <span class="tok-str">"paid"</span> }).<span class="tok-fn">explain</span>(<span class="tok-str">"executionStats"</span>)   <span class="tok-com">// + real timing</span>
+db.orders.<span class="tok-fn">find</span>({ status: <span class="tok-str">"paid"</span> }).<span class="tok-fn">explain</span>(<span class="tok-str">"allPlansExecution"</span>) <span class="tok-com">// all candidates</span></pre></div>
+      <h3>Reading the plan — key stages</h3>
+      <table>
+        <tr><th>Stage</th><th>Meaning</th><th>Verdict</th></tr>
+        <tr><td><code>COLLSCAN</code></td><td>Full collection scan</td><td>❌ Bad — add an index</td></tr>
+        <tr><td><code>IXSCAN</code></td><td>Index scan</td><td>✅ Good</td></tr>
+        <tr><td><code>FETCH</code></td><td>Reads full docs after an index match</td><td>OK; avoidable with covered queries</td></tr>
+        <tr><td><code>SORT</code></td><td>In-memory sort (no index for it)</td><td>⚠️ Costly — add a sort index</td></tr>
+      </table>
+      <ul>
+        <li><b>winningPlan</b> — the plan MongoDB chose to run.</li>
+        <li><b>totalDocsExamined</b> vs <b>nReturned</b> — want these close; a big gap means a bad/absent index.</li>
+        <li><b>totalKeysExamined</b> — index entries scanned.</li>
+      </ul>
+      <div class="callout warn"><b>Bottleneck checklist:</b> See <code class="inline">COLLSCAN</code>? Add an index. See a <code class="inline">SORT</code> stage? Add the sort field to the index (ESR). <code class="inline">docsExamined ≫ nReturned</code>? Your index isn't selective enough.</div>
+    </section>
+
+    <!-- TTL -->
+    <section id="ttl">
+      <h2><span class="num">25</span> TTL Indexes (Auto-Expiry)</h2>
+      <p class="lead">A TTL (Time-To-Live) index automatically deletes documents after a set age — no cron job, and it cuts storage cost.</p>
+      <div class="code"><div class="code-head"><span>Create a TTL index</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Delete OTP docs 5 minutes after createdAt</span>
+db.otps.<span class="tok-fn">createIndex</span>({ createdAt: <span class="tok-num">1</span> }, { expireAfterSeconds: <span class="tok-num">300</span> })
+
+<span class="tok-com">// Or expire at an exact per-doc time: set expireAfterSeconds: 0</span>
+<span class="tok-com">// and store an explicit expiresAt Date on each document</span>
+db.sessions.<span class="tok-fn">createIndex</span>({ expiresAt: <span class="tok-num">1</span> }, { expireAfterSeconds: <span class="tok-num">0</span> })</pre></div>
+      <table>
+        <tr><th>Use case</th><th>Expire after</th></tr>
+        <tr><td>OTP / 2FA codes</td><td>5 minutes</td></tr>
+        <tr><td>User sessions</td><td>1–24 hours</td></tr>
+        <tr><td>Password-reset tokens</td><td>15–60 minutes</td></tr>
+        <tr><td>Application logs</td><td>7–30 days</td></tr>
+        <tr><td>Cache entries</td><td>Seconds to minutes</td></tr>
+      </table>
+      <div class="callout tip"><b>Note:</b> A background job runs about every 60&nbsp;seconds, so deletion isn't instant to the second — but it's automatic and reliable. TTL works only on a single Date field.</div>
+    </section>
+
+    <!-- TIME SERIES -->
+    <section id="timeseries">
+      <h2><span class="num">26</span> Time Series Collections</h2>
+      <p class="lead">Purpose-built collections (v5.0+) that store timestamped data far more efficiently than regular collections — auto-bucketing, compression, and optimized queries.</p>
+      <div class="code"><div class="code-head"><span>Create a time-series collection</span><button class="copy">Copy</button></div><pre>db.<span class="tok-fn">createCollection</span>(<span class="tok-str">"weather"</span>, {
+  timeseries: {
+    timeField: <span class="tok-str">"ts"</span>,          <span class="tok-com">// required Date field</span>
+    metaField: <span class="tok-str">"sensorId"</span>,    <span class="tok-com">// groups a series together</span>
+    granularity: <span class="tok-str">"minutes"</span>
+  },
+  expireAfterSeconds: <span class="tok-num">2592000</span>   <span class="tok-com">// auto-delete after 30 days</span>
+})</pre></div>
+      <table>
+        <tr><th>Use case</th><th>metaField</th><th>measurement</th></tr>
+        <tr><td>IoT sensors</td><td>sensorId</td><td>temperature, humidity</td></tr>
+        <tr><td>Stock prices</td><td>ticker</td><td>price, volume</td></tr>
+        <tr><td>Weather</td><td>stationId</td><td>temp, wind</td></tr>
+        <tr><td>App metrics</td><td>service</td><td>latency, errors</td></tr>
+      </table>
+      <div class="callout tip"><b>Benefit:</b> MongoDB automatically buckets and compresses the data, so you get big storage savings and fast time-range queries without designing the bucket pattern yourself.</div>
+    </section>
+
+    <!-- GRIDFS -->
+    <section id="gridfs">
+      <h2><span class="num">27</span> GridFS (Large Files)</h2>
+      <p class="lead">A document is limited to 16&nbsp;MB. GridFS stores larger files (videos, PDFs, high-res images) by splitting them into chunks across two collections: <code class="inline">fs.files</code> (metadata) and <code class="inline">fs.chunks</code> (data).</p>
+      <div class="code"><div class="code-head"><span>Stream a file in &amp; out (Node.js)</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { GridFSBucket } = <span class="tok-fn">require</span>(<span class="tok-str">"mongodb"</span>);
+<span class="tok-key">const</span> bucket = <span class="tok-key">new</span> <span class="tok-fn">GridFSBucket</span>(db, { bucketName: <span class="tok-str">"videos"</span> });
+
+<span class="tok-com">// Upload</span>
+fs.<span class="tok-fn">createReadStream</span>(<span class="tok-str">"movie.mp4"</span>)
+  .<span class="tok-fn">pipe</span>(bucket.<span class="tok-fn">openUploadStream</span>(<span class="tok-str">"movie.mp4"</span>));
+
+<span class="tok-com">// Download</span>
+bucket.<span class="tok-fn">openDownloadStreamByName</span>(<span class="tok-str">"movie.mp4"</span>)
+  .<span class="tok-fn">pipe</span>(fs.<span class="tok-fn">createWriteStream</span>(<span class="tok-str">"out.mp4"</span>));</pre></div>
+      <div class="callout warn"><b>Reality check:</b> For most apps, storing files in <b>object storage (S3)</b> and keeping only the URL in MongoDB is cheaper and faster. Use GridFS when you specifically want files inside the database (single backup, transactions, access control).</div>
+    </section>
+
+    <!-- CHANGE STREAMS -->
+    <section id="changestreams">
+      <h2><span class="num">28</span> Change Streams (Real-Time)</h2>
+      <p class="lead">Subscribe to a live feed of inserts/updates/deletes and react instantly — powering notifications, live dashboards, and cache invalidation. Requires a replica set.</p>
+      <div class="code"><div class="code-head"><span>Watch a collection</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> stream = db.<span class="tok-fn">collection</span>(<span class="tok-str">"messages"</span>).<span class="tok-fn">watch</span>([
+  { <span class="tok-op">$match</span>: { operationType: <span class="tok-str">"insert"</span> } }
+]);
+
+stream.<span class="tok-fn">on</span>(<span class="tok-str">"change"</span>, (change) =&gt; {
+  <span class="tok-com">// push the new message to connected clients via WebSocket</span>
+  io.<span class="tok-fn">emit</span>(<span class="tok-str">"newMessage"</span>, change.fullDocument);
+});</pre></div>
+      <table>
+        <tr><th>Use case</th><th>Watch for</th></tr>
+        <tr><td>Chat app</td><td>New messages → push to room</td></tr>
+        <tr><td>Stock ticker</td><td>Price updates → live chart</td></tr>
+        <tr><td>Live dashboard</td><td>Order inserts → update KPIs</td></tr>
+        <tr><td>Cache invalidation</td><td>Doc updates → evict cache key</td></tr>
+      </table>
+      <div class="callout tip"><b>Resumable:</b> Change streams provide a <code class="inline">resumeToken</code> so you can restart exactly where you left off after a disconnect.</div>
+    </section>
+
+    <!-- SECURITY -->
+    <section id="security">
+      <h2><span class="num">29</span> Security</h2>
+      <p class="lead">Production databases must be locked down. The essentials:</p>
+      <table>
+        <tr><th>Control</th><th>What it does</th></tr>
+        <tr><td><b>Authentication</b></td><td>Verify identity (SCRAM, x.509, LDAP, AWS IAM)</td></tr>
+        <tr><td><b>Authorization (RBAC)</b></td><td>Role-based access — grant least privilege</td></tr>
+        <tr><td><b>TLS/SSL</b></td><td>Encrypt data in transit</td></tr>
+        <tr><td><b>Encryption at rest</b></td><td>Encrypt stored files (+ client-side field encryption)</td></tr>
+        <tr><td><b>Network</b></td><td>IP allow-lists, private VPC, no public bind</td></tr>
+        <tr><td><b>Auditing</b></td><td>Log who did what, for compliance</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Create a least-privilege user</span><button class="copy">Copy</button></div><pre>db.<span class="tok-fn">createUser</span>({
+  user: <span class="tok-str">"appUser"</span>,
+  pwd: <span class="tok-str">"&lt;from-secrets-manager&gt;"</span>,
+  roles: [ { role: <span class="tok-str">"readWrite"</span>, db: <span class="tok-str">"shop"</span> } ]  <span class="tok-com">// only what's needed</span>
+})</pre></div>
+      <div class="callout warn"><b>Never:</b> expose MongoDB to <code class="inline">0.0.0.0</code> without auth, commit credentials to git, or use one admin user for the app. These cause real-world breaches.</div>
+    </section>
+
+    <!-- BACKUP -->
+    <section id="backup">
+      <h2><span class="num">30</span> Backup &amp; Restore</h2>
+      <table>
+        <tr><th>Tool</th><th>Use</th></tr>
+        <tr><td><code>mongodump</code></td><td>Logical backup → BSON files</td></tr>
+        <tr><td><code>mongorestore</code></td><td>Restore from a dump</td></tr>
+        <tr><td>Volume snapshots</td><td>Fast backups for large clusters</td></tr>
+        <tr><td>Atlas Backup</td><td>Continuous + point-in-time restore</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Dump &amp; restore</span><button class="copy">Copy</button></div><pre><span class="tok-com"># Backup a database</span>
+mongodump --uri=<span class="tok-str">"$MONGODB_URI"</span> --db=shop --out=./backup
+
+<span class="tok-com"># Restore it</span>
+mongorestore --uri=<span class="tok-str">"$MONGODB_URI"</span> --db=shop ./backup/shop</pre></div>
+      <div class="callout tip"><b>Rule:</b> A backup you've never restored isn't a backup. Test restores regularly, and store backups in a different region/account.</div>
+    </section>
+
+    <!-- ATLAS -->
+    <section id="atlas">
+      <h2><span class="num">31</span> MongoDB Atlas</h2>
+      <p class="lead">Atlas is MongoDB's fully-managed cloud service (AWS/GCP/Azure) — it runs, scales, secures, and backs up your clusters.</p>
+      <table>
+        <tr><th>Feature</th><th>What you get</th></tr>
+        <tr><td><b>Clusters</b></td><td>Deploy replica sets/sharded clusters in minutes</td></tr>
+        <tr><td><b>Monitoring</b></td><td>Metrics, alerts, Performance Advisor (index suggestions)</td></tr>
+        <tr><td><b>Backup</b></td><td>Continuous, point-in-time restore</td></tr>
+        <tr><td><b>Triggers</b></td><td>Run functions on DB changes/schedules (serverless)</td></tr>
+        <tr><td><b>Atlas Search</b></td><td>Lucene full-text: fuzzy, autocomplete, relevance</td></tr>
+        <tr><td><b>Vector Search</b></td><td>Semantic / AI similarity search for embeddings (RAG)</td></tr>
+        <tr><td><b>Charts</b></td><td>Build dashboards directly on your data</td></tr>
+        <tr><td><b>Online Archive</b></td><td>Tier cold data to cheap storage to cut cost</td></tr>
+      </table>
+      <div class="callout tip"><b>Performance Advisor</b> analyzes real slow queries and recommends indexes — one of the fastest ways to tune a production cluster.</div>
+    </section>
+
+    <!-- COMPASS -->
+    <section id="compass">
+      <h2><span class="num">32</span> MongoDB Compass (GUI)</h2>
+      <p class="lead">Compass is the official desktop GUI — explore data, build queries and pipelines visually, and inspect performance without the shell.</p>
+      <table>
+        <tr><th>Task</th><th>In Compass</th></tr>
+        <tr><td>Create DB / Collection</td><td>"Create Database" button → name DB + first collection</td></tr>
+        <tr><td>Run queries</td><td>Filter bar: <code>{ price: { $gt: 100 } }</code> → Find</td></tr>
+        <tr><td>Manage indexes</td><td>Indexes tab → Create Index, see usage &amp; size</td></tr>
+        <tr><td>Build pipelines</td><td>Aggregation tab → add stages, live preview, export code</td></tr>
+        <tr><td>Analyze schema</td><td>Schema tab → field types, value distributions</td></tr>
+        <tr><td>Explain a query</td><td>Explain Plan tab → visualize COLLSCAN/IXSCAN</td></tr>
+      </table>
+      <div class="callout tip"><b>Tip:</b> The Aggregation Builder previews each stage's output as you go and can export the finished pipeline to Node.js/Python code — great for learning and prototyping.</div>
+    </section>
+
+    <!-- SYSTEM DESIGN -->
+    <section id="systemdesign">
+      <h2><span class="num">33</span> System Design with MongoDB</h2>
+      <p class="lead">How to model real products. For each, the key is applying embed-vs-reference and the right patterns.</p>
+
+      <h3>💬 Design WhatsApp</h3>
+      <div class="code"><div class="code-head"><span>Collections</span><button class="copy">Copy</button></div><pre>users    { _id, phone, name, lastSeen, status }
+chats    { _id, type: <span class="tok-str">"dm|group"</span>, members: [userId], lastMessage }
+messages { _id, chatId, senderId, text, sentAt, deliveredTo, readBy }
+status   { _id, userId, media, expiresAt }  <span class="tok-com">// TTL 24h</span></pre></div>
+      <p><b>Keys:</b> shard <code class="inline">messages</code> by <code class="inline">chatId</code> (co-locate a conversation), index <code class="inline">{ chatId: 1, sentAt: -1 }</code> for recent-first paging, use <b>change streams</b> for real-time delivery, and a <b>TTL index</b> on <code class="inline">status.expiresAt</code>.</p>
+
+      <h3>📸 Design Instagram</h3>
+      <div class="code"><div class="code-head"><span>Collections</span><button class="copy">Copy</button></div><pre>users     { _id, username, bio, followerCount, followingCount }
+posts     { _id, userId, imageUrl, caption, likeCount, recentComments: [] }
+comments  { _id, postId, userId, text, createdAt }
+likes     { _id, postId, userId }            <span class="tok-com">// or embed for small counts</span>
+followers { _id, followerId, followeeId }     <span class="tok-com">// many-to-many</span></pre></div>
+      <p><b>Keys:</b> store <code class="inline">likeCount</code> with the <b>computed pattern</b> (don't count on read), embed only <code class="inline">recentComments</code> (<b>subset pattern</b>), reference the rest, and index <code class="inline">followers</code> both ways for feed fan-out.</p>
+
+      <h3>🛒 Design E-commerce</h3>
+      <div class="code"><div class="code-head"><span>Collections</span><button class="copy">Copy</button></div><pre>users     { _id, email, addresses: [] }
+products  { _id, name, price, specs: [{k,v}], categoryPath }
+inventory { _id, productId, warehouse, stock }
+orders    { _id, userId, items: [{ productId, name, price, qty }], total, status }
+payments  { _id, orderId, amount, provider, status }</pre></div>
+      <p><b>Keys:</b> use the <b>attribute pattern</b> for variable specs, <b>extended reference</b> to snapshot product name/price into order items (history-safe), a <b>transaction</b> to decrement inventory + create the order together, and the <b>tree pattern</b> for categories.</p>
+
+      <h3>🚗 Design Uber</h3>
+      <div class="code"><div class="code-head"><span>Collections</span><button class="copy">Copy</button></div><pre>drivers   { _id, name, car, status, location: { type: <span class="tok-str">"Point"</span>, coordinates: [lng,lat] } }
+rides     { _id, riderId, driverId, from, to, fare, status, requestedAt }
+locations { _id, driverId, location, updatedAt }  <span class="tok-com">// or time-series</span></pre></div>
+      <p><b>Keys:</b> a <b>2dsphere</b> geospatial index on <code class="inline">drivers.location</code> for "nearest drivers" (<code class="inline">$near</code>), <b>time-series</b> for location history, and change streams to push ride status to the rider.</p>
+
+      <h3>▶️ Design YouTube</h3>
+      <div class="code"><div class="code-head"><span>Collections</span><button class="copy">Copy</button></div><pre>videos   { _id, channelId, title, url, viewCount, likeCount, tags: [] }
+views    { _id, videoId, userId, watchedAt }   <span class="tok-com">// time-series / bucketed</span>
+comments { _id, videoId, userId, text, createdAt }
+likes    { _id, videoId, userId }</pre></div>
+      <p><b>Keys:</b> store the video file in object storage (URL in Mongo), keep <code class="inline">viewCount</code>/<code class="inline">likeCount</code> as <b>computed</b> fields updated with <code class="inline">$inc</code>, and <b>bucket</b> raw views for analytics to avoid one doc per view.</p>
+    </section>
+
+    <!-- NODE INTEGRATION -->
+    <section id="node">
+      <h2><span class="num">34</span> MongoDB with Node.js — Full CRUD API</h2>
+      <p class="lead">A complete Express + Mongoose resource with CRUD, pagination, and indexes — the shape of most backend tasks.</p>
+      <div class="code"><div class="code-head"><span>routes/products.js</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> router = <span class="tok-fn">require</span>(<span class="tok-str">"express"</span>).<span class="tok-fn">Router</span>();
+<span class="tok-key">const</span> Product = <span class="tok-fn">require</span>(<span class="tok-str">"../models/Product"</span>);
+
+<span class="tok-com">// CREATE</span>
+router.<span class="tok-fn">post</span>(<span class="tok-str">"/"</span>, <span class="tok-key">async</span> (req, res) =&gt; {
+  <span class="tok-key">const</span> p = <span class="tok-key">await</span> Product.<span class="tok-fn">create</span>(req.body);
+  res.<span class="tok-fn">status</span>(<span class="tok-num">201</span>).<span class="tok-fn">json</span>(p);
+});
+
+<span class="tok-com">// READ (paginated + filtered)</span>
+router.<span class="tok-fn">get</span>(<span class="tok-str">"/"</span>, <span class="tok-key">async</span> (req, res) =&gt; {
+  <span class="tok-key">const</span> { page = <span class="tok-num">1</span>, limit = <span class="tok-num">10</span>, category } = req.query;
+  <span class="tok-key">const</span> filter = category ? { category } : {};
+  <span class="tok-key">const</span> items = <span class="tok-key">await</span> Product.<span class="tok-fn">find</span>(filter)
+    .<span class="tok-fn">sort</span>({ _id: <span class="tok-op">-1</span> })
+    .<span class="tok-fn">skip</span>((page - <span class="tok-num">1</span>) * limit)
+    .<span class="tok-fn">limit</span>(<span class="tok-fn">Number</span>(limit))
+    .<span class="tok-fn">lean</span>();               <span class="tok-com">// plain objects = faster reads</span>
+  res.<span class="tok-fn">json</span>(items);
+});
+
+<span class="tok-com">// UPDATE</span>
+router.<span class="tok-fn">put</span>(<span class="tok-str">"/:id"</span>, <span class="tok-key">async</span> (req, res) =&gt; {
+  <span class="tok-key">const</span> p = <span class="tok-key">await</span> Product.<span class="tok-fn">findByIdAndUpdate</span>(req.params.id, req.body, { new: <span class="tok-key">true</span>, runValidators: <span class="tok-key">true</span> });
+  res.<span class="tok-fn">json</span>(p);
+});
+
+<span class="tok-com">// DELETE</span>
+router.<span class="tok-fn">delete</span>(<span class="tok-str">"/:id"</span>, <span class="tok-key">async</span> (req, res) =&gt; {
+  <span class="tok-key">await</span> Product.<span class="tok-fn">findByIdAndDelete</span>(req.params.id);
+  res.<span class="tok-fn">json</span>({ deleted: <span class="tok-key">true</span> });
+});
+
+module.exports = router;</pre></div>
+      <div class="callout tip"><b>Production tip:</b> validate input, use <code class="inline">.lean()</code> for read-only endpoints, add indexes for your filter/sort fields, and switch large lists to keyset pagination.</div>
+    </section>
+
+    <!-- PRODUCTION CHECKLIST -->
+    <section id="production">
+      <h2><span class="num">35</span> Production Checklist</h2>
+      <p class="lead">Before you ship, verify each of these.</p>
+      <table>
+        <tr><th>Area</th><th>Do this</th></tr>
+        <tr><td>Indexes</td><td>Index every filter/sort field; drop unused ones (<code>$indexStats</code>)</td></tr>
+        <tr><td>Validation</td><td>Schema validation + app-level validation at boundaries</td></tr>
+        <tr><td>Connection pooling</td><td>One client at startup; tune <code>maxPoolSize</code></td></tr>
+        <tr><td>Timeouts</td><td>Set <code>serverSelectionTimeoutMS</code> &amp; query <code>maxTimeMS</code></td></tr>
+        <tr><td>Retry logic</td><td>Enable retryable writes/reads; handle transient errors</td></tr>
+        <tr><td>Transactions</td><td>Only where needed; keep them short</td></tr>
+        <tr><td>Monitoring</td><td>Alerts on slow queries, replication lag, disk, connections</td></tr>
+        <tr><td>Logging</td><td>Structured logs; never log secrets/PII</td></tr>
+        <tr><td>Compression</td><td>WiredTiger (snappy/zstd) on; network compression enabled</td></tr>
+        <tr><td>Security</td><td>Auth, TLS, least-privilege users, IP allow-list</td></tr>
+        <tr><td>Backups</td><td>Automated + tested restores in another region</td></tr>
+      </table>
+    </section>
+
+    <!-- COMMON MISTAKES -->
+    <section id="mistakes">
+      <h2><span class="num">36</span> Common Mistakes &amp; Anti-Patterns</h2>
+      <table>
+        <tr><th>Mistake</th><th>Why it hurts</th><th>Do instead</th></tr>
+        <tr><td>Large <code>skip()</code> paging</td><td>Scans skipped docs — slow deep pages</td><td>Keyset paging (<code>_id &gt; lastId</code>)</td></tr>
+        <tr><td>Unbounded arrays</td><td>Hit 16&nbsp;MB, slow every read</td><td>Reference / bucket / subset pattern</td></tr>
+        <tr><td>Too many indexes</td><td>Slow writes, high storage cost</td><td>Keep only queried ones; audit <code>$indexStats</code></td></tr>
+        <tr><td>No schema validation</td><td>Corrupt/inconsistent data</td><td>JSON Schema + app validation</td></tr>
+        <tr><td><code>$lookup</code> everywhere</td><td>Re-introduces slow JOINs</td><td>Embed / extended reference</td></tr>
+        <tr><td>No projection</td><td>Wastes network + RAM</td><td>Return only needed fields</td></tr>
+        <tr><td>Files in documents</td><td>Bloats docs, hits 16&nbsp;MB</td><td>Object storage (S3) + URL, or GridFS</td></tr>
+        <tr><td>Connect per request</td><td>Exhausts the connection pool</td><td>One shared client at startup</td></tr>
+        <tr><td>Monotonic shard key</td><td>Hot shard, uneven load</td><td>Hashed / compound shard key</td></tr>
+        <tr><td>Read-modify-write</td><td>Race conditions</td><td>Atomic <code>$inc</code>/<code>findOneAndUpdate</code></td></tr>
+      </table>
+    </section>
+
+    <!-- CONNECT -->
+    <section id="connect">
+      <h2><span class="num">37</span> Drivers, Atlas & Connecting</h2>
+      <p class="lead">MongoDB Atlas is the fully-managed cloud version. Apps connect using an official driver and a connection string (URI).</p>
+      <div class="code"><div class="code-head"><span>Node.js — connect & query</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { MongoClient } = <span class="tok-fn">require</span>(<span class="tok-str">"mongodb"</span>);
+
+<span class="tok-key">const</span> uri = process.env.<span class="tok-op">MONGODB_URI</span>; <span class="tok-com">// keep secrets in .env!</span>
+<span class="tok-key">const</span> client = <span class="tok-key">new</span> <span class="tok-fn">MongoClient</span>(uri);
+
+<span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">run</span>() {
+  <span class="tok-key">await</span> client.<span class="tok-fn">connect</span>();
+  <span class="tok-key">const</span> db = client.<span class="tok-fn">db</span>(<span class="tok-str">"shop"</span>);
+  <span class="tok-key">const</span> items = <span class="tok-key">await</span> db.<span class="tok-fn">collection</span>(<span class="tok-str">"products"</span>).<span class="tok-fn">find</span>().<span class="tok-fn">toArray</span>();
+  console.<span class="tok-fn">log</span>(items);
+}
+<span class="tok-fn">run</span>();</pre></div>
+      <div class="callout warn"><b>Security:</b> Never hardcode credentials. Store the URI in an env variable (<code class="inline">.env</code> + <code class="inline">dotenv</code>) and add <code class="inline">.env</code> to <code class="inline">.gitignore</code>. In Atlas, use IP allow-lists and least-privilege users.</div>
+    </section>
+
+    <!-- MONGOOSE & MIDDLEWARE -->
+    <section id="middleware">
+      <h2><span class="num">21</span> Mongoose &amp; Middleware</h2>
+      <p class="lead"><b>Mongoose</b> is the most popular ODM (Object Data Modeling) library for MongoDB in Node.js. It adds schemas, validation, and <b>middleware (hooks)</b> — functions that run before/after operations like save, update, and delete.</p>
+
+      <h3>Connect &amp; define a schema + model</h3>
+      <div class="code"><div class="code-head"><span>models/Product.js</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> mongoose = <span class="tok-fn">require</span>(<span class="tok-str">"mongoose"</span>);
+
+<span class="tok-key">await</span> mongoose.<span class="tok-fn">connect</span>(process.env.<span class="tok-op">MONGODB_URI</span>);
+
+<span class="tok-key">const</span> productSchema = <span class="tok-key">new</span> mongoose.<span class="tok-fn">Schema</span>({
+  name:  { type: String, required: <span class="tok-key">true</span>, trim: <span class="tok-key">true</span> },
+  price: { type: Number, required: <span class="tok-key">true</span>, min: <span class="tok-num">0</span> },
+  stock: { type: Number, default: <span class="tok-num">0</span> },
+  tags:  [String],
+  slug:  String
+}, { timestamps: <span class="tok-key">true</span> });  <span class="tok-com">// auto createdAt / updatedAt</span>
+
+module.exports = mongoose.<span class="tok-fn">model</span>(<span class="tok-str">"Product"</span>, productSchema);</pre></div>
+
+      <h3>Types of Mongoose middleware (hooks)</h3>
+      <table>
+        <tr><th>Type</th><th>When it runs</th><th>Example use</th></tr>
+        <tr><td><code>pre('save')</code></td><td>Before a document saves</td><td>Hash password, build a slug</td></tr>
+        <tr><td><code>post('save')</code></td><td>After a document saves</td><td>Send welcome email, log event</td></tr>
+        <tr><td><code>pre('find')</code></td><td>Before any find query</td><td>Auto-filter soft-deleted docs</td></tr>
+        <tr><td><code>pre('remove')</code> / <code>deleteOne</code></td><td>Before delete</td><td>Cascade delete related docs</td></tr>
+        <tr><td><code>pre('aggregate')</code></td><td>Before a pipeline runs</td><td>Inject a default <code>$match</code></td></tr>
+      </table>
+
+      <h3>Hands-on: <code class="inline">pre</code> and <code class="inline">post</code> hooks</h3>
+      <div class="code"><div class="code-head"><span>Document middleware</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Build a slug automatically before every save</span>
+productSchema.<span class="tok-fn">pre</span>(<span class="tok-str">"save"</span>, <span class="tok-key">function</span> (next) {
+  <span class="tok-key">this</span>.slug = <span class="tok-key">this</span>.name.<span class="tok-fn">toLowerCase</span>().<span class="tok-fn">replace</span>(<span class="tok-str">/\s+/g</span>, <span class="tok-str">"-"</span>);
+  <span class="tok-fn">next</span>();
+});
+
+<span class="tok-com">// Run a side-effect after saving</span>
+productSchema.<span class="tok-fn">post</span>(<span class="tok-str">"save"</span>, <span class="tok-key">function</span> (doc) {
+  console.<span class="tok-fn">log</span>(<span class="tok-str">`Product ${doc.name} saved`</span>);
+});
+
+<span class="tok-com">// Query middleware: hide soft-deleted docs from every find</span>
+productSchema.<span class="tok-fn">pre</span>(<span class="tok-str">/^find/</span>, <span class="tok-key">function</span> (next) {
+  <span class="tok-key">this</span>.<span class="tok-fn">where</span>({ deleted: { <span class="tok-op">$ne</span>: <span class="tok-key">true</span> } });
+  <span class="tok-fn">next</span>();
+});</pre></div>
+
+      <h3>Express middleware for MongoDB</h3>
+      <p>In a REST API you typically layer <b>Express middleware</b> around DB calls — parsing JSON bodies, injecting the DB connection, and centralizing async error handling.</p>
+      <div class="code"><div class="code-head"><span>Express route + async error middleware</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> express = <span class="tok-fn">require</span>(<span class="tok-str">"express"</span>);
+<span class="tok-key">const</span> Product = <span class="tok-fn">require</span>(<span class="tok-str">"./models/Product"</span>);
+<span class="tok-key">const</span> app = <span class="tok-fn">express</span>();
+
+app.<span class="tok-fn">use</span>(express.<span class="tok-fn">json</span>());        <span class="tok-com">// parse JSON bodies (needed for POST/PUT)</span>
+
+<span class="tok-com">// Wrapper so async errors reach the error handler</span>
+<span class="tok-key">const</span> <span class="tok-fn">wrap</span> = fn => (req, res, next) => <span class="tok-fn">Promise</span>.<span class="tok-fn">resolve</span>(<span class="tok-fn">fn</span>(req, res, next)).<span class="tok-fn">catch</span>(next);
+
+app.<span class="tok-fn">get</span>(<span class="tok-str">"/products"</span>, <span class="tok-fn">wrap</span>(<span class="tok-key">async</span> (req, res) =&gt; {
+  <span class="tok-key">const</span> items = <span class="tok-key">await</span> Product.<span class="tok-fn">find</span>();   <span class="tok-com">// pre('find') hook auto-applies</span>
+  res.<span class="tok-fn">json</span>(items);
+}));
+
+app.<span class="tok-fn">post</span>(<span class="tok-str">"/products"</span>, <span class="tok-fn">wrap</span>(<span class="tok-key">async</span> (req, res) =&gt; {
+  <span class="tok-key">const</span> created = <span class="tok-key">await</span> Product.<span class="tok-fn">create</span>(req.body); <span class="tok-com">// pre/post('save') run</span>
+  res.<span class="tok-fn">status</span>(<span class="tok-num">201</span>).<span class="tok-fn">json</span>(created);
+}));
+
+<span class="tok-com">// Central error-handling middleware (4 args)</span>
+app.<span class="tok-fn">use</span>((err, req, res, next) =&gt; {
+  console.<span class="tok-fn">error</span>(err);
+  res.<span class="tok-fn">status</span>(<span class="tok-num">500</span>).<span class="tok-fn">json</span>({ error: err.message });
+});</pre></div>
+      <div class="callout tip"><b>Tip:</b> Keep secrets in <code class="inline">.env</code>, load with <code class="inline">require("dotenv").config()</code> at the very top (before any DB import), and reuse a single connection — don't connect per request.</div>
+      <div class="callout warn"><b>Bottleneck:</b> Opening a new DB connection on every request exhausts the connection pool. Connect once at startup and reuse the client/connection across requests.</div>
+
+      <h3>Statics, methods &amp; virtuals</h3>
+      <div class="code"><div class="code-head"><span>Reusable model logic</span><button class="copy">Copy</button></div><pre><span class="tok-com">// STATIC: called on the Model (collection-level query)</span>
+productSchema.statics.<span class="tok-fn">findCheap</span> = <span class="tok-key">function</span> (max) {
+  <span class="tok-key">return</span> <span class="tok-key">this</span>.<span class="tok-fn">find</span>({ price: { <span class="tok-op">$lte</span>: max } });
+};
+<span class="tok-key">await</span> Product.<span class="tok-fn">findCheap</span>(<span class="tok-num">50</span>);
+
+<span class="tok-com">// METHOD: called on a document instance</span>
+productSchema.methods.<span class="tok-fn">applyDiscount</span> = <span class="tok-key">function</span> (pct) {
+  <span class="tok-key">this</span>.price *= (<span class="tok-num">1</span> - pct / <span class="tok-num">100</span>);
+  <span class="tok-key">return</span> <span class="tok-key">this</span>.<span class="tok-fn">save</span>();
+};
+
+<span class="tok-com">// VIRTUAL: computed field, not stored in the DB</span>
+productSchema.<span class="tok-fn">virtual</span>(<span class="tok-str">"priceWithTax"</span>).<span class="tok-fn">get</span>(<span class="tok-key">function</span> () {
+  <span class="tok-key">return</span> <span class="tok-key">this</span>.price * <span class="tok-num">1.18</span>;
+});</pre></div>
+
+      <h3>Populate (referencing joins)</h3>
+      <div class="code"><div class="code-head"><span>ref + populate</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> orderSchema = <span class="tok-key">new</span> mongoose.<span class="tok-fn">Schema</span>({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: <span class="tok-str">"User"</span> },
+  items: [{ product: { type: <span class="tok-str">"ObjectId"</span>, ref: <span class="tok-str">"Product"</span> }, qty: Number }]
+});
+
+<span class="tok-com">// Auto-join referenced docs (like a driver-side $lookup)</span>
+<span class="tok-key">const</span> order = <span class="tok-key">await</span> Order.<span class="tok-fn">findById</span>(id)
+  .<span class="tok-fn">populate</span>(<span class="tok-str">"user"</span>, <span class="tok-str">"name email"</span>)
+  .<span class="tok-fn">populate</span>(<span class="tok-str">"items.product"</span>);</pre></div>
+
+      <h3>Discriminators (schema inheritance)</h3>
+      <div class="code"><div class="code-head"><span>One collection, multiple shapes</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> Event = mongoose.<span class="tok-fn">model</span>(<span class="tok-str">"Event"</span>, <span class="tok-key">new</span> mongoose.<span class="tok-fn">Schema</span>(
+  { at: Date }, { discriminatorKey: <span class="tok-str">"kind"</span> }));
+
+<span class="tok-com">// Click and Purchase share the Event collection but add own fields</span>
+<span class="tok-key">const</span> Click = Event.<span class="tok-fn">discriminator</span>(<span class="tok-str">"Click"</span>,
+  <span class="tok-key">new</span> mongoose.<span class="tok-fn">Schema</span>({ url: String }));
+<span class="tok-key">const</span> Purchase = Event.<span class="tok-fn">discriminator</span>(<span class="tok-str">"Purchase"</span>,
+  <span class="tok-key">new</span> mongoose.<span class="tok-fn">Schema</span>({ amount: Number }));</pre></div>
+
+      <table>
+        <tr><th>Feature</th><th>Runs on</th><th>Use for</th></tr>
+        <tr><td><code>statics</code></td><td>Model</td><td>Custom collection queries</td></tr>
+        <tr><td><code>methods</code></td><td>Document</td><td>Instance behavior</td></tr>
+        <tr><td><code>virtuals</code></td><td>Document</td><td>Computed, non-stored fields</td></tr>
+        <tr><td><code>populate()</code></td><td>Query</td><td>Resolve <code>ref</code> references</td></tr>
+        <tr><td><code>lean()</code></td><td>Query</td><td>Fast plain-object reads</td></tr>
+        <tr><td><code>timestamps</code></td><td>Schema</td><td>Auto <code>createdAt</code>/<code>updatedAt</code></td></tr>
+        <tr><td><code>discriminators</code></td><td>Model</td><td>Inheritance / polymorphism</td></tr>
+      </table>
+
+      <div class="realworld">
+        <h4>🌍 Real-world scenario</h4>
+        <p><b>Auth:</b> a <code class="inline">pre('save')</code> hook hashes the password with bcrypt before it ever hits the DB. <b>Soft delete:</b> a <code class="inline">pre(/^find/)</code> hook transparently hides <code class="inline">deleted: true</code> docs so every route stays clean. <b>Audit:</b> a <code class="inline">post('save')</code> hook writes an entry to an <code class="inline">audit_log</code> collection.</p>
+      </div>
+    </section>
+
+    <!-- PROBLEMS -->
+    <section id="problems">
+      <h2><span class="num">22</span> Problems &amp; Solutions</h2>
+      <p class="lead">Practice scenarios modeled on real applications. Try each yourself, then reveal the solution.</p>
+
+      <div class="problem">
+        <div class="p-head">Problem 1 — Low stock alert <span class="tag">CRUD</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Task:</b> Find all products with stock below 5 and mark them with <code class="inline">status: "reorder"</code> in a single command.</p>
+          <details class="solution"><summary>Show solution</summary>
+            <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">updateMany</span>(
+  { stock: { <span class="tok-op">$lt</span>: <span class="tok-num">5</span> } },
+  { <span class="tok-op">$set</span>: { status: <span class="tok-str">"reorder"</span> } }
+)</pre></div>
+            <p><b>Why:</b> <code class="inline">updateMany</code> touches every matching doc; <code class="inline">$lt</code> filters by threshold; <code class="inline">$set</code> adds/overwrites the field.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Problem 2 — Second page of results <span class="tag">Read</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Task:</b> Return page 2 of products (10 per page), sorted by price ascending.</p>
+          <details class="solution"><summary>Show solution</summary>
+            <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">find</span>()
+  .<span class="tok-fn">sort</span>({ price: <span class="tok-num">1</span> })
+  .<span class="tok-fn">skip</span>(<span class="tok-num">10</span>)   <span class="tok-com">// (page - 1) * pageSize</span>
+  .<span class="tok-fn">limit</span>(<span class="tok-num">10</span>)</pre></div>
+            <p><b>Note:</b> For very large collections, use range-based paging (<code class="inline">price &gt; lastSeenPrice</code>) to avoid slow <code class="inline">skip</code>.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Problem 3 — Revenue by category <span class="tag">Aggregation</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Task:</b> Compute total revenue (<code class="inline">price × quantity</code>) per category and show the top 3 categories.</p>
+          <details class="solution"><summary>Show solution</summary>
+            <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre>db.orders.<span class="tok-fn">aggregate</span>([
+  { <span class="tok-op">$group</span>: {
+      _id: <span class="tok-str">"$category"</span>,
+      revenue: { <span class="tok-op">$sum</span>: { <span class="tok-op">$multiply</span>: [<span class="tok-str">"$price"</span>, <span class="tok-str">"$quantity"</span>] } }
+  }},
+  { <span class="tok-op">$sort</span>: { revenue: <span class="tok-op">-1</span> } },
+  { <span class="tok-op">$limit</span>: <span class="tok-num">3</span> }
+])</pre></div>
+            <p><b>Why:</b> <code class="inline">$group</code> aggregates; <code class="inline">$multiply</code> inside <code class="inline">$sum</code> computes a per-doc value before summing; <code class="inline">$sort</code> + <code class="inline">$limit</code> pick the top 3.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Problem 4 — Attach customer to each order <span class="tag">$lookup</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Task:</b> For each order, attach the matching customer document from the <code class="inline">customers</code> collection.</p>
+          <details class="solution"><summary>Show solution</summary>
+            <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre>db.orders.<span class="tok-fn">aggregate</span>([
+  { <span class="tok-op">$lookup</span>: {
+      from: <span class="tok-str">"customers"</span>,
+      localField: <span class="tok-str">"customerId"</span>,
+      foreignField: <span class="tok-str">"_id"</span>,
+      as: <span class="tok-str">"customer"</span>
+  }},
+  { <span class="tok-op">$unwind</span>: <span class="tok-str">"$customer"</span> }   <span class="tok-com">// turn 1-element array into object</span>
+])</pre></div>
+            <p><b>Why:</b> <code class="inline">$lookup</code> joins; <code class="inline">$unwind</code> flattens the resulting single-element array for cleaner output.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Problem 5 — Prevent duplicate emails <span class="tag">Index</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Task:</b> Guarantee no two users can share the same email at the database level.</p>
+          <details class="solution"><summary>Show solution</summary>
+            <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre>db.users.<span class="tok-fn">createIndex</span>({ email: <span class="tok-num">1</span> }, { unique: <span class="tok-key">true</span> })</pre></div>
+            <p><b>Why:</b> A unique index rejects any insert/update that would duplicate the value — enforcement lives in the DB, not just app code.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Problem 6 — Add a tag without duplicates <span class="tag">Arrays</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Task:</b> Add <code class="inline">"featured"</code> to a product's <code class="inline">tags</code> array only if it isn't already there.</p>
+          <details class="solution"><summary>Show solution</summary>
+            <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">updateOne</span>(
+  { _id: <span class="tok-num">1</span> },
+  { <span class="tok-op">$addToSet</span>: { tags: <span class="tok-str">"featured"</span> } }
+)</pre></div>
+            <p><b>Why:</b> <code class="inline">$addToSet</code> is idempotent — running it twice won't create duplicates, unlike <code class="inline">$push</code>.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num">23</span> Top 50+ Interview Questions</h2>
+      <p class="lead">60+ of the most frequently asked MongoDB questions with concise, interview-ready answers. Click any question to reveal the answer.</p>
+
+      <details class="qa"><summary>What is MongoDB and how does it differ from a relational database?</summary>
+        <div class="ans"><p>MongoDB is a document-oriented NoSQL database that stores data as flexible BSON documents in collections, rather than rows in fixed-schema tables. It favors embedding related data over JOINs, supports dynamic schemas, and scales horizontally via sharding.</p></div></details>
+
+      <details class="qa"><summary>What is BSON and why does MongoDB use it instead of JSON?</summary>
+        <div class="ans"><p>BSON (Binary JSON) is a binary-encoded superset of JSON. MongoDB uses it because it's faster to parse/traverse, more space-efficient, and supports extra types like <code class="inline">Date</code>, <code class="inline">ObjectId</code>, <code class="inline">Decimal128</code>, and <code class="inline">Binary</code> that plain JSON lacks.</p></div></details>
+
+      <details class="qa"><summary>What is the <code class="inline">_id</code> field?</summary>
+        <div class="ans"><p>Every document has a unique primary key called <code class="inline">_id</code>. If you don't supply one, MongoDB auto-generates a 12-byte <code class="inline">ObjectId</code> (timestamp + machine + process + counter). It's automatically indexed.</p></div></details>
+
+      <details class="qa"><summary>Embedding vs referencing — when do you use each?</summary>
+        <div class="ans"><p><b>Embed</b> when data is accessed together and bounded in size (one-to-few), e.g. a post and its comments — one read gets everything. <b>Reference</b> when data is large, grows unbounded, or is shared across many parents (one-to-many / many-to-many), e.g. orders pointing to a customer <code class="inline">_id</code>.</p></div></details>
+
+      <details class="qa"><summary>What is an aggregation pipeline?</summary>
+        <div class="ans"><p>A framework for multi-stage data processing. Documents flow through ordered stages (<code class="inline">$match</code>, <code class="inline">$group</code>, <code class="inline">$sort</code>, <code class="inline">$project</code>, <code class="inline">$lookup</code>, etc.), each transforming the previous stage's output — used for grouping, computed fields, and joins.</p></div></details>
+
+      <details class="qa"><summary>Difference between <code class="inline">find()</code> and <code class="inline">aggregate()</code>?</summary>
+        <div class="ans"><p><code class="inline">find()</code> retrieves and filters documents. <code class="inline">aggregate()</code> can additionally transform, group, compute, join (<code class="inline">$lookup</code>), and reshape data across multiple stages — far more powerful for analytics.</p></div></details>
+
+      <details class="qa"><summary>How do indexes work and what's the downside?</summary>
+        <div class="ans"><p>Indexes store an ordered structure (B-tree) of field values so queries can skip full collection scans. The trade-off: they consume RAM/disk and slow down writes because each write must also update the indexes. Index only fields you query or sort on.</p></div></details>
+
+      <details class="qa"><summary>What's a compound index and the ESR rule?</summary>
+        <div class="ans"><p>A compound index covers multiple fields in a defined order. The <b>ESR rule</b> says to order fields as <b>Equality</b> → <b>Sort</b> → <b>Range</b> for optimal performance, because MongoDB can use the index prefix efficiently for equality matches and sorting.</p></div></details>
+
+      <details class="qa"><summary>Does MongoDB support ACID transactions?</summary>
+        <div class="ans"><p>Yes. Single-document operations have always been atomic. Since v4.0, MongoDB supports multi-document ACID transactions (across collections/shards in v4.2+) via sessions — useful for operations like transfers that must all succeed or all fail.</p></div></details>
+
+      <details class="qa"><summary>Explain replication vs sharding.</summary>
+        <div class="ans"><p><b>Replication</b> (replica set) keeps copies of data on multiple nodes for high availability and automatic failover. <b>Sharding</b> partitions data across servers by a shard key for horizontal scaling of storage and throughput. They're often combined.</p></div></details>
+
+      <details class="qa"><summary>What is an upsert?</summary>
+        <div class="ans"><p>An update with <code class="inline">{ upsert: true }</code>: if a matching document exists it's updated; if not, a new document is inserted. Handy for "insert or update" logic in one call.</p></div></details>
+
+      <details class="qa"><summary>Difference between <code class="inline">$push</code> and <code class="inline">$addToSet</code>?</summary>
+        <div class="ans"><p>Both add to an array. <code class="inline">$push</code> always appends (allows duplicates); <code class="inline">$addToSet</code> only adds the value if it's not already present (keeps the array a set).</p></div></details>
+
+      <details class="qa"><summary>What is the document size limit?</summary>
+        <div class="ans"><p>A single BSON document is limited to <b>16&nbsp;MB</b>. For larger binary data, use <b>GridFS</b>, which splits files into chunks across two collections.</p></div></details>
+
+      <details class="qa"><summary>How do you improve a slow query?</summary>
+        <div class="ans"><p>Run <code class="inline">.explain("executionStats")</code> to inspect the plan. Look for <code class="inline">COLLSCAN</code> (full scan) and add an appropriate index; use projections to return only needed fields; follow the ESR rule for compound indexes; and avoid large <code class="inline">skip</code> offsets.</p></div></details>
+
+      <details class="qa"><summary>What is <code class="inline">$elemMatch</code> used for?</summary>
+        <div class="ans"><p>It matches array documents where a <b>single element</b> satisfies <b>multiple conditions at once</b> — e.g. an order item that is both <code class="inline">qty &gt; 1</code> and <code class="inline">price &lt; 50</code> in the same element.</p></div></details>
+
+      <details class="qa"><summary>What is a capped collection?</summary>
+        <div class="ans"><p>A fixed-size collection that keeps insertion order and automatically overwrites the oldest documents when full — great for logs or a rolling buffer. Created with <code class="inline">db.createCollection("logs", { capped: true, size: 100000 })</code>.</p></div></details>
+
+      <details class="qa"><summary>What is a TTL index?</summary>
+        <div class="ans"><p>A special single-field index on a Date field with <code class="inline">expireAfterSeconds</code>. MongoDB automatically deletes documents once they exceed that age — perfect for sessions, OTPs, and temporary caches, and it reduces storage cost.</p></div></details>
+
+      <details class="qa"><summary>What is a multikey index?</summary>
+        <div class="ans"><p>An index on an array field. MongoDB creates an index entry for each array element, so a query like <code class="inline">{ tags: "sale" }</code> can use it. You can't create a compound index on two array fields.</p></div></details>
+
+      <details class="qa"><summary>What is a covered query?</summary>
+        <div class="ans"><p>A query where all requested fields exist in the index, so MongoDB answers it entirely from the index without reading documents. Requires the projection to exclude <code class="inline">_id</code> unless <code class="inline">_id</code> is in the index. Fastest possible read.</p></div></details>
+
+      <details class="qa"><summary>What is the difference between <code class="inline">updateOne</code>, <code class="inline">replaceOne</code>, and <code class="inline">findOneAndUpdate</code>?</summary>
+        <div class="ans"><p><code class="inline">updateOne</code> applies operators like <code class="inline">$set</code> to specific fields. <code class="inline">replaceOne</code> swaps the entire document (except <code class="inline">_id</code>). <code class="inline">findOneAndUpdate</code> updates and returns the document (before or after, via <code class="inline">returnDocument</code>).</p></div></details>
+
+      <details class="qa"><summary>Difference between <code class="inline">count()</code>, <code class="inline">countDocuments()</code> and <code class="inline">estimatedDocumentCount()</code>?</summary>
+        <div class="ans"><p><code class="inline">countDocuments(filter)</code> returns an accurate count using the filter. <code class="inline">estimatedDocumentCount()</code> reads collection metadata — very fast but approximate and ignores filters. Legacy <code class="inline">count()</code> is deprecated.</p></div></details>
+
+      <details class="qa"><summary>What is the WiredTiger storage engine?</summary>
+        <div class="ans"><p>MongoDB's default storage engine since 3.2. It provides document-level concurrency (locking), compression (snappy/zstd), and a cache for the working set — key to both performance and storage cost.</p></div></details>
+
+      <details class="qa"><summary>What is the "working set"?</summary>
+        <div class="ans"><p>The portion of data + indexes actively accessed by your queries. For good performance the working set should fit in RAM; if it doesn't, MongoDB hits disk frequently (page faults) and slows down.</p></div></details>
+
+      <details class="qa"><summary>What is a write concern?</summary>
+        <div class="ans"><p>It controls the acknowledgment level for writes: <code class="inline">w:1</code> (primary ack), <code class="inline">w:"majority"</code> (majority of replica set), and <code class="inline">j:true</code> (journal on disk). Higher durability trades off latency.</p></div></details>
+
+      <details class="qa"><summary>What is a read concern / read preference?</summary>
+        <div class="ans"><p><b>Read concern</b> controls consistency (e.g. <code class="inline">"majority"</code> returns acknowledged data). <b>Read preference</b> chooses which node to read from (<code class="inline">primary</code>, <code class="inline">secondaryPreferred</code>, etc.) — used to offload analytics to secondaries.</p></div></details>
+
+      <details class="qa"><summary>What is a shard key and what makes a good one?</summary>
+        <div class="ans"><p>The field(s) used to partition data across shards. A good shard key has high cardinality, low frequency (no hot value), and monotonic-free growth so writes spread evenly. A poor key creates a "hot shard".</p></div></details>
+
+      <details class="qa"><summary>Ranged vs hashed sharding?</summary>
+        <div class="ans"><p><b>Ranged</b> keeps nearby key values together (good for range queries, risky for monotonic keys). <b>Hashed</b> distributes writes evenly by hashing the key (good for even load, bad for range queries).</p></div></details>
+
+      <details class="qa"><summary>What is <code class="inline">$unwind</code>?</summary>
+        <div class="ans"><p>An aggregation stage that deconstructs an array field, outputting one document per element. Commonly used before <code class="inline">$group</code> to aggregate over array items, or after <code class="inline">$lookup</code> to flatten the joined array.</p></div></details>
+
+      <details class="qa"><summary>Difference between <code class="inline">$project</code> and <code class="inline">$addFields</code>?</summary>
+        <div class="ans"><p><code class="inline">$addFields</code> adds/updates fields while keeping all existing ones. <code class="inline">$project</code> reshapes the document, including only the fields you specify (plus any computed ones) — it can both include and exclude.</p></div></details>
+
+      <details class="qa"><summary>What is <code class="inline">$facet</code>?</summary>
+        <div class="ans"><p>An aggregation stage that runs multiple sub-pipelines on the same input in parallel, returning all results in one document — perfect for a dashboard that needs counts, top-N, and a histogram in a single query.</p></div></details>
+
+      <details class="qa"><summary>What is <code class="inline">$merge</code> vs <code class="inline">$out</code>?</summary>
+        <div class="ans"><p>Both write pipeline results to a collection. <code class="inline">$out</code> replaces the target collection entirely. <code class="inline">$merge</code> can insert, merge, or replace matching docs into an existing collection — ideal for incremental materialized views.</p></div></details>
+
+      <details class="qa"><summary>What is GridFS?</summary>
+        <div class="ans"><p>A specification for storing files larger than the 16&nbsp;MB document limit. It splits a file into chunks stored in <code class="inline">fs.chunks</code> with metadata in <code class="inline">fs.files</code>, letting you stream large files in and out.</p></div></details>
+
+      <details class="qa"><summary>What is optimistic concurrency / how to avoid race conditions?</summary>
+        <div class="ans"><p>Use atomic operators (<code class="inline">$inc</code>, <code class="inline">$set</code>) instead of read-modify-write, add a <code class="inline">version</code> field checked in the filter, or use <code class="inline">findOneAndUpdate</code> — so two concurrent updates don't clobber each other.</p></div></details>
+
+      <details class="qa"><summary>What is the aggregation <code class="inline">$group</code> accumulator list?</summary>
+        <div class="ans"><p>Common accumulators: <code class="inline">$sum</code>, <code class="inline">$avg</code>, <code class="inline">$min</code>, <code class="inline">$max</code>, <code class="inline">$first</code>, <code class="inline">$last</code>, <code class="inline">$push</code> (collect into array), and <code class="inline">$addToSet</code> (unique array).</p></div></details>
+
+      <details class="qa"><summary>How do you model a many-to-many relationship?</summary>
+        <div class="ans"><p>Store an array of referenced <code class="inline">_id</code>s on one or both sides (e.g. a student with a <code class="inline">courseIds</code> array), or use a dedicated join collection for very large/attributed relationships. Resolve with <code class="inline">$lookup</code>.</p></div></details>
+
+      <details class="qa"><summary>What is the outlier / bucket pattern?</summary>
+        <div class="ans"><p>Design patterns for unbounded arrays. <b>Bucketing</b> groups many items into fixed-size documents (e.g. one doc per hour of sensor data). The <b>outlier pattern</b> handles rare huge documents separately so the common case stays small.</p></div></details>
+
+      <details class="qa"><summary>What is the difference between <code class="inline">$in</code> and <code class="inline">$or</code>?</summary>
+        <div class="ans"><p><code class="inline">$in</code> matches one field against a list of values (concise, index-friendly). <code class="inline">$or</code> combines independent conditions across different fields. Prefer <code class="inline">$in</code> when checking the same field.</p></div></details>
+
+      <details class="qa"><summary>How does MongoDB ensure high availability?</summary>
+        <div class="ans"><p>Via replica sets: if the primary goes down, remaining members hold an election and promote a secondary within seconds. Drivers automatically reconnect to the new primary.</p></div></details>
+
+      <details class="qa"><summary>What is an ObjectId made of?</summary>
+        <div class="ans"><p>12 bytes: a 4-byte timestamp, 5-byte random value (machine/process), and a 3-byte incrementing counter. It's roughly sortable by creation time, so sorting by <code class="inline">_id</code> ≈ sorting by insert order.</p></div></details>
+
+      <details class="qa"><summary>How do you paginate efficiently on large collections?</summary>
+        <div class="ans"><p>Avoid large <code class="inline">skip()</code> — it scans skipped docs. Use range/keyset pagination: <code class="inline">find({ _id: { $gt: lastId } }).sort({ _id: 1 }).limit(n)</code>, remembering the last <code class="inline">_id</code> from the previous page.</p></div></details>
+
+      <details class="qa"><summary>What is <code class="inline">explain()</code> and its verbosity modes?</summary>
+        <div class="ans"><p>It returns the query plan. Modes: <code class="inline">queryPlanner</code> (chosen plan), <code class="inline">executionStats</code> (actual timing/docs examined), and <code class="inline">allPlansExecution</code> (all considered plans). Use it to confirm an index is used.</p></div></details>
+
+      <details class="qa"><summary>What is a partial index and why use it?</summary>
+        <div class="ans"><p>An index built only on documents matching a filter (<code class="inline">partialFilterExpression</code>). It's smaller and cheaper — e.g. index only <code class="inline">status: "active"</code> users instead of the whole collection.</p></div></details>
+
+      <details class="qa"><summary>What is index cardinality and why does it matter?</summary>
+        <div class="ans"><p>Cardinality is the number of distinct values in a field. High-cardinality fields (like email) make selective, efficient indexes; low-cardinality fields (like boolean) filter poorly and may not benefit from an index.</p></div></details>
+
+      <details class="qa"><summary>What is the difference between a database and a collection?</summary>
+        <div class="ans"><p>A <b>database</b> is a container of collections (like a SQL schema). A <b>collection</b> is a group of documents (like a table). Both are created lazily on first write.</p></div></details>
+
+      <details class="qa"><summary>How do you do a case-insensitive search?</summary>
+        <div class="ans"><p>Use a regex with the <code class="inline">i</code> flag (<code class="inline">{ name: /laptop/i }</code>), or create a <b>collation</b>-enabled index with strength 2 for efficient case-insensitive matching, or use a text index.</p></div></details>
+
+      <details class="qa"><summary>What is a text index vs Atlas Search?</summary>
+        <div class="ans"><p>A <b>text index</b> supports basic keyword search with stemming. <b>Atlas Search</b> (Lucene-based) adds fuzzy matching, autocomplete, relevance scoring, and faceting — far more powerful for real search features.</p></div></details>
+
+      <details class="qa"><summary>What is a change stream?</summary>
+        <div class="ans"><p>A real-time feed of data changes (insert/update/delete) using <code class="inline">db.collection.watch()</code>. Apps subscribe to react instantly — e.g. live dashboards, cache invalidation, or syncing to another system.</p></div></details>
+
+      <details class="qa"><summary>What is connection pooling and why does it matter?</summary>
+        <div class="ans"><p>The driver keeps a pool of reusable connections. You should create one <code class="inline">MongoClient</code> at app startup and reuse it — creating a client per request exhausts the pool and kills throughput (a common serverless bug).</p></div></details>
+
+      <details class="qa"><summary>How do you handle schema migrations in MongoDB?</summary>
+        <div class="ans"><p>Because schemas are flexible, use incremental strategies: add new fields with defaults, run a background <code class="inline">updateMany</code> to backfill, and handle both old/new shapes in code (a <code class="inline">schemaVersion</code> field) during the transition.</p></div></details>
+
+      <details class="qa"><summary>What are common MongoDB anti-patterns?</summary>
+        <div class="ans"><p>Unbounded arrays, massive documents near 16&nbsp;MB, storing one document per key like a SQL row, over-indexing, using <code class="inline">$where</code>/JS, huge <code class="inline">skip()</code> pagination, and building a separate collection per user/tenant.</p></div></details>
+
+      <details class="qa"><summary>What is the difference between <code class="inline">deleteOne</code> and <code class="inline">findOneAndDelete</code>?</summary>
+        <div class="ans"><p><code class="inline">deleteOne</code> removes a document and returns only a count. <code class="inline">findOneAndDelete</code> removes it and returns the deleted document — useful when you need its contents afterward.</p></div></details>
+
+      <details class="qa"><summary>How do you secure a MongoDB deployment?</summary>
+        <div class="ans"><p>Enable authentication &amp; role-based access control, use TLS, bind to private networks / IP allow-lists, apply least-privilege users, keep credentials in secrets/env vars, and disable server-side JavaScript if unused.</p></div></details>
+
+      <details class="qa"><summary>What is the aggregation pipeline memory limit?</summary>
+        <div class="ans"><p>Each stage is limited to 100&nbsp;MB of RAM by default. For larger sorts/groups, enable <code class="inline">{ allowDiskUse: true }</code> so stages can spill to disk.</p></div></details>
+
+      <details class="qa"><summary>What is the difference between horizontal and vertical scaling here?</summary>
+        <div class="ans"><p><b>Vertical</b> = bigger server (more RAM/CPU) — simple but capped. <b>Horizontal</b> = sharding across many servers — MongoDB's strength for scaling beyond one machine's limits.</p></div></details>
+
+      <details class="qa"><summary>When would you NOT use MongoDB?</summary>
+        <div class="ans"><p>When you need complex multi-table transactions with heavy relational integrity, rigid schemas with lots of ad-hoc JOINs, or strong normalized reporting — a relational database may fit better. MongoDB shines with flexible, hierarchical, high-volume data.</p></div></details>
+
+      <details class="qa"><summary>How do you reduce MongoDB cost in production?</summary>
+        <div class="ans"><p>Use TTL indexes to auto-purge stale data, archive cold data to a cheaper tier (Atlas Online Archive), drop unused indexes (<code class="inline">$indexStats</code>), project only needed fields to cut transfer, right-size the cluster to the working set, and rely on built-in compression.</p></div></details>
+
+      <details class="qa"><summary>What is idempotency and which operators are idempotent?</summary>
+        <div class="ans"><p>An idempotent operation gives the same result if applied multiple times. <code class="inline">$set</code> and <code class="inline">$addToSet</code> are idempotent; <code class="inline">$inc</code> and <code class="inline">$push</code> are not (they change the result each run). Important for retries.</p></div></details>
+
+      <details class="qa"><summary>How do you back up and restore MongoDB?</summary>
+        <div class="ans"><p>Use <code class="inline">mongodump</code>/<code class="inline">mongorestore</code> for logical backups, filesystem/volume snapshots for large clusters, or Atlas continuous/cloud backups with point-in-time restore.</p></div></details>
+
+      <details class="qa"><summary>What is the difference between <code class="inline">save()</code> and <code class="inline">insertOne()</code> in Mongoose?</summary>
+        <div class="ans"><p><code class="inline">doc.save()</code> works on a model instance and runs validation + <code class="inline">save</code> middleware; it inserts or updates depending on whether the doc is new. <code class="inline">Model.create()</code>/<code class="inline">insertMany()</code> are shortcuts that build and save in one call.</p></div></details>
+
+      <details class="qa"><summary>How do transactions work with Mongoose middleware?</summary>
+        <div class="ans"><p>Start a session with <code class="inline">mongoose.startSession()</code>, wrap operations in <code class="inline">session.withTransaction()</code>, and pass <code class="inline">{ session }</code> to each query. Middleware still runs, and all writes commit or roll back together.</p></div></details>
+
+      <details class="qa"><summary>What is <code class="inline">lean()</code> in Mongoose and why use it?</summary>
+        <div class="ans"><p><code class="inline">.lean()</code> returns plain JS objects instead of full Mongoose documents — skipping hydration, getters, and change tracking. It's significantly faster and lighter for read-only queries.</p></div></details>
+
+      <details class="qa"><summary>How do you enforce data integrity without JOINs?</summary>
+        <div class="ans"><p>Embed related data so it's atomic within one document, use schema validation, unique indexes for constraints, and application-level or transaction-based checks for cross-collection consistency.</p></div></details>
+
+      <details class="qa"><summary>What is the difference between <code class="inline">$set</code> and <code class="inline">$setOnInsert</code>?</summary>
+        <div class="ans"><p>In an upsert, <code class="inline">$set</code> always applies. <code class="inline">$setOnInsert</code> applies its fields <b>only when a new document is inserted</b>, not on updates — perfect for setting <code class="inline">createdAt</code> once.</p></div></details>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num">24</span> Scenario-Based Questions</h2>
+      <p class="lead">Design-and-debug style questions like those asked in senior interviews. Think through each, then expand the approach.</p>
+
+      <div class="problem">
+        <div class="p-head">Scenario 1 — Instagram-style feed <span class="tag">Modeling</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> Design collections for users, posts, and comments where feeds load fast. Would you embed or reference comments?</p>
+          <details class="solution"><summary>Show approach</summary>
+            <p><b>Reference</b> posts from users (a post stores <code class="inline">userId</code>). For comments, <b>embed the latest few</b> in the post for instant feed rendering, and store the full list in a separate <code class="inline">comments</code> collection referenced by <code class="inline">postId</code>. This keeps feed reads to one query while comments stay unbounded and paginated on demand.</p>
+            <div class="code"><div class="code-head"><span>Post document</span><button class="copy">Copy</button></div><pre>{
+  _id: ObjectId,
+  userId: ObjectId,
+  text: <span class="tok-str">"..."</span>,
+  likeCount: <span class="tok-num">120</span>,
+  recentComments: [ { user, text } ], <span class="tok-com">// last 3, embedded</span>
+  createdAt: ISODate
+}</pre></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Scenario 2 — Sudden slow API <span class="tag">Bottleneck</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> A previously fast endpoint is now slow after data growth. How do you find and fix it?</p>
+          <details class="solution"><summary>Show approach</summary>
+            <p>Run the query with <code class="inline">.explain("executionStats")</code>. A <code class="inline">COLLSCAN</code> with <code class="inline">totalDocsExamined</code> ≫ <code class="inline">nReturned</code> signals a missing index. Add a compound index following ESR, add projections to trim payload, and re-check the plan shows <code class="inline">IXSCAN</code>. Also verify the working set still fits RAM.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Scenario 3 — Money transfer <span class="tag">Transactions</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> Deduct from account A and credit account B. How do you guarantee both happen or neither?</p>
+          <details class="solution"><summary>Show approach</summary>
+            <p>Wrap both <code class="inline">updateOne</code> calls in a <b>multi-document transaction</b> using a session. Use <code class="inline">$inc</code> for atomic balance changes and add a filter guard (<code class="inline">balance: { $gte: amount }</code>) so you never go negative. Commit on success, abort on any error.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Scenario 4 — IoT sensor data <span class="tag">Time-series</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> Millions of sensor readings per hour. How do you store them affordably and query recent data fast?</p>
+          <details class="solution"><summary>Show approach</summary>
+            <p>Use a <b>time-series collection</b> (or the bucket pattern: one doc per sensor per hour holding an array of readings). Add a <b>TTL index</b> to auto-expire old data, archive cold data to a cheaper tier, and index on <code class="inline">{ sensorId: 1, timestamp: -1 }</code> for recent-first queries.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Scenario 5 — Prevent double booking <span class="tag">Concurrency</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> Two users try to book the last seat simultaneously. How do you prevent overselling?</p>
+          <details class="solution"><summary>Show approach</summary>
+            <p>Use a single atomic <code class="inline">findOneAndUpdate</code> with a filter that only matches if the seat is still free (<code class="inline">{ seatId, booked: false }</code>) and sets <code class="inline">booked: true</code>. Only one operation will match; the other returns null and is rejected — no race condition.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Scenario 6 — Multi-tenant SaaS <span class="tag">Design</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> How do you isolate data for thousands of tenants without a collection per tenant?</p>
+          <details class="solution"><summary>Show approach</summary>
+            <p>Add a <code class="inline">tenantId</code> field to every document and make it the <b>first field of every index</b> (and often the shard key). All queries filter by <code class="inline">tenantId</code>. This scales far better than per-tenant collections/databases, which cause metadata bloat.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Scenario 7 — Leaderboard / top-N <span class="tag">Performance</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> A game needs the top 100 players by score, refreshed constantly for millions of users. How?</p>
+          <details class="solution"><summary>Show approach</summary>
+            <p>Index <code class="inline">{ score: -1 }</code> and serve <code class="inline">find().sort({score:-1}).limit(100)</code> — a covered/indexed query. For extreme scale, maintain a pre-computed leaderboard document updated with <code class="inline">$inc</code>, or use a cache (Redis) fed by change streams.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Scenario 8 — Nearby restaurants <span class="tag">Geospatial</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> Find all restaurants within 2&nbsp;km of a user's location, nearest first.</p>
+          <details class="solution"><summary>Show approach</summary>
+            <div class="code"><div class="code-head"><span>2dsphere + $near</span><button class="copy">Copy</button></div><pre>db.restaurants.<span class="tok-fn">createIndex</span>({ location: <span class="tok-str">"2dsphere"</span> })
+db.restaurants.<span class="tok-fn">find</span>({
+  location: { <span class="tok-op">$near</span>: {
+    <span class="tok-op">$geometry</span>: { type: <span class="tok-str">"Point"</span>, coordinates: [lng, lat] },
+    <span class="tok-op">$maxDistance</span>: <span class="tok-num">2000</span>   <span class="tok-com">// metres</span>
+  }}
+})</pre></div>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Scenario 9 — Idempotent payment webhook <span class="tag">Reliability</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> A payment provider may send the same webhook twice. How do you avoid double-processing?</p>
+          <details class="solution"><summary>Show approach</summary>
+            <p>Store each event's provider <code class="inline">eventId</code> with a <b>unique index</b>. Insert it first; a duplicate insert throws a duplicate-key error, so you skip re-processing. Or use <code class="inline">updateOne(..., { upsert: true })</code> with <code class="inline">$setOnInsert</code> to process exactly once.</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="problem">
+        <div class="p-head">Scenario 10 — Growing analytics collection <span class="tag">Cost</span></div>
+        <div class="p-body">
+          <p class="prompt"><b>Q:</b> An <code class="inline">events</code> collection grows by 50M docs/month and the bill is climbing. How do you control it?</p>
+          <details class="solution"><summary>Show approach</summary>
+            <p>Add a <b>TTL index</b> to auto-delete raw events after N days, roll up daily aggregates with <code class="inline">$merge</code> into a small summary collection, move cold data to <b>Atlas Online Archive</b>, drop unused indexes, and right-size the cluster to the working set.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num">25</span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Task</th><th>Command</th></tr>
+        <tr><td>List DBs</td><td><code>show dbs</code></td></tr>
+        <tr><td>Use / create DB</td><td><code>use shop</code></td></tr>
+        <tr><td>Insert one</td><td><code>db.c.insertOne({...})</code></td></tr>
+        <tr><td>Find all</td><td><code>db.c.find()</code></td></tr>
+        <tr><td>Find with filter</td><td><code>db.c.find({ price: { $gt: 10 } })</code></td></tr>
+        <tr><td>Update</td><td><code>db.c.updateOne(f, { $set: {...} })</code></td></tr>
+        <tr><td>Delete</td><td><code>db.c.deleteOne(f)</code></td></tr>
+        <tr><td>Sort desc</td><td><code>db.c.find().sort({ price: -1 })</code></td></tr>
+        <tr><td>Count</td><td><code>db.c.countDocuments(f)</code></td></tr>
+        <tr><td>Aggregate</td><td><code>db.c.aggregate([ ... ])</code></td></tr>
+        <tr><td>Create index</td><td><code>db.c.createIndex({ f: 1 })</code></td></tr>
+        <tr><td>Explain plan</td><td><code>db.c.find(f).explain()</code></td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>📘 <b>MongoDB — The Complete Hands-On Guide</b> · Foundations, CRUD, querying, aggregation, indexing, modeling, transactions, scaling, real-world scenarios, problems &amp; solutions, and interview questions.</p>
+    <p style="margin-top:6px;">Deploy target: <a href="https://github.com/varunjakkampudi-tech/training" target="_blank" rel="noopener">github.com/varunjakkampudi-tech/training</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + current.id));
+  };
+  window.addEventListener("scroll", spy, { passive: true });
+  spy();
+
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => {
+      if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none";
+    });
+  });
+
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a =>
+    a.addEventListener("click", () => sidebar.classList.remove("open"))
+  );
+</script>
+</body>
+</html>
