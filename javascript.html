@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete JavaScript handbook — engine internals, closures, prototypes, async, event loop, patterns, performance, debugging, machine coding, and 100+ interview questions." />
+<title>JavaScript — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #b8860b; --blue-dark: #7a5901; --blue-mid: #e0a800; --sky: #f2c330;
+    --light-blue: #fff6d8; --light-blue-2: #fffae8;
+    --bg: #ffffff; --bg-soft: #fffdf5; --panel: #ffffff;
+    --text: #2b2410; --muted: #7a7256; --border: #efe2b8;
+    --code-bg: #1c1a12; --accent: #1976d2; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(184, 134, 11, 0.10); --shadow-lg: 0 14px 40px rgba(122, 89, 1, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 288px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(224, 168, 0, 0.18), transparent), linear-gradient(160deg, #fff4cc, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #3a3420; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #12100a; border-bottom: 1px solid #3a3420; font-size: 0.75rem; color: #e8c86a; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #f2ecd8; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #5a5030; color: #e8c86a; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(242,195,48,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #9a8f66; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #4a3f1a; }
+  .callout.tip { border-color: var(--accent); background: #eaf3fe; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #1257a5; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #4a3f1a; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #524721; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🟨 JavaScript Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#how-runs">How JavaScript Runs</a>
+    <a href="#exec-context">Execution Context</a>
+    <a href="#hoisting">Hoisting &amp; TDZ</a>
+    <a href="#scope">Scope &amp; Lexical Scope</a>
+    <a href="#closures">Closures</a>
+    <a class="section-title">Types &amp; Objects</a>
+    <a href="#types">Types &amp; Coercion</a>
+    <a href="#objects">Objects</a>
+    <a href="#arrays">Arrays</a>
+    <a href="#strings">Strings</a>
+    <a href="#this">this / call / apply / bind</a>
+    <a href="#prototype">Prototypes &amp; Inheritance</a>
+    <a href="#classes">Classes &amp; OOP</a>
+    <a class="section-title">Async</a>
+    <a href="#callbacks">Callbacks &amp; Promises</a>
+    <a href="#async-await">Async / Await</a>
+    <a href="#event-loop">Event Loop</a>
+    <a href="#fetch">Fetch &amp; AJAX</a>
+    <a href="#generators">Generators &amp; Iterators</a>
+    <a class="section-title">Modern JS</a>
+    <a href="#es6">ES6+ Features</a>
+    <a href="#modules">Modules</a>
+    <a href="#collections">Map / Set / WeakMap</a>
+    <a href="#functional">Functional Patterns</a>
+    <a href="#debounce">Debounce &amp; Throttle</a>
+    <a href="#copy">Deep vs Shallow Copy</a>
+    <a href="#polyfills">Polyfills</a>
+    <a class="section-title">Browser &amp; Memory</a>
+    <a href="#gc">Garbage Collection</a>
+    <a href="#dom">DOM &amp; BOM</a>
+    <a href="#storage">Storage &amp; Cookies</a>
+    <a href="#workers">Web Workers</a>
+    <a class="section-title">Engineering</a>
+    <a href="#performance">Performance</a>
+    <a href="#debugging">Debugging</a>
+    <a href="#bestpractices">Best Practices</a>
+    <a class="section-title">Interview</a>
+    <a href="#machine">Machine Coding</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#production">Production Problems</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">JavaScript</span> Hands-On Guide</h1>
+    <p>From engine internals and the event loop to closures, prototypes, async, functional patterns, performance, debugging, machine-coding, and 100+ interview questions — the full frontend &amp; full-stack interview handbook.</p>
+    <div class="badges">
+      <span class="badge">Engine &amp; Runtime</span>
+      <span class="badge">Closures</span>
+      <span class="badge">Async / Event Loop</span>
+      <span class="badge">Prototypes</span>
+      <span class="badge">Machine Coding</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">JavaScript is a high-level, single-threaded, dynamically-typed language that runs in browsers and on servers (Node.js). It's the language of the web — the only one browsers natively execute.</p>
+      <h3>Why companies use it</h3>
+      <ul>
+        <li><b>Ubiquitous</b> — runs on every browser, server (Node), mobile (React Native), and desktop (Electron).</li>
+        <li><b>Full-stack</b> — one language for frontend and backend.</li>
+        <li><b>Huge ecosystem</b> — npm is the largest package registry in the world.</li>
+        <li><b>Event-driven &amp; non-blocking</b> — great for I/O-heavy apps.</li>
+      </ul>
+      <h3>Learning roadmap</h3>
+      <table>
+        <tr><th>Stage</th><th>Topics</th></tr>
+        <tr><td>Basics</td><td>Types, operators, functions, control flow</td></tr>
+        <tr><td>Core</td><td>Scope, closures, <code>this</code>, prototypes, classes</td></tr>
+        <tr><td>Async</td><td>Callbacks, promises, async/await, event loop</td></tr>
+        <tr><td>Advanced</td><td>Generators, modules, functional patterns, memory</td></tr>
+        <tr><td>Browser</td><td>DOM, BOM, storage, workers, performance</td></tr>
+      </table>
+      <div class="callout tip"><b>Interview importance:</b> JavaScript fundamentals (closures, <code class="inline">this</code>, event loop, promises, prototypes) are the single most-asked frontend topic across all companies.</div>
+    </section>
+
+    <!-- HOW JS RUNS -->
+    <section id="how-runs">
+      <h2><span class="num"></span> How JavaScript Runs</h2>
+      <p class="lead">JavaScript is interpreted <em>and</em> compiled. Modern engines (V8 in Chrome/Node, SpiderMonkey in Firefox) use JIT (Just-In-Time) compilation.</p>
+      <table>
+        <tr><th>Component</th><th>Role</th></tr>
+        <tr><td><b>Engine</b> (V8)</td><td>Parses, compiles, and executes JS. Contains the call stack + heap.</td></tr>
+        <tr><td><b>Call Stack</b></td><td>Tracks function execution (LIFO). Single-threaded.</td></tr>
+        <tr><td><b>Heap</b></td><td>Unstructured memory where objects live.</td></tr>
+        <tr><td><b>Runtime</b></td><td>Engine + Web APIs (browser) or libuv (Node) + callback queues + event loop.</td></tr>
+      </table>
+      <h3>Parsing → Compilation → Execution</h3>
+      <ol>
+        <li><b>Parsing:</b> source → tokens → Abstract Syntax Tree (AST).</li>
+        <li><b>Compilation (JIT):</b> the interpreter (Ignition) produces bytecode; the optimizing compiler (TurboFan) recompiles hot code to fast machine code.</li>
+        <li><b>Execution:</b> bytecode/machine code runs on the call stack.</li>
+      </ol>
+      <div class="code"><div class="code-head"><span>Single-threaded call stack</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">a</span>() { <span class="tok-fn">b</span>(); }
+<span class="tok-key">function</span> <span class="tok-fn">b</span>() { console.<span class="tok-fn">log</span>(<span class="tok-str">"hi"</span>); }
+<span class="tok-fn">a</span>();
+<span class="tok-com">// Stack: a() -> b() -> console.log -> pops back up</span></pre></div>
+      <div class="callout"><b>Single-threaded</b> means one call stack — only one thing runs at a time. Concurrency comes from the runtime (Web APIs / libuv) + event loop, not extra threads in your JS.</div>
+    </section>
+
+    <!-- EXECUTION CONTEXT -->
+    <section id="exec-context">
+      <h2><span class="num"></span> Execution Context</h2>
+      <p class="lead">Every time a function runs, JS creates an <b>execution context</b> — the environment holding its variables, scope chain, and <code class="inline">this</code>.</p>
+      <table>
+        <tr><th>Phase</th><th>What happens</th></tr>
+        <tr><td><b>Creation</b></td><td>Sets up the Variable Environment: hoists declarations, creates scope chain, binds <code>this</code>.</td></tr>
+        <tr><td><b>Execution</b></td><td>Runs code line by line, assigning values.</td></tr>
+      </table>
+      <ul>
+        <li><b>Global Execution Context</b> — created once when the script loads.</li>
+        <li><b>Function Execution Context</b> — created on every function call.</li>
+        <li>Contexts are pushed/popped on the <b>call stack</b>.</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>Creation vs execution phase</span><button class="copy">Copy</button></div><pre>console.<span class="tok-fn">log</span>(x); <span class="tok-com">// undefined (hoisted, not yet assigned)</span>
+<span class="tok-key">var</span> x = <span class="tok-num">10</span>;
+console.<span class="tok-fn">log</span>(x); <span class="tok-com">// 10</span></pre></div>
+    </section>
+
+    <!-- HOISTING -->
+    <section id="hoisting">
+      <h2><span class="num"></span> Hoisting &amp; TDZ</h2>
+      <p class="lead"><b>Hoisting</b> moves declarations to the top of their scope during the creation phase. <code class="inline">var</code> is hoisted &amp; initialized to <code class="inline">undefined</code>; <code class="inline">let</code>/<code class="inline">const</code> are hoisted but <em>not</em> initialized — creating the Temporal Dead Zone (TDZ).</p>
+      <div class="code"><div class="code-head"><span>var vs let/const</span><button class="copy">Copy</button></div><pre>console.<span class="tok-fn">log</span>(a); <span class="tok-com">// undefined</span>
+<span class="tok-key">var</span> a = <span class="tok-num">1</span>;
+
+console.<span class="tok-fn">log</span>(b); <span class="tok-com">// ReferenceError: Cannot access 'b' before initialization (TDZ)</span>
+<span class="tok-key">let</span> b = <span class="tok-num">2</span>;
+
+<span class="tok-fn">foo</span>();            <span class="tok-com">// "works" — function declarations are fully hoisted</span>
+<span class="tok-key">function</span> <span class="tok-fn">foo</span>() { console.<span class="tok-fn">log</span>(<span class="tok-str">"works"</span>); }</pre></div>
+      <table>
+        <tr><th></th><th>var</th><th>let</th><th>const</th></tr>
+        <tr><td>Scope</td><td>Function</td><td>Block</td><td>Block</td></tr>
+        <tr><td>Hoisted</td><td>Yes (=undefined)</td><td>Yes (TDZ)</td><td>Yes (TDZ)</td></tr>
+        <tr><td>Reassignable</td><td>Yes</td><td>Yes</td><td>No</td></tr>
+        <tr><td>Redeclarable</td><td>Yes</td><td>No</td><td>No</td></tr>
+      </table>
+      <div class="callout warn"><b>Common mistake:</b> Using <code class="inline">var</code> in loops with async callbacks captures the final value. Use <code class="inline">let</code> for per-iteration binding.</div>
+    </section>
+
+    <!-- SCOPE -->
+    <section id="scope">
+      <h2><span class="num"></span> Scope &amp; Lexical Scope</h2>
+      <p class="lead"><b>Scope</b> defines where variables are accessible. <b>Lexical (static) scope</b> means inner functions can access variables of their outer functions, determined by where code is <em>written</em>, not called.</p>
+      <div class="code"><div class="code-head"><span>Scope chain</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> g = <span class="tok-str">"global"</span>;
+<span class="tok-key">function</span> <span class="tok-fn">outer</span>() {
+  <span class="tok-key">const</span> o = <span class="tok-str">"outer"</span>;
+  <span class="tok-key">function</span> <span class="tok-fn">inner</span>() {
+    <span class="tok-key">const</span> i = <span class="tok-str">"inner"</span>;
+    console.<span class="tok-fn">log</span>(g, o, i); <span class="tok-com">// inner sees all 3 via scope chain</span>
+  }
+  <span class="tok-fn">inner</span>();
+}</pre></div>
+      <ul>
+        <li><b>Global scope</b> — accessible everywhere.</li>
+        <li><b>Function scope</b> — variables inside a function.</li>
+        <li><b>Block scope</b> — <code class="inline">let</code>/<code class="inline">const</code> inside <code class="inline">{ }</code>.</li>
+      </ul>
+    </section>
+
+    <!-- CLOSURES -->
+    <section id="closures">
+      <h2><span class="num"></span> Closures</h2>
+      <p class="lead">A <b>closure</b> is a function that remembers variables from its lexical scope even after the outer function has returned. One of the most-asked interview topics.</p>
+      <div class="code"><div class="code-head"><span>Counter closure</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">createCounter</span>() {
+  <span class="tok-key">let</span> count = <span class="tok-num">0</span>;              <span class="tok-com">// private state</span>
+  <span class="tok-key">return</span> () =&gt; ++count;         <span class="tok-com">// closes over count</span>
+}
+<span class="tok-key">const</span> c = <span class="tok-fn">createCounter</span>();
+<span class="tok-fn">c</span>(); <span class="tok-fn">c</span>(); <span class="tok-fn">c</span>();                 <span class="tok-com">// 1, 2, 3</span></pre></div>
+      <h4>Real-world uses</h4>
+      <ul>
+        <li><b>Data privacy</b> — module pattern, private variables.</li>
+        <li><b>Function factories</b> — <code class="inline">multiplyBy(2)</code>.</li>
+        <li><b>Memoization, debounce/throttle, event handlers, currying.</b></li>
+      </ul>
+      <div class="callout warn"><b>Classic bug:</b> <code class="inline">for (var i=0;i&lt;3;i++) setTimeout(()=&gt;console.log(i))</code> logs <code class="inline">3,3,3</code>. Fix with <code class="inline">let</code> (block-scoped per iteration) or an IIFE.</div>
+      <div class="realworld"><h4>🌍 Real-world</h4><p>A <b>rate limiter</b> or <b>once()</b> helper uses a closure to remember how many times a function has run, without exposing that counter globally.</p></div>
+    </section>
+
+    <!-- TYPES -->
+    <section id="types">
+      <h2><span class="num"></span> Types &amp; Coercion</h2>
+      <p class="lead">JS has 7 primitives (<code class="inline">string, number, boolean, null, undefined, symbol, bigint</code>) and objects. Primitives are immutable and copied by value; objects by reference.</p>
+      <div class="code"><div class="code-head"><span>Coercion &amp; equality</span><button class="copy">Copy</button></div><pre><span class="tok-num">1</span> == <span class="tok-str">"1"</span>     <span class="tok-com">// true  (== coerces types)</span>
+<span class="tok-num">1</span> === <span class="tok-str">"1"</span>    <span class="tok-com">// false (=== checks type + value)</span>
+<span class="tok-key">null</span> == <span class="tok-key">undefined</span>  <span class="tok-com">// true</span>
+NaN === NaN   <span class="tok-com">// false — use Number.isNaN()</span>
+[] + []       <span class="tok-com">// "" (arrays coerce to strings)</span>
+[] + {}       <span class="tok-com">// "[object Object]"</span></pre></div>
+      <div class="callout tip"><b>Rule:</b> Always use <code class="inline">===</code> unless you specifically need <code class="inline">== null</code> to catch both <code class="inline">null</code> and <code class="inline">undefined</code>.</div>
+      <table>
+        <tr><th>Check</th><th>Use</th></tr>
+        <tr><td>Type of primitive</td><td><code>typeof x</code></td></tr>
+        <tr><td>Array</td><td><code>Array.isArray(x)</code></td></tr>
+        <tr><td>Exact object type</td><td><code>Object.prototype.toString.call(x)</code></td></tr>
+        <tr><td>NaN</td><td><code>Number.isNaN(x)</code></td></tr>
+      </table>
+    </section>
+
+    <!-- OBJECTS -->
+    <section id="objects">
+      <h2><span class="num"></span> Objects</h2>
+      <div class="code"><div class="code-head"><span>Object essentials</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> user = { name: <span class="tok-str">"Aria"</span>, age: <span class="tok-num">25</span> };
+
+Object.<span class="tok-fn">keys</span>(user);     <span class="tok-com">// ["name","age"]</span>
+Object.<span class="tok-fn">values</span>(user);   <span class="tok-com">// ["Aria",25]</span>
+Object.<span class="tok-fn">entries</span>(user);  <span class="tok-com">// [["name","Aria"],["age",25]]</span>
+Object.<span class="tok-fn">freeze</span>(user);   <span class="tok-com">// make immutable (shallow)</span>
+
+<span class="tok-key">const</span> { name, ...rest } = user;  <span class="tok-com">// destructuring + rest</span>
+<span class="tok-key">const</span> clone = { ...user };        <span class="tok-com">// shallow copy</span>
+
+<span class="tok-com">// Optional chaining + nullish coalescing</span>
+<span class="tok-key">const</span> city = user?.address?.city ?? <span class="tok-str">"N/A"</span>;</pre></div>
+      <div class="callout"><b>Property descriptors:</b> Use <code class="inline">Object.defineProperty</code> to control <code class="inline">writable</code>, <code class="inline">enumerable</code>, and <code class="inline">configurable</code>, or to define getters/setters.</div>
+    </section>
+
+    <!-- ARRAYS -->
+    <section id="arrays">
+      <h2><span class="num"></span> Arrays</h2>
+      <div class="code"><div class="code-head"><span>Key array methods</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> nums = [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>];
+nums.<span class="tok-fn">map</span>(n =&gt; n * <span class="tok-num">2</span>);          <span class="tok-com">// [2,4,6,8] (new array)</span>
+nums.<span class="tok-fn">filter</span>(n =&gt; n % <span class="tok-num">2</span>);      <span class="tok-com">// [1,3]</span>
+nums.<span class="tok-fn">reduce</span>((a, n) =&gt; a + n, <span class="tok-num">0</span>); <span class="tok-com">// 10</span>
+nums.<span class="tok-fn">find</span>(n =&gt; n &gt; <span class="tok-num">2</span>);         <span class="tok-com">// 3</span>
+nums.<span class="tok-fn">some</span>(n =&gt; n &gt; <span class="tok-num">3</span>);         <span class="tok-com">// true</span>
+nums.<span class="tok-fn">every</span>(n =&gt; n &gt; <span class="tok-num">0</span>);        <span class="tok-com">// true</span>
+[<span class="tok-num">1</span>,[<span class="tok-num">2</span>,[<span class="tok-num">3</span>]]].<span class="tok-fn">flat</span>(Infinity); <span class="tok-com">// [1,2,3]</span></pre></div>
+      <table>
+        <tr><th>Mutating</th><th>Non-mutating</th></tr>
+        <tr><td><code>push, pop, shift, unshift, splice, sort, reverse</code></td><td><code>map, filter, reduce, slice, concat, spread</code></td></tr>
+      </table>
+      <div class="callout warn"><b>Gotcha:</b> <code class="inline">sort()</code> sorts as strings by default — <code class="inline">[10,2,1].sort()</code> → <code class="inline">[1,10,2]</code>. Pass a comparator: <code class="inline">sort((a,b)=&gt;a-b)</code>.</div>
+    </section>
+
+    <!-- STRINGS -->
+    <section id="strings">
+      <h2><span class="num"></span> Strings</h2>
+      <div class="code"><div class="code-head"><span>String methods &amp; templates</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> s = <span class="tok-str">"JavaScript"</span>;
+s.<span class="tok-fn">slice</span>(<span class="tok-num">0</span>, <span class="tok-num">4</span>);        <span class="tok-com">// "Java"</span>
+s.<span class="tok-fn">includes</span>(<span class="tok-str">"Script"</span>); <span class="tok-com">// true</span>
+s.<span class="tok-fn">replaceAll</span>(<span class="tok-str">"a"</span>, <span class="tok-str">"@"</span>);<span class="tok-com">// "J@v@Script"</span>
+s.<span class="tok-fn">padStart</span>(<span class="tok-num">12</span>, <span class="tok-str">"*"</span>);   <span class="tok-com">// "**JavaScript"</span>
+
+<span class="tok-key">const</span> name = <span class="tok-str">"Aria"</span>;
+<span class="tok-key">const</span> msg = <span class="tok-str">`Hello ${name}, len=${name.length}`</span>; <span class="tok-com">// template literal</span></pre></div>
+      <div class="callout tip"><b>Strings are immutable</b> — every method returns a new string. Repeated concatenation in loops is costly; prefer <code class="inline">array.join("")</code>.</div>
+    </section>
+
+    <!-- THIS -->
+    <section id="this">
+      <h2><span class="num"></span> this / call / apply / bind</h2>
+      <p class="lead"><code class="inline">this</code> is determined by <em>how a function is called</em>, not where it's defined (except arrow functions, which inherit <code class="inline">this</code> lexically).</p>
+      <table>
+        <tr><th>Call style</th><th><code>this</code> is</th></tr>
+        <tr><td>Regular function (non-strict)</td><td>global object / undefined (strict)</td></tr>
+        <tr><td>Method <code>obj.fn()</code></td><td>the object <code>obj</code></td></tr>
+        <tr><td><code>new Fn()</code></td><td>the new instance</td></tr>
+        <tr><td>Arrow function</td><td>inherited from enclosing scope</td></tr>
+        <tr><td><code>call/apply/bind</code></td><td>explicitly set</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Explicit binding</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">greet</span>(greeting) { <span class="tok-key">return</span> <span class="tok-str">`${greeting}, ${this.name}`</span>; }
+<span class="tok-key">const</span> user = { name: <span class="tok-str">"Aria"</span> };
+
+<span class="tok-fn">greet</span>.<span class="tok-fn">call</span>(user, <span class="tok-str">"Hi"</span>);      <span class="tok-com">// "Hi, Aria"  (args listed)</span>
+<span class="tok-fn">greet</span>.<span class="tok-fn">apply</span>(user, [<span class="tok-str">"Hi"</span>]);   <span class="tok-com">// "Hi, Aria"  (args array)</span>
+<span class="tok-key">const</span> bound = <span class="tok-fn">greet</span>.<span class="tok-fn">bind</span>(user); <span class="tok-com">// returns a new function</span></pre></div>
+      <div class="callout warn"><b>Interview classic:</b> Losing <code class="inline">this</code> when passing a method as a callback. Fix with <code class="inline">.bind(this)</code> or an arrow function.</div>
+    </section>
+
+    <!-- PROTOTYPE -->
+    <section id="prototype">
+      <h2><span class="num"></span> Prototypes &amp; Inheritance</h2>
+      <p class="lead">Every object has an internal <code class="inline">[[Prototype]]</code> link. Property lookups walk up the <b>prototype chain</b> until found or <code class="inline">null</code>. This is how JS does inheritance.</p>
+      <div class="code"><div class="code-head"><span>Prototype chain</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">Animal</span>(name) { this.name = name; }
+Animal.prototype.<span class="tok-fn">speak</span> = <span class="tok-key">function</span>() { <span class="tok-key">return</span> <span class="tok-str">`${this.name} makes a sound`</span>; };
+
+<span class="tok-key">const</span> dog = <span class="tok-key">new</span> <span class="tok-fn">Animal</span>(<span class="tok-str">"Rex"</span>);
+dog.<span class="tok-fn">speak</span>();                 <span class="tok-com">// found on Animal.prototype</span>
+Object.<span class="tok-fn">getPrototypeOf</span>(dog) === Animal.prototype; <span class="tok-com">// true</span></pre></div>
+      <div class="callout"><b>Chain:</b> <code class="inline">dog</code> → <code class="inline">Animal.prototype</code> → <code class="inline">Object.prototype</code> → <code class="inline">null</code>. Methods live on the prototype (shared), not per-instance (memory-efficient).</div>
+    </section>
+
+    <!-- CLASSES -->
+    <section id="classes">
+      <h2><span class="num"></span> Classes &amp; OOP</h2>
+      <p class="lead">ES6 <code class="inline">class</code> is syntactic sugar over prototypes, with cleaner inheritance via <code class="inline">extends</code>/<code class="inline">super</code>.</p>
+      <div class="code"><div class="code-head"><span>Class inheritance</span><button class="copy">Copy</button></div><pre><span class="tok-key">class</span> <span class="tok-fn">Animal</span> {
+  <span class="tok-fn">constructor</span>(name) { this.name = name; }
+  <span class="tok-fn">speak</span>() { <span class="tok-key">return</span> <span class="tok-str">`${this.name} makes a sound`</span>; }
+}
+<span class="tok-key">class</span> <span class="tok-fn">Dog</span> <span class="tok-key">extends</span> Animal {
+  <span class="tok-fn">speak</span>() { <span class="tok-key">return</span> <span class="tok-str">`${this.name} barks`</span>; }
+  #secret = <span class="tok-num">42</span>;              <span class="tok-com">// private field</span>
+  <span class="tok-key">static</span> <span class="tok-fn">create</span>(n) { <span class="tok-key">return</span> <span class="tok-key">new</span> <span class="tok-fn">Dog</span>(n); } <span class="tok-com">// static method</span>
+}
+<span class="tok-key">new</span> <span class="tok-fn">Dog</span>(<span class="tok-str">"Rex"</span>).<span class="tok-fn">speak</span>(); <span class="tok-com">// "Rex barks"</span></pre></div>
+    </section>
+
+    <!-- CALLBACKS & PROMISES -->
+    <section id="callbacks">
+      <h2><span class="num"></span> Callbacks &amp; Promises</h2>
+      <p class="lead">Async work uses callbacks, promises, or async/await. Promises solve "callback hell" and provide chaining + error propagation.</p>
+      <div class="code"><div class="code-head"><span>Promise states &amp; chaining</span><button class="copy">Copy</button></div><pre><span class="tok-com">// A promise is pending -> fulfilled | rejected</span>
+<span class="tok-key">const</span> p = <span class="tok-key">new</span> <span class="tok-fn">Promise</span>((resolve, reject) =&gt; {
+  setTimeout(() =&gt; <span class="tok-fn">resolve</span>(<span class="tok-str">"done"</span>), <span class="tok-num">100</span>);
+});
+p.<span class="tok-fn">then</span>(v =&gt; v.<span class="tok-fn">toUpperCase</span>())
+ .<span class="tok-fn">then</span>(v =&gt; console.<span class="tok-fn">log</span>(v))
+ .<span class="tok-fn">catch</span>(err =&gt; console.<span class="tok-fn">error</span>(err))
+ .<span class="tok-fn">finally</span>(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"cleanup"</span>));</pre></div>
+      <table>
+        <tr><th>Combinator</th><th>Behavior</th></tr>
+        <tr><td><code>Promise.all</code></td><td>All succeed, or reject on first failure</td></tr>
+        <tr><td><code>Promise.allSettled</code></td><td>Waits for all, returns status of each</td></tr>
+        <tr><td><code>Promise.race</code></td><td>Settles with the first to settle</td></tr>
+        <tr><td><code>Promise.any</code></td><td>First fulfilled, or AggregateError</td></tr>
+      </table>
+    </section>
+
+    <!-- ASYNC AWAIT -->
+    <section id="async-await">
+      <h2><span class="num"></span> Async / Await</h2>
+      <div class="code"><div class="code-head"><span>async/await with error handling</span><button class="copy">Copy</button></div><pre><span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">getUser</span>(id) {
+  <span class="tok-key">try</span> {
+    <span class="tok-key">const</span> res = <span class="tok-key">await</span> <span class="tok-fn">fetch</span>(<span class="tok-str">`/api/users/${id}`</span>);
+    <span class="tok-key">if</span> (!res.ok) <span class="tok-key">throw</span> <span class="tok-key">new</span> <span class="tok-fn">Error</span>(res.status);
+    <span class="tok-key">return</span> <span class="tok-key">await</span> res.<span class="tok-fn">json</span>();
+  } <span class="tok-key">catch</span> (e) {
+    console.<span class="tok-fn">error</span>(<span class="tok-str">"Failed:"</span>, e);
+    <span class="tok-key">throw</span> e;
+  }
+}
+
+<span class="tok-com">// Run in parallel — don't await sequentially!</span>
+<span class="tok-key">const</span> [a, b] = <span class="tok-key">await</span> Promise.<span class="tok-fn">all</span>([<span class="tok-fn">getUser</span>(<span class="tok-num">1</span>), <span class="tok-fn">getUser</span>(<span class="tok-num">2</span>)]);</pre></div>
+      <div class="callout warn"><b>Performance bug:</b> <code class="inline">await</code>ing in a loop runs requests sequentially. Collect promises and <code class="inline">Promise.all</code> them for parallelism.</div>
+    </section>
+
+    <!-- EVENT LOOP -->
+    <section id="event-loop">
+      <h2><span class="num"></span> The Event Loop</h2>
+      <p class="lead">The event loop lets single-threaded JS handle async work. It moves callbacks from queues to the call stack when the stack is empty.</p>
+      <table>
+        <tr><th>Queue</th><th>Examples</th><th>Priority</th></tr>
+        <tr><td><b>Microtask</b></td><td>Promises, <code>queueMicrotask</code>, <code>MutationObserver</code></td><td>High — drained fully after each task</td></tr>
+        <tr><td><b>Macrotask</b></td><td><code>setTimeout</code>, <code>setInterval</code>, I/O, UI events</td><td>Lower — one per loop tick</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Classic ordering question</span><button class="copy">Copy</button></div><pre>console.<span class="tok-fn">log</span>(<span class="tok-str">"1"</span>);
+setTimeout(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"2"</span>), <span class="tok-num">0</span>);      <span class="tok-com">// macrotask</span>
+Promise.<span class="tok-fn">resolve</span>().<span class="tok-fn">then</span>(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"3"</span>)); <span class="tok-com">// microtask</span>
+console.<span class="tok-fn">log</span>(<span class="tok-str">"4"</span>);
+<span class="tok-com">// Output: 1, 4, 3, 2  (sync -> microtasks -> macrotasks)</span></pre></div>
+      <div class="callout tip"><b>Key rule:</b> After each macrotask, the event loop drains <em>all</em> microtasks before the next render/macrotask.</div>
+    </section>
+
+    <!-- FETCH -->
+    <section id="fetch">
+      <h2><span class="num"></span> Fetch &amp; AJAX</h2>
+      <div class="code"><div class="code-head"><span>fetch with timeout (AbortController)</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> ctrl = <span class="tok-key">new</span> <span class="tok-fn">AbortController</span>();
+<span class="tok-key">const</span> id = setTimeout(() =&gt; ctrl.<span class="tok-fn">abort</span>(), <span class="tok-num">5000</span>);
+
+<span class="tok-key">const</span> res = <span class="tok-key">await</span> <span class="tok-fn">fetch</span>(<span class="tok-str">"/api/data"</span>, {
+  method: <span class="tok-str">"POST"</span>,
+  headers: { <span class="tok-str">"Content-Type"</span>: <span class="tok-str">"application/json"</span> },
+  body: JSON.<span class="tok-fn">stringify</span>({ q: <span class="tok-str">"x"</span> }),
+  signal: ctrl.signal
+});
+clearTimeout(id);</pre></div>
+      <div class="callout"><b>Note:</b> <code class="inline">fetch</code> only rejects on network failure — a 404/500 still resolves. Always check <code class="inline">res.ok</code>.</div>
+    </section>
+
+    <!-- GENERATORS -->
+    <section id="generators">
+      <h2><span class="num"></span> Generators &amp; Iterators</h2>
+      <div class="code"><div class="code-head"><span>Generator function</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span>* <span class="tok-fn">idGen</span>() {
+  <span class="tok-key">let</span> id = <span class="tok-num">1</span>;
+  <span class="tok-key">while</span> (<span class="tok-key">true</span>) <span class="tok-key">yield</span> id++;   <span class="tok-com">// lazy, pauses at yield</span>
+}
+<span class="tok-key">const</span> g = <span class="tok-fn">idGen</span>();
+g.<span class="tok-fn">next</span>().value; <span class="tok-com">// 1</span>
+g.<span class="tok-fn">next</span>().value; <span class="tok-com">// 2</span>
+
+<span class="tok-com">// Custom iterable</span>
+<span class="tok-key">const</span> range = {
+  *[Symbol.iterator]() { <span class="tok-key">for</span> (<span class="tok-key">let</span> i=<span class="tok-num">0</span>;i&lt;<span class="tok-num">3</span>;i++) <span class="tok-key">yield</span> i; }
+};
+[...range]; <span class="tok-com">// [0,1,2]</span></pre></div>
+    </section>
+
+    <!-- ES6 -->
+    <section id="es6">
+      <h2><span class="num"></span> ES6+ Features</h2>
+      <div class="code"><div class="code-head"><span>Modern syntax</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> add = (a, b = <span class="tok-num">0</span>) =&gt; a + b;        <span class="tok-com">// arrow + default params</span>
+<span class="tok-key">const</span> [x, y, ...rest] = [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>];  <span class="tok-com">// destructuring + rest</span>
+<span class="tok-key">const</span> merged = { ...a, ...b };            <span class="tok-com">// spread</span>
+<span class="tok-key">const</span> val = obj?.a?.b ?? <span class="tok-str">"default"</span>;      <span class="tok-com">// optional chaining + nullish</span>
+label: <span class="tok-key">for</span> (...) { <span class="tok-key">continue</span> label; }        <span class="tok-com">// labeled loops</span></pre></div>
+      <table>
+        <tr><th>Feature</th><th>Version</th></tr>
+        <tr><td>let/const, arrow, classes, promises, modules</td><td>ES2015 (ES6)</td></tr>
+        <tr><td>async/await</td><td>ES2017</td></tr>
+        <tr><td>Optional chaining, nullish coalescing</td><td>ES2020</td></tr>
+        <tr><td>Top-level await, <code>.at()</code></td><td>ES2022</td></tr>
+      </table>
+    </section>
+
+    <!-- MODULES -->
+    <section id="modules">
+      <h2><span class="num"></span> Modules</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>ES Modules (ESM)</h4>
+          <div class="code"><div class="code-head"><span>import / export</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">const</span> pi = <span class="tok-num">3.14</span>;
+<span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">function</span> <span class="tok-fn">f</span>(){}
+<span class="tok-key">import</span> f, { pi } <span class="tok-key">from</span> <span class="tok-str">"./m.js"</span>;</pre></div>
+          <ul><li>Static, tree-shakeable</li><li>Async loaded, <code>this</code> = undefined</li></ul>
+        </div>
+        <div class="vs-card b"><h4>CommonJS (Node)</h4>
+          <div class="code"><div class="code-head"><span>require / module.exports</span><button class="copy">Copy</button></div><pre>module.exports = { pi: <span class="tok-num">3.14</span> };
+<span class="tok-key">const</span> { pi } = <span class="tok-fn">require</span>(<span class="tok-str">"./m"</span>);</pre></div>
+          <ul><li>Synchronous, dynamic</li><li>Default in older Node</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLLECTIONS -->
+    <section id="collections">
+      <h2><span class="num"></span> Map / Set / WeakMap / WeakSet</h2>
+      <div class="code"><div class="code-head"><span>Modern collections</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> m = <span class="tok-key">new</span> <span class="tok-fn">Map</span>();      <span class="tok-com">// any-type keys, ordered, .size</span>
+m.<span class="tok-fn">set</span>(<span class="tok-str">"a"</span>, <span class="tok-num">1</span>).<span class="tok-fn">get</span>(<span class="tok-str">"a"</span>);
+
+<span class="tok-key">const</span> s = <span class="tok-key">new</span> <span class="tok-fn">Set</span>([<span class="tok-num">1</span>,<span class="tok-num">1</span>,<span class="tok-num">2</span>]); <span class="tok-com">// unique values -> {1,2}</span>
+[...<span class="tok-key">new</span> <span class="tok-fn">Set</span>(arr)];         <span class="tok-com">// dedupe an array</span>
+
+<span class="tok-key">const</span> wm = <span class="tok-key">new</span> <span class="tok-fn">WeakMap</span>();  <span class="tok-com">// object keys, GC-friendly, no leaks</span></pre></div>
+      <table>
+        <tr><th>Type</th><th>Keys</th><th>Iterable</th><th>GC</th></tr>
+        <tr><td>Map</td><td>Any</td><td>Yes</td><td>Strong</td></tr>
+        <tr><td>WeakMap</td><td>Objects only</td><td>No</td><td>Weak (auto-collected)</td></tr>
+      </table>
+    </section>
+
+    <!-- FUNCTIONAL -->
+    <section id="functional">
+      <h2><span class="num"></span> Functional Patterns</h2>
+      <div class="code"><div class="code-head"><span>Currying, composition, memoization</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Currying</span>
+<span class="tok-key">const</span> add = a =&gt; b =&gt; c =&gt; a + b + c;
+<span class="tok-fn">add</span>(<span class="tok-num">1</span>)(<span class="tok-num">2</span>)(<span class="tok-num">3</span>); <span class="tok-com">// 6</span>
+
+<span class="tok-com">// Composition</span>
+<span class="tok-key">const</span> compose = (...fns) =&gt; x =&gt; fns.<span class="tok-fn">reduceRight</span>((v, f) =&gt; <span class="tok-fn">f</span>(v), x);
+
+<span class="tok-com">// Memoization</span>
+<span class="tok-key">function</span> <span class="tok-fn">memoize</span>(fn) {
+  <span class="tok-key">const</span> cache = <span class="tok-key">new</span> <span class="tok-fn">Map</span>();
+  <span class="tok-key">return</span> (...args) =&gt; {
+    <span class="tok-key">const</span> k = JSON.<span class="tok-fn">stringify</span>(args);
+    <span class="tok-key">if</span> (!cache.<span class="tok-fn">has</span>(k)) cache.<span class="tok-fn">set</span>(k, <span class="tok-fn">fn</span>(...args));
+    <span class="tok-key">return</span> cache.<span class="tok-fn">get</span>(k);
+  };
+}</pre></div>
+    </section>
+
+    <!-- DEBOUNCE -->
+    <section id="debounce">
+      <h2><span class="num"></span> Debounce &amp; Throttle</h2>
+      <p class="lead">Two of the most-asked machine-coding questions. Both limit how often a function runs.</p>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Debounce</h4><p>Runs after activity <b>stops</b> for N ms. Use for search-as-you-type, resize.</p>
+          <div class="code"><div class="code-head"><span>debounce</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">debounce</span>(fn, delay) {
+  <span class="tok-key">let</span> t;
+  <span class="tok-key">return</span> (...args) =&gt; {
+    <span class="tok-fn">clearTimeout</span>(t);
+    t = <span class="tok-fn">setTimeout</span>(() =&gt; <span class="tok-fn">fn</span>(...args), delay);
+  };
+}</pre></div>
+        </div>
+        <div class="vs-card b"><h4>Throttle</h4><p>Runs at most <b>once per N ms</b>. Use for scroll, mousemove.</p>
+          <div class="code"><div class="code-head"><span>throttle</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">throttle</span>(fn, limit) {
+  <span class="tok-key">let</span> wait = <span class="tok-key">false</span>;
+  <span class="tok-key">return</span> (...args) =&gt; {
+    <span class="tok-key">if</span> (wait) <span class="tok-key">return</span>;
+    <span class="tok-fn">fn</span>(...args); wait = <span class="tok-key">true</span>;
+    <span class="tok-fn">setTimeout</span>(() =&gt; wait = <span class="tok-key">false</span>, limit);
+  };
+}</pre></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COPY -->
+    <section id="copy">
+      <h2><span class="num"></span> Deep vs Shallow Copy</h2>
+      <div class="code"><div class="code-head"><span>Copying objects</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Shallow — nested refs shared</span>
+<span class="tok-key">const</span> shallow = { ...obj };
+<span class="tok-key">const</span> shallow2 = Object.<span class="tok-fn">assign</span>({}, obj);
+
+<span class="tok-com">// Deep — modern, handles Dates/Maps/cycles</span>
+<span class="tok-key">const</span> deep = <span class="tok-fn">structuredClone</span>(obj);
+
+<span class="tok-com">// Deep (legacy) — loses functions/undefined/Dates</span>
+<span class="tok-key">const</span> deep2 = JSON.<span class="tok-fn">parse</span>(JSON.<span class="tok-fn">stringify</span>(obj));</pre></div>
+      <div class="callout warn"><b>Interview trap:</b> Spread/<code class="inline">Object.assign</code> are shallow — mutating a nested object affects both copies.</div>
+    </section>
+
+    <!-- POLYFILLS -->
+    <section id="polyfills">
+      <h2><span class="num"></span> Polyfills</h2>
+      <p class="lead">A polyfill re-implements a modern API for older environments. Writing <code class="inline">map</code>, <code class="inline">bind</code>, and <code class="inline">Promise</code> polyfills is a common interview task.</p>
+      <div class="code"><div class="code-head"><span>Array.prototype.myMap &amp; bind</span><button class="copy">Copy</button></div><pre>Array.prototype.<span class="tok-fn">myMap</span> = <span class="tok-key">function</span>(cb) {
+  <span class="tok-key">const</span> out = [];
+  <span class="tok-key">for</span> (<span class="tok-key">let</span> i = <span class="tok-num">0</span>; i &lt; this.length; i++)
+    out.<span class="tok-fn">push</span>(<span class="tok-fn">cb</span>(this[i], i, this));
+  <span class="tok-key">return</span> out;
+};
+
+Function.prototype.<span class="tok-fn">myBind</span> = <span class="tok-key">function</span>(ctx, ...pre) {
+  <span class="tok-key">const</span> fn = this;
+  <span class="tok-key">return</span> (...args) =&gt; fn.<span class="tok-fn">apply</span>(ctx, [...pre, ...args]);
+};</pre></div>
+    </section>
+
+    <!-- GC -->
+    <section id="gc">
+      <h2><span class="num"></span> Garbage Collection &amp; Memory Leaks</h2>
+      <p class="lead">JS uses automatic GC (mark-and-sweep): objects unreachable from roots are freed. Leaks happen when references are unintentionally kept.</p>
+      <table>
+        <tr><th>Leak source</th><th>Fix</th></tr>
+        <tr><td>Forgotten timers/intervals</td><td><code>clearInterval</code> on cleanup</td></tr>
+        <tr><td>Detached DOM nodes held in JS</td><td>Null out references</td></tr>
+        <tr><td>Global variables</td><td>Use block scope; avoid accidental globals</td></tr>
+        <tr><td>Unremoved event listeners</td><td><code>removeEventListener</code></td></tr>
+        <tr><td>Closures holding large data</td><td>Release when done; use WeakMap</td></tr>
+      </table>
+    </section>
+
+    <!-- DOM -->
+    <section id="dom">
+      <h2><span class="num"></span> DOM &amp; BOM</h2>
+      <div class="code"><div class="code-head"><span>DOM manipulation &amp; delegation</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> el = document.<span class="tok-fn">querySelector</span>(<span class="tok-str">".item"</span>);
+el.<span class="tok-fn">addEventListener</span>(<span class="tok-str">"click"</span>, handler);
+
+<span class="tok-com">// Event delegation — one listener for many children</span>
+list.<span class="tok-fn">addEventListener</span>(<span class="tok-str">"click"</span>, (e) =&gt; {
+  <span class="tok-key">if</span> (e.target.<span class="tok-fn">matches</span>(<span class="tok-str">"li"</span>)) console.<span class="tok-fn">log</span>(e.target.textContent);
+});</pre></div>
+      <div class="callout"><b>BOM</b> (Browser Object Model) = <code class="inline">window</code>, <code class="inline">location</code>, <code class="inline">history</code>, <code class="inline">navigator</code>, <code class="inline">screen</code>. <b>Event flow:</b> capture → target → bubble.</div>
+    </section>
+
+    <!-- STORAGE -->
+    <section id="storage">
+      <h2><span class="num"></span> Storage &amp; Cookies</h2>
+      <table>
+        <tr><th>Mechanism</th><th>Size</th><th>Lifetime</th><th>Sent to server</th></tr>
+        <tr><td>localStorage</td><td>~5–10MB</td><td>Persistent</td><td>No</td></tr>
+        <tr><td>sessionStorage</td><td>~5MB</td><td>Per tab</td><td>No</td></tr>
+        <tr><td>Cookies</td><td>~4KB</td><td>Configurable</td><td>Yes (every request)</td></tr>
+        <tr><td>IndexedDB</td><td>Large</td><td>Persistent</td><td>No</td></tr>
+      </table>
+      <div class="callout warn"><b>Security:</b> Never store tokens/secrets in <code class="inline">localStorage</code> (XSS-readable). Use <code class="inline">HttpOnly</code>, <code class="inline">Secure</code>, <code class="inline">SameSite</code> cookies for auth.</div>
+    </section>
+
+    <!-- WORKERS -->
+    <section id="workers">
+      <h2><span class="num"></span> Web Workers</h2>
+      <p class="lead">Workers run scripts on a background thread, keeping the UI responsive during heavy computation. They communicate via <code class="inline">postMessage</code>.</p>
+      <div class="code"><div class="code-head"><span>main.js + worker.js</span><button class="copy">Copy</button></div><pre><span class="tok-com">// main.js</span>
+<span class="tok-key">const</span> w = <span class="tok-key">new</span> <span class="tok-fn">Worker</span>(<span class="tok-str">"worker.js"</span>);
+w.<span class="tok-fn">postMessage</span>({ n: <span class="tok-num">40</span> });
+w.onmessage = (e) =&gt; console.<span class="tok-fn">log</span>(e.data);
+
+<span class="tok-com">// worker.js</span>
+onmessage = (e) =&gt; postMessage(<span class="tok-fn">fib</span>(e.data.n));</pre></div>
+      <div class="callout"><b>No DOM access</b> in workers. Great for parsing, image processing, crypto, big loops.</div>
+    </section>
+
+    <!-- PERFORMANCE -->
+    <section id="performance">
+      <h2><span class="num"></span> Performance Optimization</h2>
+      <table>
+        <tr><th>Technique</th><th>Benefit</th></tr>
+        <tr><td>Debounce/throttle events</td><td>Fewer expensive handler calls</td></tr>
+        <tr><td>Event delegation</td><td>One listener instead of thousands</td></tr>
+        <tr><td>Code splitting / lazy load</td><td>Smaller initial bundle</td></tr>
+        <tr><td>Virtualize long lists</td><td>Render only visible rows</td></tr>
+        <tr><td>Memoize expensive computations</td><td>Avoid recomputation</td></tr>
+        <tr><td>Web Workers</td><td>Offload CPU-heavy work</td></tr>
+        <tr><td>Batch DOM updates / DocumentFragment</td><td>Fewer reflows/repaints</td></tr>
+        <tr><td>requestAnimationFrame</td><td>Smooth 60fps animations</td></tr>
+      </table>
+    </section>
+
+    <!-- DEBUGGING -->
+    <section id="debugging">
+      <h2><span class="num"></span> Debugging</h2>
+      <table>
+        <tr><th>Bug</th><th>Cause</th><th>Fix</th></tr>
+        <tr><td><code>undefined is not a function</code></td><td>Wrong method/typo/context</td><td>Check spelling &amp; <code>this</code></td></tr>
+        <tr><td><code>Cannot read properties of undefined</code></td><td>Accessing nested prop on undefined</td><td>Optional chaining <code>?.</code></td></tr>
+        <tr><td>Loop logs same value</td><td><code>var</code> closure capture</td><td>Use <code>let</code></td></tr>
+        <tr><td>Lost <code>this</code></td><td>Method used as callback</td><td>Arrow / <code>bind</code></td></tr>
+        <tr><td>Floating point <code>0.1+0.2!==0.3</code></td><td>IEEE-754</td><td>Round or use integer cents</td></tr>
+      </table>
+      <div class="callout tip"><b>Tools:</b> <code class="inline">console.table</code>, <code class="inline">console.time</code>, breakpoints, <code class="inline">debugger</code>, Chrome DevTools Performance/Memory tabs.</div>
+    </section>
+
+    <!-- BEST PRACTICES -->
+    <section id="bestpractices">
+      <h2><span class="num"></span> Best Practices &amp; Anti-Patterns</h2>
+      <table>
+        <tr><th>Do</th><th>Don't</th></tr>
+        <tr><td>Use <code>const</code>/<code>let</code>, <code>===</code></td><td>Use <code>var</code> or <code>==</code></td></tr>
+        <tr><td>Pure functions, immutability</td><td>Mutate shared state</td></tr>
+        <tr><td>Handle promise rejections</td><td>Fire-and-forget async</td></tr>
+        <tr><td>Small, single-purpose functions</td><td>God functions</td></tr>
+        <tr><td>Guard clauses, early returns</td><td>Deep nesting</td></tr>
+        <tr><td>Descriptive names</td><td>Magic numbers/strings</td></tr>
+      </table>
+    </section>
+
+    <!-- MACHINE CODING -->
+    <section id="machine">
+      <h2><span class="num"></span> Machine Coding Problems</h2>
+      <div class="problem"><div class="p-head">Flatten a nested array <span class="tag">Medium</span></div><div class="p-body">
+        <p class="prompt"><b>Task:</b> Implement <code class="inline">flatten([1,[2,[3,[4]]]])</code> → <code class="inline">[1,2,3,4]</code> without <code class="inline">Array.flat</code>.</p>
+        <details class="solution"><summary>Show solution</summary>
+          <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">flatten</span>(arr) {
+  <span class="tok-key">return</span> arr.<span class="tok-fn">reduce</span>((acc, v) =&gt;
+    Array.<span class="tok-fn">isArray</span>(v) ? acc.<span class="tok-fn">concat</span>(<span class="tok-fn">flatten</span>(v)) : acc.<span class="tok-fn">concat</span>(v), []);
+}</pre></div>
+        </details>
+      </div></div>
+      <div class="problem"><div class="p-head">Implement Promise.all <span class="tag">Hard</span></div><div class="p-body">
+        <p class="prompt"><b>Task:</b> Recreate <code class="inline">Promise.all</code>.</p>
+        <details class="solution"><summary>Show solution</summary>
+          <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">promiseAll</span>(proms) {
+  <span class="tok-key">return</span> <span class="tok-key">new</span> <span class="tok-fn">Promise</span>((resolve, reject) =&gt; {
+    <span class="tok-key">const</span> res = []; <span class="tok-key">let</span> done = <span class="tok-num">0</span>;
+    proms.<span class="tok-fn">forEach</span>((p, i) =&gt;
+      Promise.<span class="tok-fn">resolve</span>(p).<span class="tok-fn">then</span>(v =&gt; {
+        res[i] = v;
+        <span class="tok-key">if</span> (++done === proms.length) <span class="tok-fn">resolve</span>(res);
+      }, reject));
+  });
+}</pre></div>
+        </details>
+      </div></div>
+      <div class="problem"><div class="p-head">Deep clone with cycles <span class="tag">Hard</span></div><div class="p-body">
+        <p class="prompt"><b>Task:</b> Deep clone an object that may contain circular references.</p>
+        <details class="solution"><summary>Show solution</summary>
+          <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">deepClone</span>(obj, seen = <span class="tok-key">new</span> <span class="tok-fn">WeakMap</span>()) {
+  <span class="tok-key">if</span> (obj === <span class="tok-key">null</span> || <span class="tok-key">typeof</span> obj !== <span class="tok-str">"object"</span>) <span class="tok-key">return</span> obj;
+  <span class="tok-key">if</span> (seen.<span class="tok-fn">has</span>(obj)) <span class="tok-key">return</span> seen.<span class="tok-fn">get</span>(obj);
+  <span class="tok-key">const</span> copy = Array.<span class="tok-fn">isArray</span>(obj) ? [] : {};
+  seen.<span class="tok-fn">set</span>(obj, copy);
+  <span class="tok-key">for</span> (<span class="tok-key">const</span> k <span class="tok-key">in</span> obj) copy[k] = <span class="tok-fn">deepClone</span>(obj[k], seen);
+  <span class="tok-key">return</span> copy;
+}</pre></div>
+        </details>
+      </div></div>
+      <div class="callout"><b>Other must-practice:</b> debounce, throttle, curry, memoize, EventEmitter, deep equality, retry with backoff, promisify, group-by, LRU cache.</div>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — Search-as-you-type is hammering the API <span class="tag">Async</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Every keystroke fires an API call. How do you fix it?</p>
+        <details class="solution"><summary>Show approach</summary><p><b>Debounce</b> the handler (~300ms), <b>cancel</b> in-flight requests with <code class="inline">AbortController</code>, and cache results. Optionally add a minimum query length.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Output ordering <span class="tag">Event Loop</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> What logs and why? <code class="inline">setTimeout(...,0)</code> vs <code class="inline">Promise.then</code> vs sync?</p>
+        <details class="solution"><summary>Show approach</summary><p>Synchronous code first, then all microtasks (promises), then macrotasks (timers). Explain the microtask/macrotask queues and that microtasks drain fully between macrotasks.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — A memory leak in a SPA <span class="tag">Memory</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Memory grows on every route change. How do you find and fix it?</p>
+        <details class="solution"><summary>Show approach</summary><p>Take heap snapshots in DevTools, compare retained objects. Usual culprits: listeners/timers/subscriptions not cleaned up, detached DOM nodes held by closures. Add cleanup on unmount and use WeakMap for caches.</p></details>
+      </div></div>
+    </section>
+
+    <!-- PRODUCTION -->
+    <section id="production">
+      <h2><span class="num"></span> Production Problems</h2>
+      <div class="problem"><div class="p-head">Numbers rounding wrong in checkout <span class="tag">Bug</span></div><div class="p-body">
+        <p class="prompt"><b>Report:</b> Totals like <code class="inline">$0.30</code> show as <code class="inline">$0.30000000000000004</code>.</p>
+        <details class="solution"><summary>Show fix</summary><p><b>Cause:</b> IEEE-754 floating point. <b>Fix:</b> work in integer cents, or use a decimal library, and format with <code class="inline">toFixed(2)</code> only for display.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Unhandled promise crashes the Node process <span class="tag">Bug</span></div><div class="p-body">
+        <p class="prompt"><b>Report:</b> Server exits intermittently.</p>
+        <details class="solution"><summary>Show fix</summary><p><b>Cause:</b> Unhandled rejection. <b>Fix:</b> add <code class="inline">.catch</code>/try-catch to every async path, and a global <code class="inline">process.on("unhandledRejection")</code> handler for logging.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <p class="lead">The most-asked JavaScript questions with concise answers.</p>
+      <details class="qa"><summary>Explain closures with a use case.</summary><div class="ans"><p>A closure is a function bundled with references to its lexical scope, so it remembers outer variables after the outer function returns. Used for data privacy, function factories, memoization, and debounce/throttle.</p></div></details>
+      <details class="qa"><summary>Difference between <code class="inline">==</code> and <code class="inline">===</code>?</summary><div class="ans"><p><code class="inline">==</code> compares after type coercion; <code class="inline">===</code> compares value and type without coercion. Prefer <code class="inline">===</code>.</p></div></details>
+      <details class="qa"><summary>Explain the event loop, microtasks and macrotasks.</summary><div class="ans"><p>JS is single-threaded. Async callbacks queue in microtask (promises) or macrotask (timers, I/O) queues. After the stack empties, the loop drains all microtasks, then one macrotask, and repeats.</p></div></details>
+      <details class="qa"><summary>How does <code class="inline">this</code> work?</summary><div class="ans"><p>Determined by call site: method → object, <code class="inline">new</code> → instance, standalone → global/undefined, arrow → lexical, or explicitly via call/apply/bind.</p></div></details>
+      <details class="qa"><summary>var vs let vs const?</summary><div class="ans"><p><code class="inline">var</code> is function-scoped and hoisted to undefined; <code class="inline">let</code>/<code class="inline">const</code> are block-scoped with a TDZ; <code class="inline">const</code> can't be reassigned.</p></div></details>
+      <details class="qa"><summary>Explain prototypal inheritance.</summary><div class="ans"><p>Objects link to a prototype via <code class="inline">[[Prototype]]</code>; property lookups walk the chain until found or null. Classes are sugar over this.</p></div></details>
+      <details class="qa"><summary>Debounce vs throttle?</summary><div class="ans"><p>Debounce runs after activity stops for N ms (search input). Throttle runs at most once per N ms (scroll).</p></div></details>
+      <details class="qa"><summary>Shallow vs deep copy?</summary><div class="ans"><p>Shallow copies top-level only (spread/assign) — nested objects are shared. Deep copies everything (<code class="inline">structuredClone</code>).</p></div></details>
+      <details class="qa"><summary>Promise.all vs allSettled vs race vs any?</summary><div class="ans"><p><b>all</b>: all or reject on first error. <b>allSettled</b>: waits for all with per-item status. <b>race</b>: first to settle. <b>any</b>: first fulfilled.</p></div></details>
+      <details class="qa"><summary>What is hoisting?</summary><div class="ans"><p>Declarations are processed in the creation phase: <code class="inline">var</code>/functions are hoisted (function fully), <code class="inline">let</code>/<code class="inline">const</code> are hoisted but uninitialized (TDZ).</p></div></details>
+      <details class="qa"><summary>call vs apply vs bind?</summary><div class="ans"><p>All set <code class="inline">this</code>. <code class="inline">call</code> takes comma args, <code class="inline">apply</code> takes an args array, <code class="inline">bind</code> returns a new bound function.</p></div></details>
+      <details class="qa"><summary>What is currying?</summary><div class="ans"><p>Transforming <code class="inline">f(a,b,c)</code> into <code class="inline">f(a)(b)(c)</code> — a series of unary functions, enabling partial application.</p></div></details>
+      <details class="qa"><summary>Explain the module pattern.</summary><div class="ans"><p>An IIFE (or module) returns a public API while keeping variables private via closure — encapsulation before ES modules.</p></div></details>
+      <details class="qa"><summary>What are Symbols?</summary><div class="ans"><p>Unique, immutable primitives used as non-colliding object keys and well-known hooks like <code class="inline">Symbol.iterator</code>.</p></div></details>
+      <details class="qa"><summary>Difference between null and undefined?</summary><div class="ans"><p><code class="inline">undefined</code> = declared but unassigned; <code class="inline">null</code> = intentional empty value. <code class="inline">typeof null</code> is <code class="inline">"object"</code> (legacy bug).</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Concept</th><th>Snippet</th></tr>
+        <tr><td>Dedupe array</td><td><code>[...new Set(arr)]</code></td></tr>
+        <tr><td>Deep clone</td><td><code>structuredClone(obj)</code></td></tr>
+        <tr><td>Optional chaining</td><td><code>a?.b?.c ?? def</code></td></tr>
+        <tr><td>Parallel async</td><td><code>await Promise.all([...])</code></td></tr>
+        <tr><td>Type check array</td><td><code>Array.isArray(x)</code></td></tr>
+        <tr><td>Debounce</td><td><code>clearTimeout + setTimeout</code></td></tr>
+        <tr><td>Sort numbers</td><td><code>arr.sort((a,b)=>a-b)</code></td></tr>
+        <tr><td>Merge objects</td><td><code>{...a, ...b}</code></td></tr>
+        <tr><td>String repeat</td><td><code>"ab".repeat(3)</code></td></tr>
+        <tr><td>Number check</td><td><code>Number.isNaN(x)</code></td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🟨 <b>JavaScript — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Foundations, async, patterns, performance, debugging, machine coding, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
