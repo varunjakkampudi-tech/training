@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete React handbook — JSX, components, all hooks, custom hooks, Router, Redux Toolkit, RTK Query, React Query, performance, patterns, architecture, testing, and 100+ interview questions." />
+<title>React — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #0891b2; --blue-dark: #075985; --blue-mid: #06b6d4; --sky: #22d3ee;
+    --light-blue: #d5f5fb; --light-blue-2: #ecfdff;
+    --bg: #ffffff; --bg-soft: #f4fdff; --panel: #ffffff;
+    --text: #0c2b33; --muted: #567680; --border: #c2ebf3;
+    --code-bg: #0a1f26; --accent: #f59e0b; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(8, 145, 178, 0.10); --shadow-lg: 0 14px 40px rgba(7, 89, 133, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 300px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(6, 182, 212, 0.18), transparent), linear-gradient(160deg, #d6f7fd, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #17414c; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #071820; border-bottom: 1px solid #17414c; font-size: 0.75rem; color: #67e8f9; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #e2f6fb; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #2a6472; color: #67e8f9; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(34,211,238,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #6f97a3; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-tag { color: #7fdfff; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #16414a; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #16414a; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #2c525b; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">⚛️ React Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Fundamentals</a>
+    <a href="#intro">Overview</a>
+    <a href="#jsx">JSX</a>
+    <a href="#components">Components &amp; Props</a>
+    <a href="#state">State &amp; Events</a>
+    <a href="#rendering">Rendering &amp; Virtual DOM</a>
+    <a href="#conditional">Conditional &amp; Lists</a>
+    <a href="#forms">Forms</a>
+    <a href="#composition">Composition &amp; Lifting</a>
+    <a href="#context">Context API</a>
+    <a class="section-title">Hooks (Deep Dive)</a>
+    <a href="#usestate">useState</a>
+    <a href="#useeffect">useEffect</a>
+    <a href="#useref">useRef</a>
+    <a href="#usememo">useMemo &amp; useCallback</a>
+    <a href="#usereducer">useReducer</a>
+    <a href="#morehooks">Other Hooks</a>
+    <a href="#customhooks">Custom Hooks</a>
+    <a class="section-title">Advanced</a>
+    <a href="#refs">Refs &amp; forwardRef</a>
+    <a href="#portals">Portals</a>
+    <a href="#errorboundary">Error Boundaries</a>
+    <a href="#lazy">Lazy &amp; Suspense</a>
+    <a href="#patterns">HOC &amp; Render Props</a>
+    <a class="section-title">Routing &amp; State</a>
+    <a href="#router">React Router</a>
+    <a href="#redux">Redux Toolkit</a>
+    <a href="#rtkquery">RTK Query &amp; React Query</a>
+    <a href="#auth">Auth &amp; Protected Routes</a>
+    <a class="section-title">Engineering</a>
+    <a href="#performance">Performance</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#testing">Testing</a>
+    <a href="#a11y">Accessibility</a>
+    <a class="section-title">Interview</a>
+    <a href="#machine">Machine Coding</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#production">Production Issues</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">React</span> Hands-On Guide</h1>
+    <p>JSX, components, every hook + custom hooks, React Router, Redux Toolkit, RTK Query, performance, patterns, architecture, testing, machine coding, and 100+ interview questions — the full frontend interview handbook.</p>
+    <div class="badges">
+      <span class="badge">Hooks</span>
+      <span class="badge">Custom Hooks</span>
+      <span class="badge">Router</span>
+      <span class="badge">Redux Toolkit</span>
+      <span class="badge">Performance</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">React is a declarative, component-based library for building UIs. You describe <em>what</em> the UI should look like for a given state, and React efficiently updates the DOM.</p>
+      <h3>Core ideas</h3>
+      <ul>
+        <li><b>Declarative</b> — UI = f(state). Describe the result, not the steps.</li>
+        <li><b>Component-based</b> — compose small, reusable pieces.</li>
+        <li><b>Virtual DOM + reconciliation</b> — diff and update only what changed.</li>
+        <li><b>Unidirectional data flow</b> — props down, events up.</li>
+      </ul>
+      <div class="callout tip"><b>Interview importance:</b> React is the most in-demand frontend skill. Hooks, rendering behavior, performance, and state management dominate interviews.</div>
+    </section>
+
+    <!-- JSX -->
+    <section id="jsx">
+      <h2><span class="num"></span> JSX</h2>
+      <p class="lead">JSX is syntax sugar for <code class="inline">React.createElement</code>. It lets you write HTML-like markup in JavaScript.</p>
+      <div class="code"><div class="code-head"><span>JSX compiles to createElement</span><button class="copy">Copy</button></div><pre><span class="tok-com">// JSX</span>
+<span class="tok-key">const</span> el = <span class="tok-tag">&lt;h1</span> className=<span class="tok-str">"title"</span><span class="tok-tag">&gt;</span>Hello {name}<span class="tok-tag">&lt;/h1&gt;</span>;
+
+<span class="tok-com">// compiles to</span>
+<span class="tok-key">const</span> el = React.<span class="tok-fn">createElement</span>(<span class="tok-str">"h1"</span>, { className: <span class="tok-str">"title"</span> }, <span class="tok-str">"Hello "</span>, name);</pre></div>
+      <ul>
+        <li>Use <code class="inline">className</code> (not <code class="inline">class</code>), <code class="inline">htmlFor</code> (not <code class="inline">for</code>).</li>
+        <li>Expressions in <code class="inline">{ }</code>; must return a single root (use fragments <code class="inline">&lt;&gt;...&lt;/&gt;</code>).</li>
+        <li>JSX prevents XSS by escaping values by default.</li>
+      </ul>
+    </section>
+
+    <!-- COMPONENTS -->
+    <section id="components">
+      <h2><span class="num"></span> Components &amp; Props</h2>
+      <div class="code"><div class="code-head"><span>Function component + props</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">Greeting</span>({ name, isVip = <span class="tok-key">false</span> }) {
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;p&gt;</span>Hello {name}{isVip &amp;&amp; <span class="tok-str">" ⭐"</span>}<span class="tok-tag">&lt;/p&gt;</span>;
+}
+<span class="tok-tag">&lt;Greeting</span> name=<span class="tok-str">"Aria"</span> isVip <span class="tok-tag">/&gt;</span></pre></div>
+      <ul>
+        <li><b>Props are read-only</b> — never mutate them (one-way data flow).</li>
+        <li><b>children</b> prop enables composition: <code class="inline">&lt;Card&gt;...&lt;/Card&gt;</code>.</li>
+        <li>Prefer <b>function components</b> + hooks over classes.</li>
+      </ul>
+    </section>
+
+    <!-- STATE -->
+    <section id="state">
+      <h2><span class="num"></span> State &amp; Events</h2>
+      <div class="code"><div class="code-head"><span>Counter with state</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">Counter</span>() {
+  <span class="tok-key">const</span> [count, setCount] = <span class="tok-fn">useState</span>(<span class="tok-num">0</span>);
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;button</span> onClick={() =&gt; <span class="tok-fn">setCount</span>(c =&gt; c + <span class="tok-num">1</span>)}<span class="tok-tag">&gt;</span>{count}<span class="tok-tag">&lt;/button&gt;</span>;
+}</pre></div>
+      <div class="callout warn"><b>State updates are async &amp; batched.</b> Use the functional updater <code class="inline">setCount(c =&gt; c + 1)</code> when the next value depends on the previous.</div>
+    </section>
+
+    <!-- RENDERING -->
+    <section id="rendering">
+      <h2><span class="num"></span> Rendering &amp; the Virtual DOM</h2>
+      <p class="lead">React keeps a lightweight copy of the DOM (Virtual DOM). On state/prop change it re-renders, diffs the new tree against the old (<b>reconciliation</b>), and applies the minimal real-DOM updates.</p>
+      <ul>
+        <li>A component re-renders when its <b>state</b> or <b>props</b> change, or its <b>parent</b> re-renders.</li>
+        <li><b>Keys</b> help React match list items across renders — use stable, unique keys (not index for dynamic lists).</li>
+        <li>Fiber architecture enables interruptible, prioritized rendering (concurrent features).</li>
+      </ul>
+      <div class="callout"><b>Reconciliation heuristics:</b> different element types → replace subtree; same type → update props; lists → matched by key.</div>
+    </section>
+
+    <!-- CONDITIONAL -->
+    <section id="conditional">
+      <h2><span class="num"></span> Conditional Rendering &amp; Lists</h2>
+      <div class="code"><div class="code-head"><span>Conditionals &amp; lists with keys</span><button class="copy">Copy</button></div><pre>{isLoading ? <span class="tok-tag">&lt;Spinner/&gt;</span> : <span class="tok-tag">&lt;List</span> items={items}<span class="tok-tag">/&gt;</span>}
+{error &amp;&amp; <span class="tok-tag">&lt;Error</span> msg={error}<span class="tok-tag">/&gt;</span>}
+
+{users.<span class="tok-fn">map</span>(u =&gt; <span class="tok-tag">&lt;li</span> key={u.id}<span class="tok-tag">&gt;</span>{u.name}<span class="tok-tag">&lt;/li&gt;</span>)}</pre></div>
+      <div class="callout warn"><b>Don't use array index as key</b> for lists that reorder/insert/delete — it causes wrong state association and subtle bugs.</div>
+    </section>
+
+    <!-- FORMS -->
+    <section id="forms">
+      <h2><span class="num"></span> Forms — Controlled vs Uncontrolled</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Controlled</h4><p>React state is the source of truth.</p>
+          <div class="code"><div class="code-head"><span>controlled input</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> [v, setV] = <span class="tok-fn">useState</span>(<span class="tok-str">""</span>);
+<span class="tok-tag">&lt;input</span> value={v} onChange={e =&gt; <span class="tok-fn">setV</span>(e.target.value)}<span class="tok-tag">/&gt;</span></pre></div>
+        </div>
+        <div class="vs-card b"><h4>Uncontrolled</h4><p>DOM holds the value; read via ref.</p>
+          <div class="code"><div class="code-head"><span>uncontrolled input</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> ref = <span class="tok-fn">useRef</span>();
+<span class="tok-tag">&lt;input</span> ref={ref} defaultValue=<span class="tok-str">"hi"</span><span class="tok-tag">/&gt;</span>
+<span class="tok-com">// read: ref.current.value</span></pre></div>
+        </div>
+      </div>
+      <div class="callout tip"><b>Rule:</b> Prefer controlled for validation/live updates; uncontrolled (or libraries like React Hook Form) for large forms to reduce re-renders.</div>
+    </section>
+
+    <!-- COMPOSITION -->
+    <section id="composition">
+      <h2><span class="num"></span> Composition &amp; Lifting State</h2>
+      <p class="lead">Share state by <b>lifting</b> it to the closest common ancestor and passing it down as props. Compose UI with <code class="inline">children</code> and specialized components rather than inheritance.</p>
+      <div class="code"><div class="code-head"><span>Lifting state up</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">Parent</span>() {
+  <span class="tok-key">const</span> [q, setQ] = <span class="tok-fn">useState</span>(<span class="tok-str">""</span>);
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;&gt;&lt;Search</span> value={q} onChange={setQ}<span class="tok-tag">/&gt;&lt;Results</span> query={q}<span class="tok-tag">/&gt;&lt;/&gt;</span>;
+}</pre></div>
+    </section>
+
+    <!-- CONTEXT -->
+    <section id="context">
+      <h2><span class="num"></span> Context API</h2>
+      <p class="lead">Context shares data (theme, auth, locale) across the tree without prop-drilling.</p>
+      <div class="code"><div class="code-head"><span>Create, provide, consume</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> ThemeCtx = <span class="tok-fn">createContext</span>(<span class="tok-str">"light"</span>);
+
+<span class="tok-tag">&lt;ThemeCtx.Provider</span> value={theme}<span class="tok-tag">&gt;</span><span class="tok-tag">&lt;App/&gt;&lt;/ThemeCtx.Provider&gt;</span>
+
+<span class="tok-key">const</span> theme = <span class="tok-fn">useContext</span>(ThemeCtx); <span class="tok-com">// consume anywhere below</span></pre></div>
+      <div class="callout warn"><b>Perf caveat:</b> Every consumer re-renders when the context value changes. Split contexts, memoize the value, or use a state library for high-frequency updates.</div>
+    </section>
+
+    <!-- useState -->
+    <section id="usestate">
+      <h2><span class="num"></span> useState</h2>
+      <p><b>What:</b> declares local state. <b>Why:</b> trigger re-render on change. <b>How:</b> returns <code class="inline">[value, setValue]</code>.</p>
+      <div class="code"><div class="code-head"><span>Lazy init &amp; functional updates</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> [state, setState] = <span class="tok-fn">useState</span>(() =&gt; <span class="tok-fn">expensiveInit</span>()); <span class="tok-com">// lazy init runs once</span>
+<span class="tok-fn">setState</span>(prev =&gt; ({ ...prev, count: prev.count + <span class="tok-num">1</span> }));    <span class="tok-com">// merge objects yourself</span></pre></div>
+      <div class="callout warn"><b>Mistakes:</b> mutating state directly; relying on state immediately after <code class="inline">setState</code> (it's async); forgetting objects/arrays need new references.</div>
+    </section>
+
+    <!-- useEffect -->
+    <section id="useeffect">
+      <h2><span class="num"></span> useEffect</h2>
+      <p><b>What:</b> run side effects (data fetch, subscriptions, timers) after render. <b>Why:</b> sync component with external systems.</p>
+      <div class="code"><div class="code-head"><span>Effect with cleanup &amp; deps</span><button class="copy">Copy</button></div><pre><span class="tok-fn">useEffect</span>(() =&gt; {
+  <span class="tok-key">const</span> id = <span class="tok-fn">setInterval</span>(tick, <span class="tok-num">1000</span>);
+  <span class="tok-key">return</span> () =&gt; <span class="tok-fn">clearInterval</span>(id); <span class="tok-com">// cleanup on unmount / before re-run</span>
+}, [dep]); <span class="tok-com">// [] = mount only; none = every render</span></pre></div>
+      <table>
+        <tr><th>Deps</th><th>Runs</th></tr>
+        <tr><td>None</td><td>After every render</td></tr>
+        <tr><td><code>[]</code></td><td>Once on mount</td></tr>
+        <tr><td><code>[a, b]</code></td><td>When a or b changes</td></tr>
+      </table>
+      <div class="callout warn"><b>Mistakes:</b> missing dependencies (stale closures), infinite loops (setting state without deps), not cleaning up subscriptions/timers.</div>
+    </section>
+
+    <!-- useRef -->
+    <section id="useref">
+      <h2><span class="num"></span> useRef</h2>
+      <p><b>What:</b> a mutable box (<code class="inline">.current</code>) that persists across renders <em>without</em> causing re-renders. <b>Use:</b> DOM access, storing timers/previous values.</p>
+      <div class="code"><div class="code-head"><span>DOM ref &amp; mutable value</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> inputRef = <span class="tok-fn">useRef</span>(<span class="tok-key">null</span>);
+<span class="tok-fn">useEffect</span>(() =&gt; inputRef.current?.<span class="tok-fn">focus</span>(), []);
+<span class="tok-tag">&lt;input</span> ref={inputRef}<span class="tok-tag">/&gt;</span></pre></div>
+    </section>
+
+    <!-- useMemo -->
+    <section id="usememo">
+      <h2><span class="num"></span> useMemo &amp; useCallback</h2>
+      <p><code class="inline">useMemo</code> memoizes a <b>value</b>; <code class="inline">useCallback</code> memoizes a <b>function</b>. Both avoid unnecessary recomputation/re-creation across renders.</p>
+      <div class="code"><div class="code-head"><span>Memoization</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> sorted = <span class="tok-fn">useMemo</span>(() =&gt; items.<span class="tok-fn">sort</span>(cmp), [items]);   <span class="tok-com">// expensive calc</span>
+<span class="tok-key">const</span> onClick = <span class="tok-fn">useCallback</span>(() =&gt; <span class="tok-fn">doX</span>(id), [id]);     <span class="tok-com">// stable fn for memo children</span></pre></div>
+      <div class="callout warn"><b>Don't over-memoize.</b> These have a cost. Use when a computation is expensive or a stable reference is needed by a memoized child / effect dependency.</div>
+    </section>
+
+    <!-- useReducer -->
+    <section id="usereducer">
+      <h2><span class="num"></span> useReducer</h2>
+      <p>For complex state logic with many transitions — a Redux-like reducer local to a component.</p>
+      <div class="code"><div class="code-head"><span>Reducer pattern</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">reducer</span>(state, action) {
+  <span class="tok-key">switch</span> (action.type) {
+    <span class="tok-key">case</span> <span class="tok-str">"inc"</span>: <span class="tok-key">return</span> { count: state.count + <span class="tok-num">1</span> };
+    <span class="tok-key">default</span>: <span class="tok-key">return</span> state;
+  }
+}
+<span class="tok-key">const</span> [state, dispatch] = <span class="tok-fn">useReducer</span>(reducer, { count: <span class="tok-num">0</span> });
+<span class="tok-fn">dispatch</span>({ type: <span class="tok-str">"inc"</span> });</pre></div>
+    </section>
+
+    <!-- MORE HOOKS -->
+    <section id="morehooks">
+      <h2><span class="num"></span> Other Built-in Hooks</h2>
+      <table>
+        <tr><th>Hook</th><th>Purpose</th></tr>
+        <tr><td><code>useContext</code></td><td>Read context value</td></tr>
+        <tr><td><code>useLayoutEffect</code></td><td>Like useEffect but fires synchronously before paint (measure DOM)</td></tr>
+        <tr><td><code>useImperativeHandle</code></td><td>Customize the ref exposed by a component (with forwardRef)</td></tr>
+        <tr><td><code>useId</code></td><td>Stable unique IDs for a11y (SSR-safe)</td></tr>
+        <tr><td><code>useTransition</code></td><td>Mark non-urgent updates to keep UI responsive</td></tr>
+        <tr><td><code>useDeferredValue</code></td><td>Defer a value to avoid blocking urgent renders</td></tr>
+        <tr><td><code>useSyncExternalStore</code></td><td>Subscribe to external stores safely (used by Redux/Zustand)</td></tr>
+      </table>
+    </section>
+
+    <!-- CUSTOM HOOKS -->
+    <section id="customhooks">
+      <h2><span class="num"></span> Custom Hooks</h2>
+      <p class="lead">A custom hook is a function starting with <code class="inline">use</code> that composes built-in hooks to share stateful logic.</p>
+      <div class="code"><div class="code-head"><span>useFetch</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">useFetch</span>(url) {
+  <span class="tok-key">const</span> [data, setData] = <span class="tok-fn">useState</span>(<span class="tok-key">null</span>);
+  <span class="tok-key">const</span> [loading, setLoading] = <span class="tok-fn">useState</span>(<span class="tok-key">true</span>);
+  <span class="tok-fn">useEffect</span>(() =&gt; {
+    <span class="tok-key">const</span> ctrl = <span class="tok-key">new</span> <span class="tok-fn">AbortController</span>();
+    <span class="tok-fn">fetch</span>(url, { signal: ctrl.signal })
+      .<span class="tok-fn">then</span>(r =&gt; r.<span class="tok-fn">json</span>()).<span class="tok-fn">then</span>(setData)
+      .<span class="tok-fn">finally</span>(() =&gt; <span class="tok-fn">setLoading</span>(<span class="tok-key">false</span>));
+    <span class="tok-key">return</span> () =&gt; ctrl.<span class="tok-fn">abort</span>();
+  }, [url]);
+  <span class="tok-key">return</span> { data, loading };
+}</pre></div>
+      <div class="code"><div class="code-head"><span>useDebounce &amp; useLocalStorage</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">useDebounce</span>(value, delay = <span class="tok-num">300</span>) {
+  <span class="tok-key">const</span> [v, setV] = <span class="tok-fn">useState</span>(value);
+  <span class="tok-fn">useEffect</span>(() =&gt; {
+    <span class="tok-key">const</span> id = <span class="tok-fn">setTimeout</span>(() =&gt; <span class="tok-fn">setV</span>(value), delay);
+    <span class="tok-key">return</span> () =&gt; <span class="tok-fn">clearTimeout</span>(id);
+  }, [value, delay]);
+  <span class="tok-key">return</span> v;
+}
+
+<span class="tok-key">function</span> <span class="tok-fn">useLocalStorage</span>(key, init) {
+  <span class="tok-key">const</span> [val, setVal] = <span class="tok-fn">useState</span>(() =&gt;
+    JSON.<span class="tok-fn">parse</span>(localStorage.<span class="tok-fn">getItem</span>(key)) ?? init);
+  <span class="tok-fn">useEffect</span>(() =&gt; localStorage.<span class="tok-fn">setItem</span>(key, JSON.<span class="tok-fn">stringify</span>(val)), [key, val]);
+  <span class="tok-key">return</span> [val, setVal];
+}</pre></div>
+      <div class="callout"><b>Common custom hooks:</b> <code class="inline">usePrevious</code>, <code class="inline">useToggle</code>, <code class="inline">useOnClickOutside</code>, <code class="inline">useMediaQuery</code>, <code class="inline">useIntersectionObserver</code>, <code class="inline">useEventListener</code>.</div>
+    </section>
+
+    <!-- REFS -->
+    <section id="refs">
+      <h2><span class="num"></span> Refs, forwardRef &amp; useImperativeHandle</h2>
+      <div class="code"><div class="code-head"><span>Expose an imperative API</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> Input = <span class="tok-fn">forwardRef</span>((props, ref) =&gt; {
+  <span class="tok-key">const</span> inner = <span class="tok-fn">useRef</span>();
+  <span class="tok-fn">useImperativeHandle</span>(ref, () =&gt; ({ focus: () =&gt; inner.current.<span class="tok-fn">focus</span>() }));
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;input</span> ref={inner} {...props}<span class="tok-tag">/&gt;</span>;
+});</pre></div>
+    </section>
+
+    <!-- PORTALS -->
+    <section id="portals">
+      <h2><span class="num"></span> Portals</h2>
+      <p class="lead">Render children into a DOM node outside the parent hierarchy — ideal for modals, tooltips, toasts (avoids overflow/z-index issues).</p>
+      <div class="code"><div class="code-head"><span>createPortal</span><button class="copy">Copy</button></div><pre><span class="tok-key">return</span> <span class="tok-fn">createPortal</span>(
+  <span class="tok-tag">&lt;div</span> className=<span class="tok-str">"modal"</span><span class="tok-tag">&gt;</span>{children}<span class="tok-tag">&lt;/div&gt;</span>,
+  document.<span class="tok-fn">getElementById</span>(<span class="tok-str">"modal-root"</span>)
+);</pre></div>
+    </section>
+
+    <!-- ERROR BOUNDARY -->
+    <section id="errorboundary">
+      <h2><span class="num"></span> Error Boundaries</h2>
+      <p class="lead">Class components that catch render errors in their subtree and show a fallback. (No hook equivalent yet — use a class or a library.)</p>
+      <div class="code"><div class="code-head"><span>ErrorBoundary</span><button class="copy">Copy</button></div><pre><span class="tok-key">class</span> <span class="tok-fn">ErrorBoundary</span> <span class="tok-key">extends</span> React.Component {
+  state = { hasError: <span class="tok-key">false</span> };
+  <span class="tok-key">static</span> <span class="tok-fn">getDerivedStateFromError</span>() { <span class="tok-key">return</span> { hasError: <span class="tok-key">true</span> }; }
+  <span class="tok-fn">componentDidCatch</span>(err, info) { <span class="tok-fn">logToService</span>(err, info); }
+  <span class="tok-fn">render</span>() { <span class="tok-key">return</span> this.state.hasError ? <span class="tok-tag">&lt;Fallback/&gt;</span> : this.props.children; }
+}</pre></div>
+    </section>
+
+    <!-- LAZY -->
+    <section id="lazy">
+      <h2><span class="num"></span> Lazy Loading &amp; Suspense</h2>
+      <div class="code"><div class="code-head"><span>Code splitting</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> Dashboard = <span class="tok-fn">lazy</span>(() =&gt; <span class="tok-fn">import</span>(<span class="tok-str">"./Dashboard"</span>));
+
+<span class="tok-tag">&lt;Suspense</span> fallback={<span class="tok-tag">&lt;Spinner/&gt;</span>}<span class="tok-tag">&gt;</span>
+  <span class="tok-tag">&lt;Dashboard/&gt;</span>
+<span class="tok-tag">&lt;/Suspense&gt;</span></pre></div>
+      <div class="callout tip"><b>Benefit:</b> Splits the bundle so routes/heavy components load on demand — faster initial load.</div>
+    </section>
+
+    <!-- PATTERNS -->
+    <section id="patterns">
+      <h2><span class="num"></span> HOC &amp; Render Props</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Higher-Order Component</h4>
+          <div class="code"><div class="code-head"><span>HOC</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> withAuth = Cmp =&gt; props =&gt;
+  <span class="tok-fn">isLoggedIn</span>() ? <span class="tok-tag">&lt;Cmp</span> {...props}<span class="tok-tag">/&gt;</span> : <span class="tok-tag">&lt;Login/&gt;</span>;</pre></div>
+        </div>
+        <div class="vs-card b"><h4>Render Props</h4>
+          <div class="code"><div class="code-head"><span>render prop</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;Mouse</span> render={pos =&gt; <span class="tok-tag">&lt;p&gt;</span>{pos.x},{pos.y}<span class="tok-tag">&lt;/p&gt;</span>}<span class="tok-tag">/&gt;</span></pre></div>
+        </div>
+      </div>
+      <div class="callout tip"><b>Modern take:</b> Custom hooks have largely replaced HOCs and render props for sharing logic — simpler and no wrapper hell.</div>
+    </section>
+
+    <!-- ROUTER -->
+    <section id="router">
+      <h2><span class="num"></span> React Router</h2>
+      <div class="code"><div class="code-head"><span>Routes, params, nesting</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;BrowserRouter&gt;</span>
+  <span class="tok-tag">&lt;Routes&gt;</span>
+    <span class="tok-tag">&lt;Route</span> path=<span class="tok-str">"/"</span> element={<span class="tok-tag">&lt;Home/&gt;</span>}<span class="tok-tag">/&gt;</span>
+    <span class="tok-tag">&lt;Route</span> path=<span class="tok-str">"/users/:id"</span> element={<span class="tok-tag">&lt;User/&gt;</span>}<span class="tok-tag">/&gt;</span>
+    <span class="tok-tag">&lt;Route</span> path=<span class="tok-str">"/dash"</span> element={<span class="tok-tag">&lt;Layout/&gt;</span>}<span class="tok-tag">&gt;</span>
+      <span class="tok-tag">&lt;Route</span> index element={<span class="tok-tag">&lt;Overview/&gt;</span>}<span class="tok-tag">/&gt;</span>
+      <span class="tok-tag">&lt;Route</span> path=<span class="tok-str">"settings"</span> element={<span class="tok-tag">&lt;Settings/&gt;</span>}<span class="tok-tag">/&gt;</span>
+    <span class="tok-tag">&lt;/Route&gt;</span>
+    <span class="tok-tag">&lt;Route</span> path=<span class="tok-str">"*"</span> element={<span class="tok-tag">&lt;NotFound/&gt;</span>}<span class="tok-tag">/&gt;</span>
+  <span class="tok-tag">&lt;/Routes&gt;</span>
+<span class="tok-tag">&lt;/BrowserRouter&gt;</span></pre></div>
+      <div class="code"><div class="code-head"><span>Hooks: navigate, params, search</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { id } = <span class="tok-fn">useParams</span>();
+<span class="tok-key">const</span> navigate = <span class="tok-fn">useNavigate</span>();
+<span class="tok-key">const</span> [params, setParams] = <span class="tok-fn">useSearchParams</span>();
+<span class="tok-fn">navigate</span>(<span class="tok-str">"/login"</span>, { replace: <span class="tok-key">true</span> });</pre></div>
+      <div class="callout tip"><b>Data APIs (v6.4+):</b> loaders/actions fetch data before rendering a route, enabling parallel loading and avoiding waterfalls.</div>
+    </section>
+
+    <!-- REDUX -->
+    <section id="redux">
+      <h2><span class="num"></span> Redux Toolkit</h2>
+      <p class="lead">Redux centralizes global state. <b>Redux Toolkit (RTK)</b> is the official, boilerplate-free way — slices, immutable updates via Immer, and a preconfigured store.</p>
+      <div class="code"><div class="code-head"><span>createSlice + store</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> counter = <span class="tok-fn">createSlice</span>({
+  name: <span class="tok-str">"counter"</span>,
+  initialState: { value: <span class="tok-num">0</span> },
+  reducers: {
+    increment: s =&gt; { s.value++; },        <span class="tok-com">// Immer: "mutate" safely</span>
+    addBy: (s, a) =&gt; { s.value += a.payload; }
+  }
+});
+<span class="tok-key">export</span> <span class="tok-key">const</span> { increment, addBy } = counter.actions;
+
+<span class="tok-key">const</span> store = <span class="tok-fn">configureStore</span>({ reducer: { counter: counter.reducer } });</pre></div>
+      <div class="code"><div class="code-head"><span>useSelector + useDispatch</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> value = <span class="tok-fn">useSelector</span>(s =&gt; s.counter.value);
+<span class="tok-key">const</span> dispatch = <span class="tok-fn">useDispatch</span>();
+<span class="tok-fn">dispatch</span>(<span class="tok-fn">increment</span>());</pre></div>
+      <div class="callout"><b>Data flow:</b> Component → <code class="inline">dispatch(action)</code> → reducer computes new state → subscribed components re-render. Single source of truth, predictable, time-travel debuggable.</div>
+    </section>
+
+    <!-- RTK QUERY -->
+    <section id="rtkquery">
+      <h2><span class="num"></span> RTK Query &amp; React Query</h2>
+      <p class="lead">Server-state libraries handle fetching, caching, deduping, and revalidation — replacing hand-written <code class="inline">useEffect</code> fetch logic.</p>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>RTK Query</h4>
+          <div class="code"><div class="code-head"><span>createApi</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> api = <span class="tok-fn">createApi</span>({
+  baseQuery: <span class="tok-fn">fetchBaseQuery</span>({ baseUrl: <span class="tok-str">"/api"</span> }),
+  endpoints: b =&gt; ({
+    getUsers: b.<span class="tok-fn">query</span>(() =&gt; <span class="tok-str">"users"</span>)
+  })
+});
+<span class="tok-key">const</span> { data, isLoading } = <span class="tok-fn">useGetUsersQuery</span>();</pre></div>
+        </div>
+        <div class="vs-card b"><h4>React Query (TanStack)</h4>
+          <div class="code"><div class="code-head"><span>useQuery</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { data, isLoading } = <span class="tok-fn">useQuery</span>({
+  queryKey: [<span class="tok-str">"users"</span>],
+  queryFn: () =&gt; axios.<span class="tok-fn">get</span>(<span class="tok-str">"/api/users"</span>).<span class="tok-fn">then</span>(r =&gt; r.data)
+});</pre></div>
+        </div>
+      </div>
+      <div class="callout tip"><b>When to use what:</b> Context for low-frequency global state (theme/auth); Redux for complex client state; RTK Query / React Query for <b>server state</b> (most data fetching).</div>
+    </section>
+
+    <!-- AUTH -->
+    <section id="auth">
+      <h2><span class="num"></span> Auth &amp; Protected Routes</h2>
+      <div class="code"><div class="code-head"><span>ProtectedRoute + Axios interceptor</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">Protected</span>({ children }) {
+  <span class="tok-key">const</span> { user } = <span class="tok-fn">useAuth</span>();
+  <span class="tok-key">return</span> user ? children : <span class="tok-tag">&lt;Navigate</span> to=<span class="tok-str">"/login"</span> replace<span class="tok-tag">/&gt;</span>;
+}
+
+<span class="tok-com">// attach token to every request</span>
+axios.interceptors.request.<span class="tok-fn">use</span>(cfg =&gt; {
+  cfg.headers.Authorization = <span class="tok-str">`Bearer ${getToken()}`</span>;
+  <span class="tok-key">return</span> cfg;
+});</pre></div>
+      <div class="callout warn"><b>Security:</b> Prefer <code class="inline">HttpOnly</code> cookies over <code class="inline">localStorage</code> for tokens (XSS-safe), and implement refresh-token rotation.</div>
+    </section>
+
+    <!-- PERFORMANCE -->
+    <section id="performance">
+      <h2><span class="num"></span> Performance Optimization</h2>
+      <table>
+        <tr><th>Technique</th><th>Fixes</th></tr>
+        <tr><td><code>React.memo</code></td><td>Skip re-render if props unchanged</td></tr>
+        <tr><td><code>useMemo</code> / <code>useCallback</code></td><td>Stable values/functions for memoized children</td></tr>
+        <tr><td>List virtualization (react-window)</td><td>Render only visible rows</td></tr>
+        <tr><td>Code splitting + lazy</td><td>Smaller initial bundle</td></tr>
+        <tr><td>Stable keys</td><td>Correct list reconciliation</td></tr>
+        <tr><td>Move state down / split context</td><td>Fewer re-renders</td></tr>
+        <tr><td>useTransition / useDeferredValue</td><td>Keep UI responsive during heavy updates</td></tr>
+      </table>
+      <div class="callout tip"><b>Measure first:</b> Use the React Profiler and "Highlight updates" to find what re-renders before optimizing.</div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section id="architecture">
+      <h2><span class="num"></span> Architecture</h2>
+      <div class="code"><div class="code-head"><span>Feature-based folder structure</span><button class="copy">Copy</button></div><pre>src/
+  app/            <span class="tok-com">// store, routes, providers</span>
+  features/
+    auth/         <span class="tok-com">// components, hooks, slice, api, tests</span>
+    products/
+  components/     <span class="tok-com">// shared UI</span>
+  hooks/  lib/  utils/  styles/</pre></div>
+      <ul>
+        <li><b>Feature-based</b> beats type-based at scale (colocate by domain).</li>
+        <li><b>Atomic design</b> for the component library (atoms → molecules → organisms).</li>
+        <li><b>Micro-frontends</b> (Module Federation) split a large app across teams.</li>
+        <li><b>Next.js</b> adds SSR/SSG/RSC, routing, and data fetching on top of React.</li>
+      </ul>
+    </section>
+
+    <!-- TESTING -->
+    <section id="testing">
+      <h2><span class="num"></span> Testing</h2>
+      <div class="code"><div class="code-head"><span>React Testing Library</span><button class="copy">Copy</button></div><pre><span class="tok-fn">test</span>(<span class="tok-str">"increments"</span>, <span class="tok-key">async</span> () =&gt; {
+  <span class="tok-fn">render</span>(<span class="tok-tag">&lt;Counter/&gt;</span>);
+  <span class="tok-key">await</span> userEvent.<span class="tok-fn">click</span>(screen.<span class="tok-fn">getByRole</span>(<span class="tok-str">"button"</span>));
+  <span class="tok-fn">expect</span>(screen.<span class="tok-fn">getByText</span>(<span class="tok-str">"1"</span>)).<span class="tok-fn">toBeInTheDocument</span>();
+});</pre></div>
+      <div class="callout tip"><b>Principle:</b> Test behavior (what the user sees/does), not implementation details. Query by role/text, not class names.</div>
+    </section>
+
+    <!-- A11Y -->
+    <section id="a11y">
+      <h2><span class="num"></span> Accessibility in React</h2>
+      <ul>
+        <li>Use semantic elements + ARIA only when needed; label controls (<code class="inline">htmlFor</code>/<code class="inline">aria-label</code>).</li>
+        <li>Manage focus on route change &amp; modal open/close; trap focus in dialogs.</li>
+        <li>Use <code class="inline">useId</code> for associating labels/inputs (SSR-safe).</li>
+        <li>Ensure keyboard operability and visible focus states.</li>
+      </ul>
+    </section>
+
+    <!-- MACHINE CODING -->
+    <section id="machine">
+      <h2><span class="num"></span> Machine Coding Problems</h2>
+      <div class="problem"><div class="p-head">Debounced search box <span class="tag">Medium</span></div><div class="p-body">
+        <p class="prompt"><b>Task:</b> Build a search input that calls the API only after the user stops typing.</p>
+        <details class="solution"><summary>Show solution</summary>
+          <div class="code"><div class="code-head"><span>Solution</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">Search</span>() {
+  <span class="tok-key">const</span> [q, setQ] = <span class="tok-fn">useState</span>(<span class="tok-str">""</span>);
+  <span class="tok-key">const</span> debounced = <span class="tok-fn">useDebounce</span>(q, <span class="tok-num">400</span>);
+  <span class="tok-key">const</span> { data } = <span class="tok-fn">useFetch</span>(<span class="tok-str">`/api?q=${debounced}`</span>);
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;input</span> value={q} onChange={e =&gt; <span class="tok-fn">setQ</span>(e.target.value)}<span class="tok-tag">/&gt;</span>;
+}</pre></div>
+        </details>
+      </div></div>
+      <div class="problem"><div class="p-head">Other must-practice <span class="tag">Set</span></div><div class="p-body">
+        <p class="prompt">Todo app, pagination, infinite scroll, OTP input, star rating, accordion, tabs, modal, carousel, autocomplete, file upload w/ progress, dark mode toggle, shopping cart, nested comments, stopwatch.</p>
+      </div></div>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — 5000-row table is slow <span class="tag">Performance</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> A list of 5000 rows lags on every keystroke. How do you optimize?</p>
+        <details class="solution"><summary>Show approach</summary><p><b>Virtualize</b> (react-window) to render only visible rows; <code class="inline">React.memo</code> row components; <code class="inline">useMemo</code> the filtered/sorted data; stable keys; move the input state so the whole list doesn't re-render; consider <code class="inline">useDeferredValue</code> for the filter.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Stale closure in useEffect <span class="tag">Hooks</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> A timer logs an old state value. Why, and how do you fix it?</p>
+        <details class="solution"><summary>Show approach</summary><p>The effect captured the initial state (stale closure). Fix by adding the value to deps, using the functional updater <code class="inline">setX(x =&gt; ...)</code>, or storing the latest value in a ref.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — Prop drilling hell <span class="tag">State</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> A value is passed through 6 layers of components. How do you improve it?</p>
+        <details class="solution"><summary>Show approach</summary><p>Lift to Context for low-frequency global data, or a state library (Redux/Zustand) for complex/high-frequency state. Compose with <code class="inline">children</code> to avoid unnecessary intermediaries.</p></details>
+      </div></div>
+    </section>
+
+    <!-- PRODUCTION -->
+    <section id="production">
+      <h2><span class="num"></span> Production Issues</h2>
+      <div class="problem"><div class="p-head">Infinite re-render loop <span class="tag">Bug</span></div><div class="p-body">
+        <p class="prompt"><b>Report:</b> Page freezes; "Maximum update depth exceeded".</p>
+        <details class="solution"><summary>Show fix</summary><p><b>Cause:</b> calling <code class="inline">setState</code> during render, or an object/array in effect deps recreated each render. <b>Fix:</b> move updates into effects/handlers, memoize deps, and correct the dependency array.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Memory leak: setState after unmount <span class="tag">Bug</span></div><div class="p-body">
+        <p class="prompt"><b>Report:</b> Warning about updating state on an unmounted component.</p>
+        <details class="solution"><summary>Show fix</summary><p><b>Cause:</b> async resolves after unmount. <b>Fix:</b> abort fetches with <code class="inline">AbortController</code> and clean up subscriptions/timers in the effect return.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>What is the Virtual DOM and reconciliation?</summary><div class="ans"><p>An in-memory tree of elements. On update, React builds a new tree, diffs it against the old (reconciliation) using type + key heuristics, and applies minimal real-DOM changes.</p></div></details>
+      <details class="qa"><summary>Why are keys important in lists?</summary><div class="ans"><p>Keys let React match elements across renders to preserve state and minimize DOM ops. Use stable unique IDs; index keys break on reorder/insert/delete.</p></div></details>
+      <details class="qa"><summary>useEffect vs useLayoutEffect?</summary><div class="ans"><p><code class="inline">useEffect</code> runs asynchronously after paint; <code class="inline">useLayoutEffect</code> runs synchronously before paint (use to measure/adjust DOM to avoid flicker).</p></div></details>
+      <details class="qa"><summary>What causes a component to re-render?</summary><div class="ans"><p>State change, prop change, parent re-render, or context value change. Use <code class="inline">React.memo</code>/<code class="inline">useMemo</code>/<code class="inline">useCallback</code> to prevent unnecessary ones.</p></div></details>
+      <details class="qa"><summary>Controlled vs uncontrolled components?</summary><div class="ans"><p>Controlled: value driven by React state (predictable, validatable). Uncontrolled: DOM holds the value, read via ref (less re-render, simpler for big forms).</p></div></details>
+      <details class="qa"><summary>What is a custom hook?</summary><div class="ans"><p>A reusable function starting with <code class="inline">use</code> that composes built-in hooks to share stateful logic between components without HOCs/render props.</p></div></details>
+      <details class="qa"><summary>Context vs Redux?</summary><div class="ans"><p>Context passes data without prop-drilling but re-renders all consumers on change — best for low-frequency global state. Redux offers structured, debuggable, high-frequency state management with middleware and selectors.</p></div></details>
+      <details class="qa"><summary>What does React.memo do?</summary><div class="ans"><p>Memoizes a component so it skips re-render when props are shallow-equal. Pair with <code class="inline">useCallback</code>/<code class="inline">useMemo</code> so prop references stay stable.</p></div></details>
+      <details class="qa"><summary>Explain the rules of hooks.</summary><div class="ans"><p>Only call hooks at the top level (not in loops/conditions) and only from React functions/custom hooks — so React can track hook order reliably.</p></div></details>
+      <details class="qa"><summary>How does React Router handle protected routes?</summary><div class="ans"><p>Wrap routes in a component that checks auth and renders children or redirects with <code class="inline">&lt;Navigate&gt;</code>. Combine with loaders for data-aware guarding.</p></div></details>
+      <details class="qa"><summary>What is prop drilling and how to avoid it?</summary><div class="ans"><p>Passing props through many intermediate components. Avoid with Context, composition (<code class="inline">children</code>), or a state library.</p></div></details>
+      <details class="qa"><summary>What are error boundaries?</summary><div class="ans"><p>Class components that catch render/lifecycle errors in their subtree via <code class="inline">getDerivedStateFromError</code>/<code class="inline">componentDidCatch</code> and show a fallback UI.</p></div></details>
+      <details class="qa"><summary>Server state vs client state?</summary><div class="ans"><p>Client state is UI/local (form inputs, toggles). Server state is remote data with caching/staleness concerns — handled best by React Query/RTK Query.</p></div></details>
+      <details class="qa"><summary>What is Suspense?</summary><div class="ans"><p>A mechanism to declaratively show a fallback while lazy components or data are loading, enabling code splitting and (with frameworks) streaming.</p></div></details>
+      <details class="qa"><summary>Class vs function components?</summary><div class="ans"><p>Function components with hooks are the modern standard — less boilerplate, easier logic reuse. Classes remain only for error boundaries.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Need</th><th>Use</th></tr>
+        <tr><td>Local state</td><td><code>useState</code></td></tr>
+        <tr><td>Complex state</td><td><code>useReducer</code></td></tr>
+        <tr><td>Side effect</td><td><code>useEffect</code></td></tr>
+        <tr><td>DOM / mutable ref</td><td><code>useRef</code></td></tr>
+        <tr><td>Expensive calc</td><td><code>useMemo</code></td></tr>
+        <tr><td>Stable callback</td><td><code>useCallback</code></td></tr>
+        <tr><td>Skip re-render</td><td><code>React.memo</code></td></tr>
+        <tr><td>Global (low-freq)</td><td>Context</td></tr>
+        <tr><td>Global (complex)</td><td>Redux Toolkit</td></tr>
+        <tr><td>Server data</td><td>React Query / RTK Query</td></tr>
+        <tr><td>Routing</td><td>React Router</td></tr>
+        <tr><td>Code split</td><td><code>lazy</code> + <code>Suspense</code></td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>⚛️ <b>React — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Fundamentals, hooks, routing, state, performance, patterns, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
