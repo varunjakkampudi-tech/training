@@ -469,6 +469,9 @@
     <!-- ROUTER -->
     <section id="router">
       <h2><span class="num"></span> React Router</h2>
+      <p class="lead">React Router is the standard for client-side routing. Modern apps use the <b>data router</b> (<code class="inline">createBrowserRouter</code>) which adds loaders, actions, and built-in pending/error states.</p>
+
+      <h3>Classic JSX routes (params &amp; nesting)</h3>
       <div class="code"><div class="code-head"><span>Routes, params, nesting</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;BrowserRouter&gt;</span>
   <span class="tok-tag">&lt;Routes&gt;</span>
     <span class="tok-tag">&lt;Route</span> path=<span class="tok-str">"/"</span> element={<span class="tok-tag">&lt;Home/&gt;</span>}<span class="tok-tag">/&gt;</span>
@@ -480,11 +483,113 @@
     <span class="tok-tag">&lt;Route</span> path=<span class="tok-str">"*"</span> element={<span class="tok-tag">&lt;NotFound/&gt;</span>}<span class="tok-tag">/&gt;</span>
   <span class="tok-tag">&lt;/Routes&gt;</span>
 <span class="tok-tag">&lt;/BrowserRouter&gt;</span></pre></div>
-      <div class="code"><div class="code-head"><span>Hooks: navigate, params, search</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { id } = <span class="tok-fn">useParams</span>();
-<span class="tok-key">const</span> navigate = <span class="tok-fn">useNavigate</span>();
-<span class="tok-key">const</span> [params, setParams] = <span class="tok-fn">useSearchParams</span>();
-<span class="tok-fn">navigate</span>(<span class="tok-str">"/login"</span>, { replace: <span class="tok-key">true</span> });</pre></div>
-      <div class="callout tip"><b>Data APIs (v6.4+):</b> loaders/actions fetch data before rendering a route, enabling parallel loading and avoiding waterfalls.</div>
+
+      <h3>createBrowserRouter (data router)</h3>
+      <div class="code"><div class="code-head"><span>Object-based routes + data APIs</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> { createBrowserRouter, RouterProvider } <span class="tok-key">from</span> <span class="tok-str">"react-router-dom"</span>;
+
+<span class="tok-key">const</span> router = <span class="tok-fn">createBrowserRouter</span>([
+  {
+    path: <span class="tok-str">"/"</span>,
+    element: <span class="tok-tag">&lt;RootLayout/&gt;</span>,        <span class="tok-com">// shared layout (has &lt;Outlet/&gt;)</span>
+    errorElement: <span class="tok-tag">&lt;ErrorPage/&gt;</span>,   <span class="tok-com">// catches loader/render errors</span>
+    children: [
+      { index: <span class="tok-key">true</span>, element: <span class="tok-tag">&lt;Home/&gt;</span> },
+      {
+        path: <span class="tok-str">"users/:id"</span>,
+        element: <span class="tok-tag">&lt;User/&gt;</span>,
+        loader: userLoader,          <span class="tok-com">// fetch BEFORE render</span>
+        action: userAction           <span class="tok-com">// handle form submits</span>
+      },
+      { path: <span class="tok-str">"*"</span>, element: <span class="tok-tag">&lt;NotFound/&gt;</span> }
+    ]
+  }
+]);
+
+<span class="tok-key">export</span> <span class="tok-key">default</span> () =&gt; <span class="tok-tag">&lt;RouterProvider</span> router={router}<span class="tok-tag">/&gt;</span>;</pre></div>
+      <div class="callout tip"><b>Why data routers:</b> loaders run <b>in parallel</b> before the route renders (no fetch-on-render waterfalls or loading spinners scattered in components), and you get built-in <code class="inline">errorElement</code> + pending UI.</div>
+
+      <h3>Layout routes &amp; &lt;Outlet/&gt;</h3>
+      <p>A <b>layout route</b> has no <code class="inline">path</code> of its own for content — it renders shared chrome (navbar, sidebar) and an <code class="inline">&lt;Outlet/&gt;</code> where the matched child route renders.</p>
+      <div class="code"><div class="code-head"><span>RootLayout with Outlet</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> { Outlet, NavLink, useNavigation } <span class="tok-key">from</span> <span class="tok-str">"react-router-dom"</span>;
+
+<span class="tok-key">function</span> <span class="tok-fn">RootLayout</span>() {
+  <span class="tok-key">const</span> nav = <span class="tok-fn">useNavigation</span>();   <span class="tok-com">// "idle" | "loading" | "submitting"</span>
+  <span class="tok-key">return</span> (
+    <span class="tok-tag">&lt;div&gt;</span>
+      <span class="tok-tag">&lt;header&gt;</span>
+        <span class="tok-tag">&lt;NavLink</span> to=<span class="tok-str">"/"</span> end<span class="tok-tag">&gt;</span>Home<span class="tok-tag">&lt;/NavLink&gt;</span>
+        <span class="tok-tag">&lt;NavLink</span> to=<span class="tok-str">"/users/1"</span><span class="tok-tag">&gt;</span>User<span class="tok-tag">&lt;/NavLink&gt;</span>  <span class="tok-com">// auto "active" class</span>
+      <span class="tok-tag">&lt;/header&gt;</span>
+      {nav.state === <span class="tok-str">"loading"</span> &amp;&amp; <span class="tok-tag">&lt;TopBar/&gt;</span>}   <span class="tok-com">// global pending UI</span>
+      <span class="tok-tag">&lt;main&gt;&lt;Outlet</span> <span class="tok-tag">/&gt;&lt;/main&gt;</span>   <span class="tok-com">// child route renders HERE</span>
+    <span class="tok-tag">&lt;/div&gt;</span>
+  );
+}</pre></div>
+
+      <h3>Loaders — read data before render</h3>
+      <div class="code"><div class="code-head"><span>loader + useLoaderData</span><button class="copy">Copy</button></div><pre><span class="tok-com">// runs before &lt;User/&gt; mounts; params/request are provided</span>
+<span class="tok-key">export</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">userLoader</span>({ params, request }) {
+  <span class="tok-key">const</span> res = <span class="tok-key">await</span> <span class="tok-fn">fetch</span>(<span class="tok-str">`/api/users/${params.id}`</span>, {
+    signal: request.signal          <span class="tok-com">// auto-aborts on navigation</span>
+  });
+  <span class="tok-key">if</span> (!res.ok) <span class="tok-key">throw</span> <span class="tok-key">new</span> <span class="tok-fn">Response</span>(<span class="tok-str">"Not Found"</span>, { status: <span class="tok-num">404</span> });
+  <span class="tok-key">return</span> res.<span class="tok-fn">json</span>();          <span class="tok-com">// available via useLoaderData()</span>
+}
+
+<span class="tok-key">function</span> <span class="tok-fn">User</span>() {
+  <span class="tok-key">const</span> user = <span class="tok-fn">useLoaderData</span>();  <span class="tok-com">// already loaded — no useEffect!</span>
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;h1&gt;</span>{user.name}<span class="tok-tag">&lt;/h1&gt;</span>;
+}</pre></div>
+      <div class="callout"><b>Thrown Responses</b> in a loader are caught by the nearest <code class="inline">errorElement</code> — access them with <code class="inline">useRouteError()</code>. This replaces manual error state.</div>
+
+      <h3>Actions — handle form submissions</h3>
+      <div class="code"><div class="code-head"><span>action + &lt;Form/&gt; + useActionData</span><button class="copy">Copy</button></div><pre><span class="tok-com">// runs on non-GET &lt;Form&gt; submit; then loaders auto-revalidate</span>
+<span class="tok-key">export</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">userAction</span>({ request, params }) {
+  <span class="tok-key">const</span> form = <span class="tok-key">await</span> request.<span class="tok-fn">formData</span>();
+  <span class="tok-key">const</span> name = form.<span class="tok-fn">get</span>(<span class="tok-str">"name"</span>);
+  <span class="tok-key">if</span> (!name) <span class="tok-key">return</span> { error: <span class="tok-str">"Name required"</span> }; <span class="tok-com">// -&gt; useActionData()</span>
+  <span class="tok-key">await</span> <span class="tok-fn">saveUser</span>(params.id, { name });
+  <span class="tok-key">return</span> <span class="tok-fn">redirect</span>(<span class="tok-str">`/users/${params.id}`</span>);  <span class="tok-com">// navigate on success</span>
+}
+
+<span class="tok-key">function</span> <span class="tok-fn">EditUser</span>() {
+  <span class="tok-key">const</span> errors = <span class="tok-fn">useActionData</span>();
+  <span class="tok-key">const</span> nav = <span class="tok-fn">useNavigation</span>();
+  <span class="tok-key">return</span> (
+    <span class="tok-tag">&lt;Form</span> method=<span class="tok-str">"post"</span><span class="tok-tag">&gt;</span>            <span class="tok-com">// posts to the route's action</span>
+      <span class="tok-tag">&lt;input</span> name=<span class="tok-str">"name"</span><span class="tok-tag">/&gt;</span>
+      {errors?.error &amp;&amp; <span class="tok-tag">&lt;p&gt;</span>{errors.error}<span class="tok-tag">&lt;/p&gt;</span>}
+      <span class="tok-tag">&lt;button</span> disabled={nav.state !== <span class="tok-str">"idle"</span>}<span class="tok-tag">&gt;</span>
+        {nav.state === <span class="tok-str">"submitting"</span> ? <span class="tok-str">"Saving…"</span> : <span class="tok-str">"Save"</span>}
+      <span class="tok-tag">&lt;/button&gt;</span>
+    <span class="tok-tag">&lt;/Form&gt;</span>
+  );
+}</pre></div>
+      <div class="callout tip"><b>Auto-revalidation:</b> After an action runs, React Router automatically re-runs the page's loaders so the UI reflects the new data — no manual refetch.</div>
+
+      <h3>Deferred data &amp; &lt;Await/&gt;</h3>
+      <div class="code"><div class="code-head"><span>Stream slow data with defer</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">function</span> <span class="tok-fn">loader</span>() {
+  <span class="tok-key">return</span> <span class="tok-fn">defer</span>({ reviews: <span class="tok-fn">fetchReviews</span>() }); <span class="tok-com">// don't await slow part</span>
+}
+<span class="tok-tag">&lt;Suspense</span> fallback={<span class="tok-tag">&lt;Spinner/&gt;</span>}<span class="tok-tag">&gt;</span>
+  <span class="tok-tag">&lt;Await</span> resolve={data.reviews}<span class="tok-tag">&gt;</span>{r =&gt; <span class="tok-tag">&lt;Reviews</span> data={r}<span class="tok-tag">/&gt;</span>}<span class="tok-tag">&lt;/Await&gt;</span>
+<span class="tok-tag">&lt;/Suspense&gt;</span></pre></div>
+
+      <h3>Navigation hooks</h3>
+      <table>
+        <tr><th>Hook / API</th><th>Purpose</th></tr>
+        <tr><td><code>useParams()</code></td><td>Read dynamic segments (<code>:id</code>)</td></tr>
+        <tr><td><code>useNavigate()</code></td><td>Programmatic navigation</td></tr>
+        <tr><td><code>useSearchParams()</code></td><td>Read/update query string</td></tr>
+        <tr><td><code>useLoaderData()</code></td><td>Data from the route's loader</td></tr>
+        <tr><td><code>useActionData()</code></td><td>Return value of the route's action</td></tr>
+        <tr><td><code>useNavigation()</code></td><td>Global pending/submitting state</td></tr>
+        <tr><td><code>useRouteError()</code></td><td>Error in an <code>errorElement</code></td></tr>
+        <tr><td><code>&lt;Outlet/&gt;</code></td><td>Where child routes render in a layout</td></tr>
+        <tr><td><code>&lt;NavLink/&gt;</code></td><td>Link with active styling</td></tr>
+        <tr><td><code>&lt;Form/&gt;</code> / <code>useFetcher()</code></td><td>Submit to actions (with/without navigation)</td></tr>
+      </table>
+      <div class="realworld"><h4>🌍 Real-world</h4><p>A dashboard uses a <b>layout route</b> (nav + <code class="inline">Outlet</code>), each page has a <b>loader</b> for parallel data fetch, forms post to <b>actions</b> that validate + save + redirect, <code class="inline">useNavigation</code> shows a global progress bar, and <code class="inline">errorElement</code> renders friendly error pages — all without a single <code class="inline">useEffect</code> fetch.</p></div>
     </section>
 
     <!-- REDUX -->
@@ -535,17 +640,42 @@
     <!-- AUTH -->
     <section id="auth">
       <h2><span class="num"></span> Auth &amp; Protected Routes</h2>
+      <h3>Component guard (JSX routes)</h3>
       <div class="code"><div class="code-head"><span>ProtectedRoute + Axios interceptor</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">Protected</span>({ children }) {
   <span class="tok-key">const</span> { user } = <span class="tok-fn">useAuth</span>();
-  <span class="tok-key">return</span> user ? children : <span class="tok-tag">&lt;Navigate</span> to=<span class="tok-str">"/login"</span> replace<span class="tok-tag">/&gt;</span>;
+  <span class="tok-key">const</span> location = <span class="tok-fn">useLocation</span>();
+  <span class="tok-com">// remember where they wanted to go, redirect back after login</span>
+  <span class="tok-key">return</span> user
+    ? children
+    : <span class="tok-tag">&lt;Navigate</span> to=<span class="tok-str">"/login"</span> state={{ from: location }} replace<span class="tok-tag">/&gt;</span>;
 }
+<span class="tok-tag">&lt;Route</span> path=<span class="tok-str">"/dash"</span> element={<span class="tok-tag">&lt;Protected&gt;&lt;Dashboard/&gt;&lt;/Protected&gt;</span>}<span class="tok-tag">/&gt;</span>
 
 <span class="tok-com">// attach token to every request</span>
 axios.interceptors.request.<span class="tok-fn">use</span>(cfg =&gt; {
   cfg.headers.Authorization = <span class="tok-str">`Bearer ${getToken()}`</span>;
   <span class="tok-key">return</span> cfg;
 });</pre></div>
-      <div class="callout warn"><b>Security:</b> Prefer <code class="inline">HttpOnly</code> cookies over <code class="inline">localStorage</code> for tokens (XSS-safe), and implement refresh-token rotation.</div>
+
+      <h3>Loader guard (data router — preferred)</h3>
+      <div class="code"><div class="code-head"><span>Protect a route in its loader</span><button class="copy">Copy</button></div><pre><span class="tok-com">// redirect in the loader BEFORE the component renders</span>
+<span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">requireAuth</span>({ request }) {
+  <span class="tok-key">const</span> user = <span class="tok-key">await</span> <span class="tok-fn">getUser</span>();
+  <span class="tok-key">if</span> (!user) {
+    <span class="tok-key">const</span> from = <span class="tok-key">new</span> <span class="tok-fn">URL</span>(request.url).pathname;
+    <span class="tok-key">throw</span> <span class="tok-fn">redirect</span>(<span class="tok-str">`/login?next=${from}`</span>); <span class="tok-com">// throw a redirect Response</span>
+  }
+  <span class="tok-key">return</span> user;
+}
+
+<span class="tok-key">const</span> router = <span class="tok-fn">createBrowserRouter</span>([
+  { path: <span class="tok-str">"/"</span>, element: <span class="tok-tag">&lt;RootLayout/&gt;</span>, children: [
+    { path: <span class="tok-str">"dash"</span>, element: <span class="tok-tag">&lt;Dashboard/&gt;</span>, loader: requireAuth },
+    { path: <span class="tok-str">"login"</span>, element: <span class="tok-tag">&lt;Login/&gt;</span>, action: loginAction }
+  ]}
+]);</pre></div>
+      <div class="callout tip"><b>Why loader guards win:</b> the check happens before render (no flash of protected content), redirects are instant, and you can wrap a whole layout route so all children inherit the guard.</div>
+      <div class="callout warn"><b>Security:</b> Prefer <code class="inline">HttpOnly</code> cookies over <code class="inline">localStorage</code> for tokens (XSS-safe), implement refresh-token rotation, and always re-check authorization on the server — client guards are UX, not security.</div>
     </section>
 
     <!-- PERFORMANCE -->
@@ -666,6 +796,10 @@ axios.interceptors.request.<span class="tok-fn">use</span>(cfg =&gt; {
       <details class="qa"><summary>What does React.memo do?</summary><div class="ans"><p>Memoizes a component so it skips re-render when props are shallow-equal. Pair with <code class="inline">useCallback</code>/<code class="inline">useMemo</code> so prop references stay stable.</p></div></details>
       <details class="qa"><summary>Explain the rules of hooks.</summary><div class="ans"><p>Only call hooks at the top level (not in loops/conditions) and only from React functions/custom hooks — so React can track hook order reliably.</p></div></details>
       <details class="qa"><summary>How does React Router handle protected routes?</summary><div class="ans"><p>Wrap routes in a component that checks auth and renders children or redirects with <code class="inline">&lt;Navigate&gt;</code>. Combine with loaders for data-aware guarding.</p></div></details>
+      <details class="qa"><summary>createBrowserRouter vs BrowserRouter?</summary><div class="ans"><p><code class="inline">BrowserRouter</code> + JSX <code class="inline">&lt;Routes&gt;</code> is the classic API. <code class="inline">createBrowserRouter</code> is the data router: object-based routes with <b>loaders</b>, <b>actions</b>, <code class="inline">errorElement</code>, and built-in pending/error states — used with <code class="inline">&lt;RouterProvider&gt;</code>.</p></div></details>
+      <details class="qa"><summary>What are loaders and actions?</summary><div class="ans"><p>A <b>loader</b> fetches a route's data <em>before</em> it renders (accessed via <code class="inline">useLoaderData</code>), running loaders in parallel to avoid waterfalls. An <b>action</b> handles non-GET <code class="inline">&lt;Form&gt;</code> submissions (via <code class="inline">useActionData</code>), then loaders auto-revalidate.</p></div></details>
+      <details class="qa"><summary>What is &lt;Outlet/&gt; and a layout route?</summary><div class="ans"><p>A layout route renders shared UI (nav/sidebar) plus an <code class="inline">&lt;Outlet/&gt;</code> placeholder where the matched child route renders — enabling nested layouts without repeating chrome.</p></div></details>
+      <details class="qa"><summary>How do loaders handle errors and pending states?</summary><div class="ans"><p>Throw a <code class="inline">Response</code> in a loader to trigger the nearest <code class="inline">errorElement</code> (read with <code class="inline">useRouteError</code>). <code class="inline">useNavigation()</code> exposes global <code class="inline">loading</code>/<code class="inline">submitting</code> state for progress UI. <code class="inline">defer</code> + <code class="inline">&lt;Await&gt;</code> stream slow data.</p></div></details>
       <details class="qa"><summary>What is prop drilling and how to avoid it?</summary><div class="ans"><p>Passing props through many intermediate components. Avoid with Context, composition (<code class="inline">children</code>), or a state library.</p></div></details>
       <details class="qa"><summary>What are error boundaries?</summary><div class="ans"><p>Class components that catch render/lifecycle errors in their subtree via <code class="inline">getDerivedStateFromError</code>/<code class="inline">componentDidCatch</code> and show a fallback UI.</p></div></details>
       <details class="qa"><summary>Server state vs client state?</summary><div class="ans"><p>Client state is UI/local (form inputs, toggles). Server state is remote data with caching/staleness concerns — handled best by React Query/RTK Query.</p></div></details>
