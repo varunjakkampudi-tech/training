@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete REST API handbook — principles, HTTP methods, status codes, versioning, auth, caching, idempotency, pagination, security, OpenAPI, and 100+ interview questions." />
+<title>REST API — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #6d28d9; --blue-dark: #4c1d95; --blue-mid: #7c3aed; --sky: #a78bfa;
+    --light-blue: #ede9fe; --light-blue-2: #f5f3ff;
+    --bg: #ffffff; --bg-soft: #faf9ff; --panel: #ffffff;
+    --text: #241a3d; --muted: #6b6285; --border: #e2dbf5;
+    --code-bg: #17122a; --accent: #f59e0b; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(109, 40, 217, 0.10); --shadow-lg: 0 14px 40px rgba(76, 29, 149, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 296px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(124, 58, 237, 0.16), transparent), linear-gradient(160deg, #ece7fd, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #322a52; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #0f0b1e; border-bottom: 1px solid #322a52; font-size: 0.75rem; color: #c4b5fd; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #ece8f8; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #473c6e; color: #c4b5fd; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(167,139,250,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #8a7fb0; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #33285a; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #33285a; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #453a68; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🔌 REST API Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#principles">REST Principles</a>
+    <a href="#resources">Resources &amp; URIs</a>
+    <a href="#methods">HTTP Methods</a>
+    <a href="#status">Status Codes</a>
+    <a href="#headers">Headers</a>
+    <a class="section-title">Design</a>
+    <a href="#idempotency">Idempotency &amp; Safety</a>
+    <a href="#versioning">Versioning</a>
+    <a href="#pagination">Pagination / Filter / Sort</a>
+    <a href="#hateoas">HATEOAS &amp; Negotiation</a>
+    <a href="#errors">Error Handling (RFC 7807)</a>
+    <a class="section-title">Cross-Cutting</a>
+    <a href="#auth">Authentication</a>
+    <a href="#caching">Caching</a>
+    <a href="#rate">Rate Limiting</a>
+    <a href="#security">Security (OWASP)</a>
+    <a href="#docs">OpenAPI / Swagger</a>
+    <a class="section-title">Compare</a>
+    <a href="#compare">REST vs GraphQL vs gRPC</a>
+    <a href="#bestpractices">Best Practices</a>
+    <a class="section-title">Interview</a>
+    <a href="#scenario">Design Scenarios</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">REST API</span> Hands-On Guide</h1>
+    <p>REST principles, HTTP methods &amp; status codes, versioning, idempotency, pagination, auth, caching, rate limiting, OWASP security, OpenAPI, and 100+ interview questions — the API design handbook.</p>
+    <div class="badges">
+      <span class="badge">HTTP</span>
+      <span class="badge">Status Codes</span>
+      <span class="badge">Idempotency</span>
+      <span class="badge">Auth / OAuth2</span>
+      <span class="badge">Caching</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">REST (Representational State Transfer) is an architectural style for networked APIs over HTTP. Resources are identified by URLs and manipulated with standard HTTP methods.</p>
+      <ul>
+        <li><b>Resource-oriented</b> — everything is a resource with a URL.</li>
+        <li><b>Uses HTTP semantics</b> — methods, status codes, headers.</li>
+        <li><b>Stateless</b> — each request carries all needed context.</li>
+        <li><b>Representation-based</b> — usually JSON.</li>
+      </ul>
+      <div class="callout tip"><b>Interview importance:</b> HTTP methods/status codes, idempotency, versioning, auth, and caching are the core REST interview topics.</div>
+    </section>
+
+    <!-- PRINCIPLES -->
+    <section id="principles">
+      <h2><span class="num"></span> REST Principles (Constraints)</h2>
+      <table>
+        <tr><th>Constraint</th><th>Meaning</th></tr>
+        <tr><td><b>Client–Server</b></td><td>Separation of UI and data storage</td></tr>
+        <tr><td><b>Stateless</b></td><td>No client session on the server; each request is self-contained</td></tr>
+        <tr><td><b>Cacheable</b></td><td>Responses declare cacheability (headers)</td></tr>
+        <tr><td><b>Uniform Interface</b></td><td>Consistent resource URLs + standard methods</td></tr>
+        <tr><td><b>Layered System</b></td><td>Proxies/gateways/LBs can sit between client and server</td></tr>
+        <tr><td><b>Code on Demand</b> (optional)</td><td>Server can send executable code</td></tr>
+      </table>
+      <div class="callout"><b>Richardson Maturity Model:</b> L0 (single endpoint) → L1 (resources) → L2 (HTTP verbs + status) → L3 (HATEOAS/hypermedia). Most "REST" APIs are Level 2.</div>
+    </section>
+
+    <!-- RESOURCES -->
+    <section id="resources">
+      <h2><span class="num"></span> Resources &amp; URI Design</h2>
+      <table>
+        <tr><th>Good</th><th>Avoid</th></tr>
+        <tr><td><code>GET /users</code></td><td><code>GET /getUsers</code></td></tr>
+        <tr><td><code>GET /users/42/orders</code></td><td><code>GET /users?getOrders=42</code></td></tr>
+        <tr><td><code>POST /users</code></td><td><code>POST /createUser</code></td></tr>
+      </table>
+      <ul>
+        <li><b>Nouns, not verbs</b> — the method is the verb.</li>
+        <li><b>Plural collections</b> — <code class="inline">/users</code>, <code class="inline">/users/{id}</code>.</li>
+        <li><b>Nest for relationships</b> — <code class="inline">/users/{id}/orders</code> (avoid deep nesting &gt; 2 levels).</li>
+        <li><b>Lowercase, hyphenated</b> — <code class="inline">/order-items</code>.</li>
+      </ul>
+    </section>
+
+    <!-- METHODS -->
+    <section id="methods">
+      <h2><span class="num"></span> HTTP Methods</h2>
+      <table>
+        <tr><th>Method</th><th>Use</th><th>Safe</th><th>Idempotent</th></tr>
+        <tr><td>GET</td><td>Read</td><td>✅</td><td>✅</td></tr>
+        <tr><td>POST</td><td>Create / actions</td><td>❌</td><td>❌</td></tr>
+        <tr><td>PUT</td><td>Replace (full)</td><td>❌</td><td>✅</td></tr>
+        <tr><td>PATCH</td><td>Partial update</td><td>❌</td><td>❌* </td></tr>
+        <tr><td>DELETE</td><td>Remove</td><td>❌</td><td>✅</td></tr>
+        <tr><td>HEAD / OPTIONS</td><td>Metadata / preflight</td><td>✅</td><td>✅</td></tr>
+      </table>
+      <div class="callout"><b>PUT vs PATCH vs POST:</b> PUT replaces the whole resource (idempotent); PATCH applies a partial change; POST creates or triggers non-idempotent actions.</div>
+    </section>
+
+    <!-- STATUS -->
+    <section id="status">
+      <h2><span class="num"></span> Status Codes</h2>
+      <table>
+        <tr><th>Class</th><th>Common codes</th></tr>
+        <tr><td><b>2xx Success</b></td><td>200 OK, 201 Created, 202 Accepted, 204 No Content</td></tr>
+        <tr><td><b>3xx Redirect</b></td><td>301 Moved, 304 Not Modified</td></tr>
+        <tr><td><b>4xx Client</b></td><td>400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 422 Unprocessable, 429 Too Many Requests</td></tr>
+        <tr><td><b>5xx Server</b></td><td>500 Internal, 502 Bad Gateway, 503 Unavailable, 504 Timeout</td></tr>
+      </table>
+      <div class="callout warn"><b>Use the right code:</b> 201 + <code class="inline">Location</code> header on create; 204 for deletes with no body; 401 (who are you?) vs 403 (not allowed); 409 for conflicts; 422 for validation.</div>
+    </section>
+
+    <!-- HEADERS -->
+    <section id="headers">
+      <h2><span class="num"></span> Headers</h2>
+      <table>
+        <tr><th>Header</th><th>Purpose</th></tr>
+        <tr><td><code>Content-Type</code></td><td>Body format (application/json)</td></tr>
+        <tr><td><code>Accept</code></td><td>Desired response format (content negotiation)</td></tr>
+        <tr><td><code>Authorization</code></td><td><code>Bearer &lt;token&gt;</code></td></tr>
+        <tr><td><code>Cache-Control</code> / <code>ETag</code></td><td>Caching &amp; validation</td></tr>
+        <tr><td><code>Location</code></td><td>URL of a created resource</td></tr>
+        <tr><td><code>Idempotency-Key</code></td><td>Safe retries of POST</td></tr>
+        <tr><td><code>X-RateLimit-*</code></td><td>Rate-limit status</td></tr>
+      </table>
+    </section>
+
+    <!-- IDEMPOTENCY -->
+    <section id="idempotency">
+      <h2><span class="num"></span> Idempotency &amp; Safety</h2>
+      <p class="lead"><b>Safe</b> = no side effects (GET). <b>Idempotent</b> = repeating gives the same result (GET, PUT, DELETE). Critical for reliable retries.</p>
+      <div class="code"><div class="code-head"><span>Idempotency-Key for POST</span><button class="copy">Copy</button></div><pre>POST /payments
+Idempotency-Key: 4f8c-...-a1
+
+<span class="tok-com"># Server stores the key + result. A retry with the same key</span>
+<span class="tok-com"># returns the original response instead of charging twice.</span></pre></div>
+      <div class="callout tip"><b>Why it matters:</b> Networks retry. Idempotent design (or idempotency keys) prevents duplicate orders/charges.</div>
+    </section>
+
+    <!-- VERSIONING -->
+    <section id="versioning">
+      <h2><span class="num"></span> Versioning</h2>
+      <table>
+        <tr><th>Strategy</th><th>Example</th></tr>
+        <tr><td>URI path</td><td><code>/api/v1/users</code> (most common)</td></tr>
+        <tr><td>Header</td><td><code>Accept: application/vnd.api.v2+json</code></td></tr>
+        <tr><td>Query param</td><td><code>/users?version=2</code></td></tr>
+      </table>
+      <div class="callout"><b>Rule:</b> Never break existing clients. Add fields (non-breaking) freely; version only for breaking changes, and deprecate old versions with a timeline + <code class="inline">Deprecation</code>/<code class="inline">Sunset</code> headers.</div>
+    </section>
+
+    <!-- PAGINATION -->
+    <section id="pagination">
+      <h2><span class="num"></span> Pagination, Filtering, Sorting</h2>
+      <div class="code"><div class="code-head"><span>Query conventions</span><button class="copy">Copy</button></div><pre>GET /products?category=phones&amp;price_gte=100    <span class="tok-com"># filter</span>
+GET /products?sort=-price,name                 <span class="tok-com"># sort (desc price, asc name)</span>
+GET /products?page=2&amp;limit=20                   <span class="tok-com"># offset pagination</span>
+GET /products?cursor=eyJpZCI6MTIzfQ&amp;limit=20    <span class="tok-com"># cursor pagination</span></pre></div>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Offset</h4><ul><li>Simple <code>page/limit</code></li><li>Slow on deep pages; can skip/duplicate on writes</li></ul></div>
+        <div class="vs-card b"><h4>Cursor (keyset)</h4><ul><li>Stable &amp; fast for large/real-time data</li><li>Opaque cursor from the last item</li></ul></div>
+      </div>
+    </section>
+
+    <!-- HATEOAS -->
+    <section id="hateoas">
+      <h2><span class="num"></span> HATEOAS &amp; Content Negotiation</h2>
+      <div class="code"><div class="code-head"><span>Hypermedia links</span><button class="copy">Copy</button></div><pre>{
+  <span class="tok-str">"id"</span>: <span class="tok-num">42</span>, <span class="tok-str">"status"</span>: <span class="tok-str">"pending"</span>,
+  <span class="tok-str">"_links"</span>: {
+    <span class="tok-str">"self"</span>:   { <span class="tok-str">"href"</span>: <span class="tok-str">"/orders/42"</span> },
+    <span class="tok-str">"cancel"</span>: { <span class="tok-str">"href"</span>: <span class="tok-str">"/orders/42/cancel"</span>, <span class="tok-str">"method"</span>: <span class="tok-str">"POST"</span> }
+  }
+}</pre></div>
+      <p><b>Content negotiation:</b> the client's <code class="inline">Accept</code> header lets the server return JSON, XML, or a specific version — the same resource, different representation.</p>
+    </section>
+
+    <!-- ERRORS -->
+    <section id="errors">
+      <h2><span class="num"></span> Error Handling (RFC 7807)</h2>
+      <div class="code"><div class="code-head"><span>Problem Details format</span><button class="copy">Copy</button></div><pre>HTTP/1.1 <span class="tok-num">422</span> Unprocessable Entity
+Content-Type: application/problem+json
+{
+  <span class="tok-str">"type"</span>: <span class="tok-str">"https://api.com/errors/validation"</span>,
+  <span class="tok-str">"title"</span>: <span class="tok-str">"Validation failed"</span>,
+  <span class="tok-str">"status"</span>: <span class="tok-num">422</span>,
+  <span class="tok-str">"detail"</span>: <span class="tok-str">"email is invalid"</span>,
+  <span class="tok-str">"errors"</span>: [{ <span class="tok-str">"field"</span>: <span class="tok-str">"email"</span>, <span class="tok-str">"message"</span>: <span class="tok-str">"invalid"</span> }]
+}</pre></div>
+      <div class="callout tip"><b>Consistency:</b> Use one error envelope everywhere with a machine-readable <code class="inline">type</code>/<code class="inline">code</code>, a human message, and field-level details. Never leak stack traces.</div>
+    </section>
+
+    <!-- AUTH -->
+    <section id="auth">
+      <h2><span class="num"></span> Authentication &amp; Authorization</h2>
+      <table>
+        <tr><th>Scheme</th><th>Use</th></tr>
+        <tr><td><b>API keys</b></td><td>Simple server-to-server identification</td></tr>
+        <tr><td><b>JWT (Bearer)</b></td><td>Stateless auth; signed claims</td></tr>
+        <tr><td><b>OAuth 2.0</b></td><td>Delegated access, third-party (authorization code, client credentials)</td></tr>
+        <tr><td><b>OIDC</b></td><td>Authentication layer on OAuth2 (login)</td></tr>
+        <tr><td><b>mTLS</b></td><td>Mutual certs for high-security service-to-service</td></tr>
+      </table>
+      <div class="callout warn"><b>Best practice:</b> Short-lived access tokens + refresh tokens, HTTPS only, scopes/roles for authorization, and rotate secrets. Never put tokens in URLs (logged).</div>
+    </section>
+
+    <!-- CACHING -->
+    <section id="caching">
+      <h2><span class="num"></span> Caching</h2>
+      <div class="code"><div class="code-head"><span>ETag validation (304)</span><button class="copy">Copy</button></div><pre>GET /products/42
+&lt;- 200 OK  ETag: "v3"  Cache-Control: max-age=60
+
+GET /products/42
+   If-None-Match: "v3"
+&lt;- 304 Not Modified  <span class="tok-com"># unchanged, no body -> bandwidth saved</span></pre></div>
+      <table>
+        <tr><th>Directive</th><th>Effect</th></tr>
+        <tr><td><code>Cache-Control: max-age=60</code></td><td>Fresh for 60s</td></tr>
+        <tr><td><code>no-store</code></td><td>Never cache (sensitive)</td></tr>
+        <tr><td><code>private</code> / <code>public</code></td><td>Per-user vs shared caches (CDN)</td></tr>
+        <tr><td><code>ETag</code> + <code>If-None-Match</code></td><td>Conditional revalidation</td></tr>
+      </table>
+    </section>
+
+    <!-- RATE -->
+    <section id="rate">
+      <h2><span class="num"></span> Rate Limiting</h2>
+      <ul>
+        <li>Return <code class="inline">429 Too Many Requests</code> with <code class="inline">Retry-After</code>.</li>
+        <li>Expose <code class="inline">X-RateLimit-Limit/Remaining/Reset</code> headers.</li>
+        <li>Algorithms: token bucket, leaky bucket, sliding window.</li>
+        <li>Per API key/user/IP; distributed via Redis.</li>
+      </ul>
+    </section>
+
+    <!-- SECURITY -->
+    <section id="security">
+      <h2><span class="num"></span> Security (OWASP API Top 10)</h2>
+      <table>
+        <tr><th>Risk</th><th>Mitigation</th></tr>
+        <tr><td>Broken Object-Level Auth (BOLA)</td><td>Check the user owns the resource on every request</td></tr>
+        <tr><td>Broken Authentication</td><td>Strong tokens, rotation, MFA</td></tr>
+        <tr><td>Excessive Data Exposure</td><td>Response schemas; return only needed fields</td></tr>
+        <tr><td>Mass Assignment</td><td>Whitelist writable fields</td></tr>
+        <tr><td>Injection</td><td>Validation + parameterized queries</td></tr>
+        <tr><td>Lack of Rate Limiting</td><td>Throttle + quotas</td></tr>
+        <tr><td>Security Misconfig</td><td>HTTPS, CORS allow-list, no verbose errors</td></tr>
+      </table>
+    </section>
+
+    <!-- DOCS -->
+    <section id="docs">
+      <h2><span class="num"></span> OpenAPI / Swagger</h2>
+      <div class="code"><div class="code-head"><span>OpenAPI snippet</span><button class="copy">Copy</button></div><pre>paths:
+  /users/{id}:
+    get:
+      summary: Get a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        <span class="tok-str">"200"</span>: { description: OK }
+        <span class="tok-str">"404"</span>: { description: Not found }</pre></div>
+      <div class="callout tip"><b>Contract-first:</b> OpenAPI drives interactive docs (Swagger UI), client SDK generation, mock servers, and contract testing.</div>
+    </section>
+
+    <!-- COMPARE -->
+    <section id="compare">
+      <h2><span class="num"></span> REST vs GraphQL vs gRPC</h2>
+      <table>
+        <tr><th></th><th>REST</th><th>GraphQL</th><th>gRPC</th></tr>
+        <tr><td>Transport</td><td>HTTP/JSON</td><td>HTTP/JSON</td><td>HTTP/2 + Protobuf</td></tr>
+        <tr><td>Shape</td><td>Fixed per endpoint</td><td>Client-specified</td><td>Contract (proto)</td></tr>
+        <tr><td>Over/under-fetch</td><td>Possible</td><td>Solved</td><td>Efficient binary</td></tr>
+        <tr><td>Caching</td><td>Native (HTTP)</td><td>Harder</td><td>Custom</td></tr>
+        <tr><td>Best for</td><td>Public/CRUD APIs</td><td>Flexible clients</td><td>Internal microservices</td></tr>
+      </table>
+    </section>
+
+    <!-- BEST PRACTICES -->
+    <section id="bestpractices">
+      <h2><span class="num"></span> Best Practices</h2>
+      <ul>
+        <li>Nouns + plural collections; correct HTTP methods &amp; status codes.</li>
+        <li>Version the API; never break existing clients.</li>
+        <li>Consistent error format (RFC 7807); validate all input.</li>
+        <li>Paginate list endpoints; support filtering/sorting.</li>
+        <li>Idempotency keys for unsafe retries.</li>
+        <li>Cache with ETag/Cache-Control; rate-limit.</li>
+        <li>Secure with HTTPS, auth, scopes, OWASP mitigations.</li>
+        <li>Document with OpenAPI; return <code class="inline">Location</code> on create.</li>
+      </ul>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Design Scenarios</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — Design a payments endpoint <span class="tag">Idempotency</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> Clients may retry on timeout. How do you avoid double charges?</p>
+        <details class="solution"><summary>Show approach</summary><p>Require an <code class="inline">Idempotency-Key</code> header; store key → result. On retry with the same key, return the original response. Use 201 + <code class="inline">Location</code>; 409 on conflicting keys.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Users can read others' data <span class="tag">Security</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> <code class="inline">GET /orders/{id}</code> returns any order regardless of owner.</p>
+        <details class="solution"><summary>Show approach</summary><p>Broken Object-Level Authorization (BOLA). Always verify the authenticated user owns/*may access* the resource, not just that they're logged in.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — A list endpoint times out <span class="tag">Performance</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> <code class="inline">GET /events</code> returns millions of rows.</p>
+        <details class="solution"><summary>Show approach</summary><p>Enforce pagination (cursor-based for large data), add filters, indexes, field selection, and caching. Never return unbounded lists.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>What is REST?</summary><div class="ans"><p>An architectural style using HTTP where resources have URLs and are manipulated with standard methods; stateless, cacheable, uniform interface.</p></div></details>
+      <details class="qa"><summary>PUT vs PATCH vs POST?</summary><div class="ans"><p>PUT replaces the full resource (idempotent); PATCH partially updates; POST creates or performs non-idempotent actions.</p></div></details>
+      <details class="qa"><summary>What does idempotent mean?</summary><div class="ans"><p>Repeating the request has the same effect as doing it once — GET, PUT, DELETE. Enables safe retries; POST needs an idempotency key.</p></div></details>
+      <details class="qa"><summary>Safe vs idempotent methods?</summary><div class="ans"><p>Safe = no side effects (GET, HEAD). Idempotent = repeatable without extra effect (GET, PUT, DELETE). POST is neither.</p></div></details>
+      <details class="qa"><summary>201 vs 200 vs 204?</summary><div class="ans"><p>201 Created (with <code class="inline">Location</code>) for successful creation; 200 OK for general success with a body; 204 No Content for success without a body (e.g. DELETE).</p></div></details>
+      <details class="qa"><summary>401 vs 403?</summary><div class="ans"><p>401 = not authenticated; 403 = authenticated but not authorized.</p></div></details>
+      <details class="qa"><summary>How do you version an API?</summary><div class="ans"><p>URI path (<code class="inline">/v1</code>), header, or query param. Add non-breaking changes freely; version for breaking changes and deprecate with a timeline.</p></div></details>
+      <details class="qa"><summary>What is HATEOAS?</summary><div class="ans"><p>Hypermedia As The Engine Of Application State — responses include links to related actions, so clients navigate the API dynamically (REST maturity Level 3).</p></div></details>
+      <details class="qa"><summary>Offset vs cursor pagination?</summary><div class="ans"><p>Offset (page/limit) is simple but slow/unstable on large or changing data. Cursor (keyset) uses the last item's key — stable and fast.</p></div></details>
+      <details class="qa"><summary>How do you cache REST responses?</summary><div class="ans"><p><code class="inline">Cache-Control</code> for freshness and <code class="inline">ETag</code> + <code class="inline">If-None-Match</code> for revalidation (304). CDNs cache <code class="inline">public</code> responses.</p></div></details>
+      <details class="qa"><summary>How do you secure a REST API?</summary><div class="ans"><p>HTTPS, token auth (JWT/OAuth2) with scopes, object-level authorization (avoid BOLA), input validation, rate limiting, CORS allow-list, OWASP mitigations.</p></div></details>
+      <details class="qa"><summary>REST vs GraphQL?</summary><div class="ans"><p>REST has fixed endpoints and native HTTP caching; GraphQL lets clients request exactly the fields they need (no over/under-fetching) but caching is harder.</p></div></details>
+      <details class="qa"><summary>What is content negotiation?</summary><div class="ans"><p>The client's <code class="inline">Accept</code> header tells the server which representation/version/format to return for the same resource.</p></div></details>
+      <details class="qa"><summary>Why is statelessness important?</summary><div class="ans"><p>Each request is self-contained, so any server instance can handle it — enabling horizontal scaling and simpler load balancing.</p></div></details>
+      <details class="qa"><summary>How do you handle partial failures / retries?</summary><div class="ans"><p>Idempotent design + idempotency keys, exponential backoff on the client, and clear 4xx/5xx codes with <code class="inline">Retry-After</code> where relevant.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Action</th><th>Method + Path</th><th>Success</th></tr>
+        <tr><td>List</td><td><code>GET /users</code></td><td>200</td></tr>
+        <tr><td>Get one</td><td><code>GET /users/42</code></td><td>200 / 404</td></tr>
+        <tr><td>Create</td><td><code>POST /users</code></td><td>201 + Location</td></tr>
+        <tr><td>Replace</td><td><code>PUT /users/42</code></td><td>200 / 204</td></tr>
+        <tr><td>Update</td><td><code>PATCH /users/42</code></td><td>200</td></tr>
+        <tr><td>Delete</td><td><code>DELETE /users/42</code></td><td>204</td></tr>
+        <tr><td>Validation error</td><td>—</td><td>422</td></tr>
+        <tr><td>Rate limited</td><td>—</td><td>429 + Retry-After</td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🔌 <b>REST API — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Principles, HTTP, versioning, auth, caching, security, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
