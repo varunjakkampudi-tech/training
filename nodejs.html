@@ -149,6 +149,11 @@
     <a href="#testing">Testing</a>
     <a href="#perf">Performance</a>
     <a href="#deploy">Docker &amp; Deployment</a>
+    <a class="section-title">Deep Internals</a>
+    <a href="#internals">Internals (Memory/GC/Loop)</a>
+    <a href="#childproc">Child Processes</a>
+    <a href="#observability">Config &amp; Observability</a>
+    <a href="#prodarch">Production Architecture</a>
     <a class="section-title">Interview</a>
     <a href="#scenario">Scenario Questions</a>
     <a href="#prodissues">Production Issues</a>
@@ -285,6 +290,20 @@ bus.<span class="tok-fn">emit</span>(<span class="tok-str">"order"</span>, <span
   (err) =&gt; err &amp;&amp; console.<span class="tok-fn">error</span>(err)
 );</pre></div>
       <div class="callout tip"><b>Backpressure:</b> <code class="inline">pipe</code>/<code class="inline">pipeline</code> automatically pause the source when the destination is slow — prevents memory blowups.</div>
+      <h3>Deep dive: custom streams, highWaterMark, object mode</h3>
+      <div class="code"><div class="code-head"><span>Custom Transform stream</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { Transform } = <span class="tok-fn">require</span>(<span class="tok-str">"stream"</span>);
+<span class="tok-key">const</span> upper = <span class="tok-key">new</span> <span class="tok-fn">Transform</span>({
+  highWaterMark: <span class="tok-num">16</span> * <span class="tok-num">1024</span>,   <span class="tok-com">// buffer threshold (bytes)</span>
+  objectMode: <span class="tok-key">false</span>,          <span class="tok-com">// true to stream objects, not bytes</span>
+  <span class="tok-fn">transform</span>(chunk, enc, cb) {
+    cb(<span class="tok-key">null</span>, chunk.<span class="tok-fn">toString</span>().<span class="tok-fn">toUpperCase</span>());
+  }
+});</pre></div>
+      <ul>
+        <li><b>highWaterMark</b> — the internal buffer size that triggers backpressure (default 16KB for bytes, 16 objects in object mode).</li>
+        <li><b>Object mode</b> — stream JS objects instead of buffers/strings.</li>
+        <li><b>Zero-copy</b> — <code class="inline">sendfile</code>/<code class="inline">pipe</code> avoid copying data through user space where possible.</li>
+      </ul>
     </section>
 
     <!-- FS -->
@@ -447,6 +466,76 @@ CMD [<span class="tok-str">"node"</span>, <span class="tok-str">"server.js"</spa
     </section>
 
     <!-- SCENARIO -->
+    <section id="internals">
+      <h2><span class="num"></span> Node.js Internals (Memory, GC, Loop)</h2>
+      <p class="lead">Senior interviews dig into how Node manages memory and keeps the loop healthy.</p>
+      <h3>Memory &amp; garbage collection</h3>
+      <ul>
+        <li>V8 heap is generational: <b>new space</b> (fast scavenge) + <b>old space</b> (mark-sweep-compact). Most objects die young.</li>
+        <li>Default old-space cap ~1.5–2GB; raise with <code class="inline">--max-old-space-size=4096</code>.</li>
+        <li>Long GC pauses cause latency spikes — avoid huge live object sets and churn.</li>
+        <li>Inspect with <code class="inline">process.memoryUsage()</code> (rss, heapUsed, external).</li>
+      </ul>
+      <h3>Event loop starvation</h3>
+      <div class="callout warn"><b>Starvation:</b> Excessive <code class="inline">process.nextTick</code>/microtasks or a long synchronous block prevents the poll phase from running, starving I/O. Break big work into chunks (<code class="inline">setImmediate</code>) or move it to a worker.</div>
+      <h3>Thread pool sizing</h3>
+      <div class="code"><div class="code-head"><span>UV_THREADPOOL_SIZE</span><button class="copy">Copy</button></div><pre><span class="tok-com"># Default 4 threads serve fs, crypto, dns, zlib.</span>
+<span class="tok-com"># Raise for crypto/compression-heavy workloads (max 1024):</span>
+UV_THREADPOOL_SIZE=<span class="tok-num">16</span> node server.js</pre></div>
+    </section>
+
+    <section id="childproc">
+      <h2><span class="num"></span> Child Processes</h2>
+      <table>
+        <tr><th>API</th><th>Use</th></tr>
+        <tr><td><code>spawn</code></td><td>Stream large output; long-running processes</td></tr>
+        <tr><td><code>exec</code></td><td>Buffered output for short commands (shell)</td></tr>
+        <tr><td><code>execFile</code></td><td>Run a binary without a shell (safer)</td></tr>
+        <tr><td><code>fork</code></td><td>Spawn a Node child with an IPC channel</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>spawn vs fork</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> { spawn, fork } = <span class="tok-fn">require</span>(<span class="tok-str">"child_process"</span>);
+<span class="tok-key">const</span> ls = <span class="tok-fn">spawn</span>(<span class="tok-str">"ls"</span>, [<span class="tok-str">"-la"</span>]);
+ls.stdout.<span class="tok-fn">on</span>(<span class="tok-str">"data"</span>, d =&gt; process.stdout.<span class="tok-fn">write</span>(d));
+
+<span class="tok-key">const</span> child = <span class="tok-fn">fork</span>(<span class="tok-str">"./worker.js"</span>); <span class="tok-com">// Node child + IPC</span>
+child.<span class="tok-fn">send</span>({ job: <span class="tok-num">1</span> });</pre></div>
+      <div class="callout"><b>Child process vs worker thread:</b> use <b>child_process</b> to run other programs/isolate crashes; use <b>worker threads</b> for CPU-bound JS sharing memory.</div>
+    </section>
+
+    <section id="observability">
+      <h2><span class="num"></span> Configuration &amp; Observability</h2>
+      <ul>
+        <li><b>Config:</b> 12-factor env vars, validated at boot (zod/envalid); separate per environment; secrets from a manager.</li>
+        <li><b>Health/readiness probes:</b> <code class="inline">/healthz</code> (liveness) and <code class="inline">/readyz</code> (deps ready) for Kubernetes.</li>
+        <li><b>Metrics:</b> Prometheus (<code class="inline">prom-client</code>) or OpenTelemetry — latency, throughput, error rate, event-loop lag.</li>
+        <li><b>Tracing/logging:</b> correlation/request IDs propagated across services; structured JSON logs.</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>Health + readiness</span><button class="copy">Copy</button></div><pre>app.<span class="tok-fn">get</span>(<span class="tok-str">"/healthz"</span>, (_, res) =&gt; res.<span class="tok-fn">sendStatus</span>(<span class="tok-num">200</span>));
+app.<span class="tok-fn">get</span>(<span class="tok-str">"/readyz"</span>, <span class="tok-key">async</span> (_, res) =&gt; {
+  <span class="tok-key">try</span> { <span class="tok-key">await</span> db.<span class="tok-fn">ping</span>(); res.<span class="tok-fn">sendStatus</span>(<span class="tok-num">200</span>); }
+  <span class="tok-key">catch</span> { res.<span class="tok-fn">sendStatus</span>(<span class="tok-num">503</span>); }
+});</pre></div>
+    </section>
+
+    <section id="prodarch">
+      <h2><span class="num"></span> Production Architecture</h2>
+      <table>
+        <tr><th>Concern</th><th>Practice</th></tr>
+        <tr><td>API versioning</td><td><code>/api/v1</code>, avoid breaking changes</td></tr>
+        <tr><td>Idempotency</td><td>Idempotency-Key header for safe retries on POST</td></tr>
+        <tr><td>Zero-downtime deploy</td><td>Rolling/blue-green, drain on SIGTERM</td></tr>
+        <tr><td>Resilience</td><td>Retry with backoff + circuit breaker (opossum)</td></tr>
+        <tr><td>Rate limiting</td><td>Per-user/IP, distributed via Redis</td></tr>
+        <tr><td>Queues</td><td>BullMQ for background jobs / decoupling</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Graceful shutdown</span><button class="copy">Copy</button></div><pre>process.<span class="tok-fn">on</span>(<span class="tok-str">"SIGTERM"</span>, <span class="tok-key">async</span> () =&gt; {
+  server.<span class="tok-fn">close</span>();          <span class="tok-com">// stop accepting new connections</span>
+  <span class="tok-key">await</span> db.<span class="tok-fn">close</span>();          <span class="tok-com">// drain resources</span>
+  process.<span class="tok-fn">exit</span>(<span class="tok-num">0</span>);
+});</pre></div>
+    </section>
+
+    <!-- SCENARIO -->
     <section id="scenario">
       <h2><span class="num"></span> Scenario-Based Questions</h2>
       <div class="problem"><div class="p-head">Scenario 1 — API is slow under load <span class="tag">Performance</span></div><div class="p-body">
@@ -494,6 +583,19 @@ CMD [<span class="tok-str">"node"</span>, <span class="tok-str">"server.js"</spa
       <details class="qa"><summary>What is the difference between exports and module.exports?</summary><div class="ans"><p><code class="inline">module.exports</code> is the actual exported object; <code class="inline">exports</code> is a reference to it. Reassigning <code class="inline">exports</code> breaks the link — assign to <code class="inline">module.exports</code>.</p></div></details>
       <details class="qa"><summary>How do you do graceful shutdown?</summary><div class="ans"><p>Listen for SIGTERM/SIGINT, stop accepting new connections (<code class="inline">server.close</code>), drain in-flight requests, close DB/Redis, then exit.</p></div></details>
       <details class="qa"><summary>What is the thread pool used for?</summary><div class="ans"><p>libuv's pool (default 4, <code class="inline">UV_THREADPOOL_SIZE</code>) runs blocking ops like file I/O, DNS, crypto, and compression off the main thread.</p></div></details>
+      <details class="qa"><summary>How does Node manage memory / GC?</summary><div class="ans"><p>V8 uses a generational heap: fast scavenges of new space and mark-sweep-compact of old space. Tune old-space with <code class="inline">--max-old-space-size</code>; watch <code class="inline">process.memoryUsage()</code>.</p></div></details>
+      <details class="qa"><summary>What is event loop starvation?</summary><div class="ans"><p>When microtasks/<code class="inline">nextTick</code> or a long sync block prevent the poll phase from processing I/O. Chunk work with <code class="inline">setImmediate</code> or offload to a worker.</p></div></details>
+      <details class="qa"><summary>spawn vs exec vs fork?</summary><div class="ans"><p><code class="inline">spawn</code> streams output (large/long); <code class="inline">exec</code> buffers output for short shell commands; <code class="inline">fork</code> spawns a Node child with an IPC channel.</p></div></details>
+      <details class="qa"><summary>Child process vs worker thread?</summary><div class="ans"><p>Child processes are isolated OS processes (run other programs, crash isolation); worker threads share memory in-process and suit CPU-bound JS.</p></div></details>
+      <details class="qa"><summary>What is highWaterMark?</summary><div class="ans"><p>The internal buffer size that triggers backpressure in a stream (default 16KB for bytes, 16 for object mode).</p></div></details>
+      <details class="qa"><summary>How do you make an endpoint idempotent?</summary><div class="ans"><p>Accept an <code class="inline">Idempotency-Key</code>, store the result per key, and return the cached response on retries — so duplicate POSTs don't double-process.</p></div></details>
+      <details class="qa"><summary>What is a circuit breaker?</summary><div class="ans"><p>A resilience pattern that stops calling a failing dependency after a threshold, returning fast/fallback, then probes to recover — preventing cascading failures (e.g. opossum).</p></div></details>
+      <details class="qa"><summary>Liveness vs readiness probe?</summary><div class="ans"><p>Liveness (<code class="inline">/healthz</code>) says the process is alive; readiness (<code class="inline">/readyz</code>) says dependencies are ready to serve traffic. Orchestrators use them to restart/route.</p></div></details>
+      <details class="qa"><summary>How do you achieve zero-downtime deploys?</summary><div class="ans"><p>Rolling or blue-green deployments, health checks, and graceful shutdown (drain in-flight requests on SIGTERM before exit).</p></div></details>
+      <details class="qa"><summary>How do you observe a Node service in prod?</summary><div class="ans"><p>Metrics (Prometheus/OpenTelemetry: latency, error rate, event-loop lag), structured logs with correlation IDs, and distributed tracing.</p></div></details>
+      <details class="qa"><summary>What is Buffer?</summary><div class="ans"><p>A fixed-length raw binary data container outside the V8 heap, used for file/network I/O and binary protocols.</p></div></details>
+      <details class="qa"><summary>How do background jobs work in Node?</summary><div class="ans"><p>Push work to a queue (BullMQ + Redis) and process it in separate worker processes — decoupling request latency from heavy tasks.</p></div></details>
+      <details class="qa"><summary>Why avoid blocking the event loop?</summary><div class="ans"><p>It's single-threaded — one slow synchronous operation stalls every concurrent request. Use async APIs, streams, and workers.</p></div></details>
     </section>
 
     <!-- CHEAT SHEET -->
