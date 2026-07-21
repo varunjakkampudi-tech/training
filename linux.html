@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete Linux Administration handbook — filesystem, permissions, processes, systemd, packages, networking, storage, shell scripting, cron, logs, security, and 100+ interview questions." />
+<title>Linux Administration — The Complete Hands-On Guide</title>
+<style>
+  :root {
+    --blue: #16a34a; --blue-dark: #14532d; --blue-mid: #22c55e; --sky: #4ade80;
+    --light-blue: #dcfce7; --light-blue-2: #f0fdf4;
+    --bg: #ffffff; --bg-soft: #f5fdf8; --panel: #ffffff;
+    --text: #0f2a19; --muted: #4b6b58; --border: #c6ecd3;
+    --code-bg: #0b1a12; --accent: #f59e0b; --danger: #e53935; --green: #2e9e5b;
+    --shadow: 0 8px 24px rgba(22, 163, 74, 0.10); --shadow-lg: 0 14px 40px rgba(20, 83, 45, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 300px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.1rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-dark); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: 0.9rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(34, 197, 94, 0.18), transparent), linear-gradient(160deg, #d6f5e1, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.7rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { color: var(--blue-mid); }
+  header.hero p { max-width: 760px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-dark); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--blue)); color: #fff; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.25rem; color: var(--blue); margin: 28px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  code.inline { background: var(--light-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #17402b; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #07160e; border-bottom: 1px solid #17402b; font-size: 0.75rem; color: #86efac; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #dcf6e6; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #216040; color: #86efac; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(74,222,128,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #6f977f; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-cmd { color: #86efac; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #164a2e; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+  .problem { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; overflow: hidden; box-shadow: var(--shadow); background: #fff; }
+  .problem .p-head { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); color: #fff; padding: 12px 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .problem .p-head .tag { margin-left: auto; font-size: 0.7rem; background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .problem .p-body { padding: 16px 18px; }
+  .problem .p-body .prompt { color: #164a2e; margin-bottom: 4px; }
+  details.solution { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  details.solution summary { cursor: pointer; color: var(--blue); font-weight: 700; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.solution summary::before { content: "▶"; font-size: 0.7rem; transition: transform 0.15s; }
+  details.solution[open] summary::before { transform: rotate(90deg); }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #2b5340; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-dark); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 1.8rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🐧 Linux Admin Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">Overview</a>
+    <a href="#fhs">Filesystem (FHS)</a>
+    <a href="#files">File Commands</a>
+    <a href="#permissions">Permissions</a>
+    <a class="section-title">System</a>
+    <a href="#users">Users &amp; Groups</a>
+    <a href="#processes">Processes</a>
+    <a href="#systemd">systemd &amp; Services</a>
+    <a href="#packages">Package Management</a>
+    <a class="section-title">Resources</a>
+    <a href="#networking">Networking</a>
+    <a href="#storage">Disk &amp; Storage</a>
+    <a href="#logs">Logs &amp; Journald</a>
+    <a class="section-title">Automation</a>
+    <a href="#text">Text Processing</a>
+    <a href="#scripting">Shell Scripting</a>
+    <a href="#cron">Cron &amp; Scheduling</a>
+    <a class="section-title">Security &amp; Ops</a>
+    <a href="#ssh">SSH &amp; Access</a>
+    <a href="#firewall">Firewall &amp; Hardening</a>
+    <a href="#monitoring">Monitoring &amp; Troubleshooting</a>
+    <a class="section-title">Interview</a>
+    <a href="#scenario">Scenario Questions</a>
+    <a href="#interview">Interview Questions</a>
+    <a href="#cheatsheet">Cheat Sheet</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">Linux Administration</span> Guide</h1>
+    <p>Filesystem, permissions, processes, systemd, package management, networking, storage, shell scripting, cron, logs, SSH, firewall hardening, and troubleshooting — with 100+ interview questions. The DevOps/backend Linux handbook.</p>
+    <div class="badges">
+      <span class="badge">Permissions</span>
+      <span class="badge">systemd</span>
+      <span class="badge">Networking</span>
+      <span class="badge">Shell Scripting</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <h2><span class="num"></span> Overview</h2>
+      <p class="lead">Linux runs most servers, containers, and cloud infrastructure. Administration means managing files, users, processes, services, networking, storage, and security from the command line.</p>
+      <table>
+        <tr><th>Concept</th><th>Meaning</th></tr>
+        <tr><td>Kernel</td><td>Core that manages hardware, processes, memory</td></tr>
+        <tr><td>Shell</td><td>Command interpreter (bash, zsh)</td></tr>
+        <tr><td>Distro</td><td>Kernel + tools (Ubuntu/Debian, RHEL/CentOS, Alpine)</td></tr>
+        <tr><td>Everything is a file</td><td>Devices, sockets, processes exposed as files</td></tr>
+      </table>
+      <div class="callout tip"><b>Interview importance:</b> permissions, processes/systemd, networking, log/troubleshooting, and shell scripting are the most-asked Linux admin topics.</div>
+    </section>
+
+    <!-- FHS -->
+    <section id="fhs">
+      <h2><span class="num"></span> Filesystem Hierarchy (FHS)</h2>
+      <table>
+        <tr><th>Path</th><th>Contains</th></tr>
+        <tr><td><code>/</code></td><td>Root of everything</td></tr>
+        <tr><td><code>/etc</code></td><td>System config files</td></tr>
+        <tr><td><code>/var</code></td><td>Logs, spool, variable data (<code>/var/log</code>)</td></tr>
+        <tr><td><code>/home</code></td><td>User home directories</td></tr>
+        <tr><td><code>/usr</code></td><td>User binaries &amp; libraries</td></tr>
+        <tr><td><code>/bin</code>, <code>/sbin</code></td><td>Essential / admin binaries</td></tr>
+        <tr><td><code>/tmp</code></td><td>Temporary files (cleared on reboot)</td></tr>
+        <tr><td><code>/proc</code>, <code>/sys</code></td><td>Kernel/process virtual filesystems</td></tr>
+        <tr><td><code>/dev</code></td><td>Device files</td></tr>
+        <tr><td><code>/opt</code>, <code>/srv</code></td><td>Optional/third-party &amp; served data</td></tr>
+      </table>
+    </section>
+
+    <!-- FILES -->
+    <section id="files">
+      <h2><span class="num"></span> File &amp; Directory Commands</h2>
+      <div class="code"><div class="code-head"><span>Navigation &amp; manipulation</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">ls</span> -lah          <span class="tok-com"># list all, long, human sizes</span>
+<span class="tok-cmd">cd</span> /var/log; <span class="tok-cmd">pwd</span>
+<span class="tok-cmd">cp</span> -r src dst      <span class="tok-com"># recursive copy</span>
+<span class="tok-cmd">mv</span> a b            <span class="tok-com"># move/rename</span>
+<span class="tok-cmd">rm</span> -rf dir        <span class="tok-com"># ⚠️ recursive force delete</span>
+<span class="tok-cmd">mkdir</span> -p a/b/c    <span class="tok-com"># create nested dirs</span>
+<span class="tok-cmd">ln</span> -s target link <span class="tok-com"># symbolic link</span>
+<span class="tok-cmd">find</span> /var -name <span class="tok-str">"*.log"</span> -mtime +7 -delete <span class="tok-com"># old logs</span></pre></div>
+      <div class="code"><div class="code-head"><span>Viewing files</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">cat</span> file        <span class="tok-com"># whole file</span>
+<span class="tok-cmd">less</span> file       <span class="tok-com"># paged viewer</span>
+<span class="tok-cmd">head</span> -n 20 file  <span class="tok-cmd">tail</span> -f app.log  <span class="tok-com"># follow live logs</span>
+<span class="tok-cmd">wc</span> -l file       <span class="tok-com"># line count</span></pre></div>
+      <div class="callout warn"><b>Danger:</b> <code class="inline">rm -rf /</code> or a stray space (<code class="inline">rm -rf / tmp</code>) can wipe the system. Double-check paths; prefer <code class="inline">trash-cli</code> where possible.</div>
+    </section>
+
+    <!-- PERMISSIONS -->
+    <section id="permissions">
+      <h2><span class="num"></span> Permissions &amp; Ownership</h2>
+      <div class="code"><div class="code-head"><span>Reading ls -l output</span><button class="copy">Copy</button></div><pre>-rwxr-xr--  1 alice devs  4096 Jul 21 file
+ │└┬┘└┬┘└┬┘     owner group
+ │ │  │  └ others: r--  (read)
+ │ │  └── group:  r-x  (read, execute)
+ │ └───── owner:  rwx  (read, write, execute)
+ └─────── type: - file, d dir, l link</pre></div>
+      <div class="code"><div class="code-head"><span>chmod / chown / umask</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">chmod</span> 755 script.sh   <span class="tok-com"># rwx r-x r-x (owner all, others read+exec)</span>
+<span class="tok-cmd">chmod</span> u+x,g-w file    <span class="tok-com"># symbolic</span>
+<span class="tok-cmd">chown</span> alice:devs file <span class="tok-com"># owner:group</span>
+<span class="tok-cmd">umask</span> 022            <span class="tok-com"># default: new files 644, dirs 755</span></pre></div>
+      <table>
+        <tr><th>Octal</th><th>Perm</th></tr>
+        <tr><td>7</td><td>rwx</td></tr>
+        <tr><td>6</td><td>rw-</td></tr>
+        <tr><td>5</td><td>r-x</td></tr>
+        <tr><td>4</td><td>r--</td></tr>
+      </table>
+      <div class="callout tip"><b>Special bits:</b> <code class="inline">setuid</code> (4xxx) runs as owner, <code class="inline">setgid</code> (2xxx) inherits group, <code class="inline">sticky</code> (1xxx, on <code class="inline">/tmp</code>) only owner can delete their files.</div>
+    </section>
+
+    <!-- USERS -->
+    <section id="users">
+      <h2><span class="num"></span> Users &amp; Groups</h2>
+      <div class="code"><div class="code-head"><span>User management</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">sudo</span> useradd -m -s /bin/bash alice  <span class="tok-com"># create with home + shell</span>
+<span class="tok-cmd">sudo</span> passwd alice
+<span class="tok-cmd">sudo</span> usermod -aG sudo alice        <span class="tok-com"># add to sudo group</span>
+<span class="tok-cmd">sudo</span> userdel -r alice             <span class="tok-com"># delete + home</span>
+<span class="tok-cmd">id</span> alice;  <span class="tok-cmd">groups</span> alice;  <span class="tok-cmd">whoami</span></pre></div>
+      <table>
+        <tr><th>File</th><th>Holds</th></tr>
+        <tr><td><code>/etc/passwd</code></td><td>User accounts</td></tr>
+        <tr><td><code>/etc/shadow</code></td><td>Password hashes</td></tr>
+        <tr><td><code>/etc/group</code></td><td>Groups</td></tr>
+        <tr><td><code>/etc/sudoers</code></td><td>sudo rules (edit with <code>visudo</code>)</td></tr>
+      </table>
+    </section>
+
+    <!-- PROCESSES -->
+    <section id="processes">
+      <h2><span class="num"></span> Processes &amp; Signals</h2>
+      <div class="code"><div class="code-head"><span>Inspect &amp; control</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">ps</span> aux              <span class="tok-com"># all processes</span>
+<span class="tok-cmd">top</span> / <span class="tok-cmd">htop</span>          <span class="tok-com"># live resource view</span>
+<span class="tok-cmd">kill</span> -9 &lt;pid&gt;       <span class="tok-com"># SIGKILL (force)</span>
+<span class="tok-cmd">kill</span> -15 &lt;pid&gt;      <span class="tok-com"># SIGTERM (graceful)</span>
+<span class="tok-cmd">pkill</span> -f node       <span class="tok-com"># by name/pattern</span>
+<span class="tok-cmd">nice</span> -n 10 cmd;  <span class="tok-cmd">renice</span> -n 5 -p &lt;pid&gt; <span class="tok-com"># priority</span>
+<span class="tok-cmd">jobs</span>;  <span class="tok-cmd">bg</span>;  <span class="tok-cmd">fg</span>;  cmd &amp;   <span class="tok-com"># job control</span>
+<span class="tok-cmd">nohup</span> cmd &amp;         <span class="tok-com"># survive logout</span></pre></div>
+      <table>
+        <tr><th>Signal</th><th>Meaning</th></tr>
+        <tr><td>SIGTERM (15)</td><td>Ask to stop gracefully</td></tr>
+        <tr><td>SIGKILL (9)</td><td>Force kill (can't be caught)</td></tr>
+        <tr><td>SIGHUP (1)</td><td>Reload config</td></tr>
+        <tr><td>SIGINT (2)</td><td>Ctrl+C interrupt</td></tr>
+      </table>
+    </section>
+
+    <!-- SYSTEMD -->
+    <section id="systemd">
+      <h2><span class="num"></span> systemd &amp; Services</h2>
+      <div class="code"><div class="code-head"><span>Manage services</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">sudo</span> systemctl start|stop|restart nginx
+<span class="tok-cmd">sudo</span> systemctl enable nginx    <span class="tok-com"># start on boot</span>
+<span class="tok-cmd">systemctl</span> status nginx
+<span class="tok-cmd">systemctl</span> list-units --type=service --state=running
+<span class="tok-cmd">journalctl</span> -u nginx -f        <span class="tok-com"># follow service logs</span></pre></div>
+      <div class="code"><div class="code-head"><span>Custom unit: /etc/systemd/system/app.service</span><button class="copy">Copy</button></div><pre>[Unit]
+Description=My Node App
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /srv/app/server.js
+Restart=always
+User=app
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target</pre></div>
+      <div class="callout tip"><b>After editing units:</b> <code class="inline">sudo systemctl daemon-reload</code> then <code class="inline">enable --now app</code>. Use <code class="inline">Restart=always</code> for crash recovery.</div>
+    </section>
+
+    <!-- PACKAGES -->
+    <section id="packages">
+      <h2><span class="num"></span> Package Management</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Debian/Ubuntu (apt)</h4>
+          <div class="code"><div class="code-head"><span>apt</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">sudo</span> apt update &amp;&amp; sudo apt upgrade
+<span class="tok-cmd">sudo</span> apt install nginx
+<span class="tok-cmd">sudo</span> apt remove nginx
+<span class="tok-cmd">apt</span> search &lt;pkg&gt;</pre></div>
+        </div>
+        <div class="vs-card b"><h4>RHEL/CentOS (dnf/yum)</h4>
+          <div class="code"><div class="code-head"><span>dnf</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">sudo</span> dnf update
+<span class="tok-cmd">sudo</span> dnf install nginx
+<span class="tok-cmd">sudo</span> dnf remove nginx
+<span class="tok-cmd">dnf</span> search &lt;pkg&gt;</pre></div>
+        </div>
+      </div>
+      <div class="callout"><b>Also:</b> <code class="inline">apk</code> (Alpine), <code class="inline">snap</code>/<code class="inline">flatpak</code> (universal), <code class="inline">dpkg -i</code>/<code class="inline">rpm -i</code> (local packages).</div>
+    </section>
+
+    <!-- NETWORKING -->
+    <section id="networking">
+      <h2><span class="num"></span> Networking</h2>
+      <div class="code"><div class="code-head"><span>Inspect &amp; test</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">ip</span> a               <span class="tok-com"># interfaces &amp; IPs (replaces ifconfig)</span>
+<span class="tok-cmd">ip</span> route          <span class="tok-com"># routing table</span>
+<span class="tok-cmd">ss</span> -tulpn          <span class="tok-com"># listening ports + processes</span>
+<span class="tok-cmd">ping</span> host;  <span class="tok-cmd">traceroute</span> host
+<span class="tok-cmd">curl</span> -I https://site.com   <span class="tok-com"># headers only</span>
+<span class="tok-cmd">dig</span> site.com;  <span class="tok-cmd">nslookup</span> site.com  <span class="tok-com"># DNS</span>
+<span class="tok-cmd">nc</span> -zv host 443    <span class="tok-com"># port connectivity check</span></pre></div>
+      <table>
+        <tr><th>Task</th><th>Command</th></tr>
+        <tr><td>Who's on a port</td><td><code>ss -tulpn | grep :80</code></td></tr>
+        <tr><td>Test HTTP</td><td><code>curl -v host</code></td></tr>
+        <tr><td>DNS lookup</td><td><code>dig +short host</code></td></tr>
+        <tr><td>Download</td><td><code>wget</code> / <code>curl -O</code></td></tr>
+      </table>
+    </section>
+
+    <!-- STORAGE -->
+    <section id="storage">
+      <h2><span class="num"></span> Disk &amp; Storage</h2>
+      <div class="code"><div class="code-head"><span>Space &amp; mounts</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">df</span> -h              <span class="tok-com"># disk free per filesystem</span>
+<span class="tok-cmd">du</span> -sh /var/*      <span class="tok-com"># dir sizes (find space hogs)</span>
+<span class="tok-cmd">lsblk</span>;  <span class="tok-cmd">blkid</span>       <span class="tok-com"># block devices / UUIDs</span>
+<span class="tok-cmd">mount</span> /dev/sdb1 /mnt
+<span class="tok-cmd">sudo</span> mkfs.ext4 /dev/sdb1   <span class="tok-com"># format</span>
+<span class="tok-com"># persist mounts in /etc/fstab (by UUID)</span></pre></div>
+      <div class="callout warn"><b>Full disk?</b> <code class="inline">df -h</code> shows which FS is full, <code class="inline">du -sh /var/* | sort -h</code> finds the hog. Watch out for large logs, <code class="inline">/tmp</code>, and deleted-but-open files (<code class="inline">lsof | grep deleted</code>).</div>
+    </section>
+
+    <!-- LOGS -->
+    <section id="logs">
+      <h2><span class="num"></span> Logs &amp; journald</h2>
+      <div class="code"><div class="code-head"><span>Where to look</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">journalctl</span> -xe            <span class="tok-com"># recent errors</span>
+<span class="tok-cmd">journalctl</span> -u ssh --since <span class="tok-str">"1 hour ago"</span>
+<span class="tok-cmd">tail</span> -f /var/log/syslog     <span class="tok-com"># Debian</span>
+<span class="tok-cmd">tail</span> -f /var/log/messages   <span class="tok-com"># RHEL</span>
+<span class="tok-cmd">dmesg</span> -T                   <span class="tok-com"># kernel ring buffer</span></pre></div>
+      <div class="callout tip"><b>Rotate logs</b> with <code class="inline">logrotate</code> (<code class="inline">/etc/logrotate.d/</code>) so they don't fill the disk.</div>
+    </section>
+
+    <!-- TEXT -->
+    <section id="text">
+      <h2><span class="num"></span> Text Processing (grep/sed/awk)</h2>
+      <div class="code"><div class="code-head"><span>The power trio + pipes</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">grep</span> -rin <span class="tok-str">"error"</span> /var/log   <span class="tok-com"># recursive, case-insensitive, line #</span>
+<span class="tok-cmd">sed</span> -i <span class="tok-str">'s/old/new/g'</span> file    <span class="tok-com"># in-place replace</span>
+<span class="tok-cmd">awk</span> <span class="tok-str">'{print $1, $9}'</span> access.log  <span class="tok-com"># columns</span>
+
+<span class="tok-com"># pipeline: top 10 IPs hitting the server</span>
+<span class="tok-cmd">awk</span> <span class="tok-str">'{print $1}'</span> access.log | <span class="tok-cmd">sort</span> | <span class="tok-cmd">uniq</span> -c | <span class="tok-cmd">sort</span> -rn | <span class="tok-cmd">head</span></pre></div>
+    </section>
+
+    <!-- SCRIPTING -->
+    <section id="scripting">
+      <h2><span class="num"></span> Shell Scripting (bash)</h2>
+      <div class="code"><div class="code-head"><span>backup.sh</span><button class="copy">Copy</button></div><pre>#!/usr/bin/env bash
+set -euo pipefail            <span class="tok-com"># exit on error/unset/pipe fail</span>
+
+SRC=<span class="tok-str">"/srv/app"</span>
+DEST=<span class="tok-str">"/backups"</span>
+DATE=$(date +%F)
+
+<span class="tok-key">if</span> [[ ! -d <span class="tok-str">"$DEST"</span> ]]; <span class="tok-key">then</span> mkdir -p <span class="tok-str">"$DEST"</span>; <span class="tok-key">fi</span>
+
+tar -czf <span class="tok-str">"$DEST/app-$DATE.tar.gz"</span> <span class="tok-str">"$SRC"</span>
+<span class="tok-key">for</span> f <span class="tok-key">in</span> <span class="tok-str">"$DEST"</span>/*.tar.gz; <span class="tok-key">do</span>
+  echo <span class="tok-str">"backup: $f"</span>
+<span class="tok-key">done</span>
+echo <span class="tok-str">"Done ✓"</span></pre></div>
+      <div class="callout tip"><b>Always</b> start scripts with <code class="inline">set -euo pipefail</code>, quote variables (<code class="inline">"$var"</code>), and check with <b>shellcheck</b>.</div>
+    </section>
+
+    <!-- CRON -->
+    <section id="cron">
+      <h2><span class="num"></span> Cron &amp; Scheduling</h2>
+      <div class="code"><div class="code-head"><span>crontab -e</span><button class="copy">Copy</button></div><pre><span class="tok-com"># ┌ min ┌ hour ┌ day ┌ month ┌ weekday</span>
+<span class="tok-num">0</span> <span class="tok-num">2</span> * * *   /srv/backup.sh          <span class="tok-com"># every day 02:00</span>
+*/<span class="tok-num">5</span> * * * *  /srv/health.sh          <span class="tok-com"># every 5 min</span>
+<span class="tok-num">0</span> <span class="tok-num">0</span> * * <span class="tok-num">0</span>   /srv/weekly.sh          <span class="tok-com"># Sunday midnight</span></pre></div>
+      <div class="callout"><b>Alternatives:</b> systemd <b>timers</b> (better logging/dependencies), <code class="inline">at</code> for one-off jobs, <code class="inline">anacron</code> for machines not always on.</div>
+    </section>
+
+    <!-- SSH -->
+    <section id="ssh">
+      <h2><span class="num"></span> SSH &amp; Remote Access</h2>
+      <div class="code"><div class="code-head"><span>Key-based login &amp; transfer</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">ssh-keygen</span> -t ed25519          <span class="tok-com"># generate key pair</span>
+<span class="tok-cmd">ssh-copy-id</span> user@host           <span class="tok-com"># install public key</span>
+<span class="tok-cmd">ssh</span> user@host -p 2222
+<span class="tok-cmd">scp</span> file user@host:/path        <span class="tok-com"># copy over ssh</span>
+<span class="tok-cmd">rsync</span> -avz src/ user@host:/dst  <span class="tok-com"># efficient sync</span></pre></div>
+      <div class="callout warn"><b>Harden SSH</b> (<code class="inline">/etc/ssh/sshd_config</code>): disable root login (<code class="inline">PermitRootLogin no</code>), disable password auth (keys only), change default port, and use <b>fail2ban</b>.</div>
+    </section>
+
+    <!-- FIREWALL -->
+    <section id="firewall">
+      <h2><span class="num"></span> Firewall &amp; Hardening</h2>
+      <div class="code"><div class="code-head"><span>ufw / firewalld</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">sudo</span> ufw allow 22/tcp;  sudo ufw allow 443/tcp
+<span class="tok-cmd">sudo</span> ufw enable;  sudo ufw status
+<span class="tok-com"># RHEL: firewall-cmd --add-service=https --permanent; --reload</span></pre></div>
+      <ul>
+        <li>Least privilege: only open needed ports; deny by default.</li>
+        <li>Keep packages patched (<code class="inline">unattended-upgrades</code>).</li>
+        <li>Use <b>fail2ban</b> against brute force; SELinux/AppArmor for MAC.</li>
+        <li>Least-sudo; audit with <code class="inline">auditd</code>.</li>
+      </ul>
+    </section>
+
+    <!-- MONITORING -->
+    <section id="monitoring">
+      <h2><span class="num"></span> Monitoring &amp; Troubleshooting</h2>
+      <div class="code"><div class="code-head"><span>Resource inspection</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">top</span> / <span class="tok-cmd">htop</span>       <span class="tok-com"># CPU/mem live</span>
+<span class="tok-cmd">free</span> -h          <span class="tok-com"># memory</span>
+<span class="tok-cmd">vmstat</span> 1;  <span class="tok-cmd">iostat</span>  <span class="tok-com"># CPU/IO</span>
+<span class="tok-cmd">uptime</span>;  <span class="tok-cmd">w</span>       <span class="tok-com"># load average, who's on</span>
+<span class="tok-cmd">lsof</span> -i :8080     <span class="tok-com"># what's using a port</span>
+<span class="tok-cmd">strace</span> -p &lt;pid&gt;    <span class="tok-com"># syscalls of a process</span></pre></div>
+      <div class="callout tip"><b>Load average</b> (1/5/15 min) &gt; number of CPU cores = overloaded. Correlate with <code class="inline">top</code> (CPU vs IO wait) to find the cause.</div>
+    </section>
+
+    <!-- SCENARIO -->
+    <section id="scenario">
+      <h2><span class="num"></span> Scenario-Based Questions</h2>
+      <div class="problem"><div class="p-head">Scenario 1 — Disk is 100% full <span class="tag">Storage</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> An app crashes; the server disk is full. How do you find &amp; fix it?</p>
+        <details class="solution"><summary>Show approach</summary><p><code class="inline">df -h</code> to find the full FS, <code class="inline">du -sh /* | sort -h</code> (then drill down) to find the hog — usually logs. Truncate/rotate logs, remove old files, check deleted-but-open files with <code class="inline">lsof | grep deleted</code> (restart the holder). Add <code class="inline">logrotate</code> + alerts.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 2 — Service won't start <span class="tag">systemd</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> <code class="inline">systemctl start app</code> fails.</p>
+        <details class="solution"><summary>Show approach</summary><p><code class="inline">systemctl status app</code> and <code class="inline">journalctl -u app -e</code> for the error. Common causes: wrong <code class="inline">ExecStart</code> path, permission/user issue, port already in use (<code class="inline">ss -tulpn</code>), missing env/config. Fix, <code class="inline">daemon-reload</code>, restart.</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 3 — High load / slow server <span class="tag">Performance</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> The server is sluggish; load average is high.</p>
+        <details class="solution"><summary>Show approach</summary><p><code class="inline">uptime</code>/<code class="inline">top</code> — is it CPU, memory, or IO wait? <code class="inline">free -h</code> for swap thrash, <code class="inline">iostat</code> for disk, <code class="inline">ps</code> to find the hog. Kill/renice the offender, add resources, or fix the root cause (runaway process, memory leak).</p></details>
+      </div></div>
+      <div class="problem"><div class="p-head">Scenario 4 — Can't reach a service on a port <span class="tag">Networking</span></div><div class="p-body">
+        <p class="prompt"><b>Q:</b> A client can't connect to your app on :8080.</p>
+        <details class="solution"><summary>Show approach</summary><p>Is it listening? <code class="inline">ss -tulpn | grep 8080</code>. Bound to <code class="inline">0.0.0.0</code> or just localhost? Firewall open? <code class="inline">ufw status</code>. Test locally (<code class="inline">curl localhost:8080</code>) then remotely (<code class="inline">nc -zv host 8080</code>). Check security groups if cloud.</p></details>
+      </div></div>
+    </section>
+
+    <!-- INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Top Interview Questions</h2>
+      <details class="qa"><summary>Explain Linux file permissions.</summary><div class="ans"><p>Each file has read/write/execute for owner, group, others (e.g. <code class="inline">rwxr-xr--</code> = 754). Set with <code class="inline">chmod</code> (octal or symbolic); ownership with <code class="inline">chown</code>.</p></div></details>
+      <details class="qa"><summary>SIGTERM vs SIGKILL?</summary><div class="ans"><p>SIGTERM (15) asks a process to stop gracefully (can clean up); SIGKILL (9) forcibly terminates it and can't be caught. Try TERM first.</p></div></details>
+      <details class="qa"><summary>What is systemd?</summary><div class="ans"><p>The init system and service manager: starts/stops services (units), manages dependencies, boot, logging (journald), and timers. Managed via <code class="inline">systemctl</code>.</p></div></details>
+      <details class="qa"><summary>How do you find what's using a port?</summary><div class="ans"><p><code class="inline">ss -tulpn | grep :PORT</code> (or <code class="inline">lsof -i :PORT</code>) shows the listening process and PID.</p></div></details>
+      <details class="qa"><summary>How do you troubleshoot a full disk?</summary><div class="ans"><p><code class="inline">df -h</code> finds the full filesystem; <code class="inline">du -sh</code> drills into the biggest dirs; check logs, <code class="inline">/tmp</code>, and deleted-open files via <code class="inline">lsof</code>. Rotate/clean and alert.</p></div></details>
+      <details class="qa"><summary>What is the difference between a hard link and a symbolic link?</summary><div class="ans"><p>A hard link is another name for the same inode (same data, same FS). A symlink is a pointer to a path (can cross filesystems, breaks if the target moves).</p></div></details>
+      <details class="qa"><summary>What does chmod 755 mean?</summary><div class="ans"><p>Owner rwx (7), group r-x (5), others r-x (5) — common for executables/scripts and directories.</p></div></details>
+      <details class="qa"><summary>How do you schedule a task?</summary><div class="ans"><p><code class="inline">crontab -e</code> for cron jobs, or a systemd timer for better logging/dependency handling; <code class="inline">at</code> for one-offs.</p></div></details>
+      <details class="qa"><summary>What is load average?</summary><div class="ans"><p>Average number of processes runnable/uninterruptible over 1/5/15 minutes. Above the CPU core count indicates overload; distinguish CPU vs IO wait.</p></div></details>
+      <details class="qa"><summary>How do you run a process in the background / after logout?</summary><div class="ans"><p><code class="inline">cmd &amp;</code> backgrounds it; <code class="inline">nohup cmd &amp;</code> or a systemd service survives logout; <code class="inline">disown</code> detaches a job.</p></div></details>
+      <details class="qa"><summary>What is the difference between apt and dnf?</summary><div class="ans"><p>Package managers for different families: <code class="inline">apt</code> (Debian/Ubuntu, .deb) and <code class="inline">dnf</code>/<code class="inline">yum</code> (RHEL/Fedora, .rpm). Both install/update/remove and resolve dependencies.</p></div></details>
+      <details class="qa"><summary>How do you view live logs?</summary><div class="ans"><p><code class="inline">tail -f /var/log/...</code> or <code class="inline">journalctl -u service -f</code> for systemd-managed services.</p></div></details>
+      <details class="qa"><summary>What is a runlevel / target?</summary><div class="ans"><p>systemd "targets" replace SysV runlevels — e.g. <code class="inline">multi-user.target</code> (server) vs <code class="inline">graphical.target</code> (desktop). Set with <code class="inline">systemctl set-default</code>.</p></div></details>
+      <details class="qa"><summary>How do you secure an SSH server?</summary><div class="ans"><p>Key-only auth (disable passwords), <code class="inline">PermitRootLogin no</code>, non-default port, firewall, and fail2ban against brute force.</p></div></details>
+      <details class="qa"><summary>What does set -euo pipefail do?</summary><div class="ans"><p>In bash: <code class="inline">-e</code> exit on error, <code class="inline">-u</code> error on unset variables, <code class="inline">-o pipefail</code> fail if any command in a pipe fails — making scripts safer.</p></div></details>
+    </section>
+
+    <!-- CHEAT SHEET -->
+    <section id="cheatsheet">
+      <h2><span class="num"></span> Quick Cheat Sheet</h2>
+      <table>
+        <tr><th>Task</th><th>Command</th></tr>
+        <tr><td>Permissions</td><td><code>chmod 755 f</code></td></tr>
+        <tr><td>Ownership</td><td><code>chown u:g f</code></td></tr>
+        <tr><td>Find files</td><td><code>find / -name x</code></td></tr>
+        <tr><td>Search text</td><td><code>grep -rin x .</code></td></tr>
+        <tr><td>Processes</td><td><code>ps aux</code> / <code>top</code></td></tr>
+        <tr><td>Kill</td><td><code>kill -15 pid</code></td></tr>
+        <tr><td>Service</td><td><code>systemctl status x</code></td></tr>
+        <tr><td>Ports</td><td><code>ss -tulpn</code></td></tr>
+        <tr><td>Disk</td><td><code>df -h</code> / <code>du -sh</code></td></tr>
+        <tr><td>Logs</td><td><code>journalctl -u x -f</code></td></tr>
+      </table>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🐧 <b>Linux Administration — The Complete Hands-On Guide</b> · Part of the Tech Learning Library. Filesystem, permissions, systemd, networking, scripting, security, and interview questions.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
