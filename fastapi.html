@@ -181,6 +181,14 @@
         <li><b>Auto docs</b> — Swagger UI (<code class="inline">/docs</code>) &amp; ReDoc (<code class="inline">/redoc</code>) for free.</li>
         <li><b>DI system</b> — clean, testable dependency injection.</li>
       </ul>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>An <b>API</b> is the way one program talks to another over HTTP — for example, your React front-end asking a server for a list of users. FastAPI is a Python toolkit for building that server: you write normal Python functions, decorate them with the URL they answer, and FastAPI handles receiving the request, checking the data, and sending back JSON. Its superpower is that ordinary Python <b>type hints</b> automatically become input validation <em>and</em> live interactive documentation.</p>
+      <div class="code"><div class="code-head"><span>Type hints do the validation for you</span><button class="copy">Copy</button></div><pre><span class="tok-op">@app.get</span>(<span class="tok-str">"/add"</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">add</span>(a: int, b: int):   <span class="tok-com"># the ': int' hints ARE the validation</span>
+    <span class="tok-key">return</span> {<span class="tok-str">"sum"</span>: a + b}
+<span class="tok-com"># GET /add?a=2&amp;b=3      -&gt; {"sum": 5}</span>
+<span class="tok-com"># GET /add?a=2&amp;b=hello  -&gt; 422 error, automatically, with a helpful message</span></pre></div>
+      <div class="callout"><b>Why people pick FastAPI:</b> less boilerplate than Flask/Django for APIs, automatic <code class="inline">/docs</code> you can click and test, real <code class="inline">async</code> support for speed, and editor autocomplete because everything is typed.</div>
       <div class="callout tip"><b>Interview importance:</b> Pydantic validation, dependency injection, async vs sync, and OAuth2/JWT security are the most-asked FastAPI topics.</div>
     </section>
 
@@ -240,6 +248,7 @@ app = <span class="tok-fn">FastAPI</span>(title=<span class="tok-str">"Shop API"
         <tr><td><code>response_model</code></td><td>Shape &amp; filter the response (hide secrets)</td></tr>
         <tr><td><code>from_attributes</code></td><td>Build from ORM objects (v1: <code>orm_mode</code>)</td></tr>
       </table>
+      <div class="callout"><b>What is a Pydantic model?</b> It's a <b>blueprint for a piece of data</b>. You declare the fields and their types once as a class; FastAPI then uses it to (1) reject requests that don't match, (2) convert the incoming JSON into a real Python object with autocomplete, and (3) shape what you send back. Think of <code class="inline">UserCreate</code> as “the exact form a new user must fill in” and <code class="inline">UserOut</code> as “exactly which fields we're allowed to return” (so a password hash never leaks).</div>
     </section>
 
     <!-- VALIDATION -->
