@@ -411,6 +411,23 @@
         <tr><td>Primary Key</td><td><code>_id</code> (ObjectId)</td></tr>
       </table>
       <div class="callout tip"><b>Note:</b> BSON = <b>Binary JSON</b> — a binary-encoded serialization of JSON-like documents that enables fast traversal and rich data types not available in plain JSON.</div>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>A traditional <b>SQL database</b> stores data in rigid tables — like a spreadsheet where every row must have the same columns. A <b>document database</b> like MongoDB instead stores each record as a flexible <b>document</b> that looks almost exactly like a JavaScript object. Related data (an order and its items, a user and their address) can live together inside one document, so you often don't need to stitch multiple tables together with JOINs.</p>
+      <div class="code"><div class="code-head"><span>Same data: SQL rows vs one MongoDB document</span><button class="copy">Copy</button></div><pre><span class="tok-com">// SQL: split across two tables, joined by user_id</span>
+<span class="tok-com">// users:    id | name  | city</span>
+<span class="tok-com">//           1  | Aria  | NY</span>
+<span class="tok-com">// hobbies:  user_id | hobby</span>
+<span class="tok-com">//           1       | chess</span>
+<span class="tok-com">//           1       | piano</span>
+
+<span class="tok-com">// MongoDB: one self-contained document</span>
+{
+  <span class="tok-str">"_id"</span>: <span class="tok-fn">ObjectId</span>(<span class="tok-str">"..."</span>),
+  <span class="tok-str">"name"</span>: <span class="tok-str">"Aria"</span>,
+  <span class="tok-str">"city"</span>: <span class="tok-str">"NY"</span>,
+  <span class="tok-str">"hobbies"</span>: [<span class="tok-str">"chess"</span>, <span class="tok-str">"piano"</span>]   <span class="tok-com">// array lives right here</span>
+}</pre></div>
+      <div class="callout"><b>What “NoSQL” and “schema-flexible” mean:</b> NoSQL simply means “not a traditional table-based SQL database.” Schema-flexible means two documents in the same collection can have different fields — great when your data shape varies or evolves. (You can still enforce structure with schema validation when you want it.)</div>
     </section>
 
     <!-- SQL VS NOSQL -->
