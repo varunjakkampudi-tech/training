@@ -189,6 +189,13 @@
         <li><b>Huge ecosystem</b> — npm.</li>
       </ul>
       <div class="callout warn"><b>Not ideal for:</b> CPU-bound work (image/video processing, heavy computation) — it blocks the event loop. Offload to worker threads or separate services.</div>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>A browser can run JavaScript, but only for web pages. <b>Node.js</b> takes the same JavaScript engine (V8) and lets you run JS <b>anywhere</b> — to build web servers, command-line tools, and scripts — with extra abilities the browser doesn't allow, like reading files and opening network connections. So “Node is a JavaScript runtime” simply means: a program that runs your JavaScript outside the browser.</p>
+      <div class="code"><div class="code-head"><span>Your first Node program</span><button class="copy">Copy</button></div><pre><span class="tok-com">// hello.js  — run it with:  node hello.js</span>
+<span class="tok-key">const</span> os = <span class="tok-fn">require</span>(<span class="tok-str">"os"</span>);              <span class="tok-com">// built-in module (not available in a browser)</span>
+console.<span class="tok-fn">log</span>(<span class="tok-str">`Hello from Node on ${os.platform()}`</span>);</pre></div>
+      <h3>What “non-blocking” means (the waiter analogy)</h3>
+      <p>Imagine one waiter (the single thread) serving many tables. A <b>blocking</b> waiter would take one table's order, walk to the kitchen, and <em>stand there waiting</em> for the food before serving anyone else. A <b>non-blocking</b> waiter takes the order, hands it to the kitchen, and immediately serves other tables; when the food is ready, the kitchen signals and the waiter delivers it. Node works like the second waiter — while it waits for a file, database, or network response, it keeps handling other requests. That's how one thread serves thousands of users.</p>
     </section>
 
     <!-- ARCHITECTURE -->
@@ -221,6 +228,17 @@ setTimeout(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str
 setImmediate(() =&gt; console.<span class="tok-fn">log</span>(<span class="tok-str">"immediate"</span>));
 <span class="tok-com">// nextTick -> promise -> timeout/immediate (order varies by context)</span></pre></div>
       <div class="callout warn"><b>Bottleneck:</b> A synchronous CPU-heavy loop blocks the entire event loop — all requests stall. Never do heavy sync work in a request handler.</div>
+      <h3>Why blocking the loop is catastrophic</h3>
+      <p>Because one thread handles <em>every</em> request, a single slow synchronous operation freezes the whole server — every other user waits. This is the most important Node.js performance rule to internalize.</p>
+      <div class="code"><div class="code-head"><span>One bad handler stalls everyone</span><button class="copy">Copy</button></div><pre><span class="tok-com">// ❌ BLOCKS the loop — all other requests hang for seconds</span>
+app.<span class="tok-fn">get</span>(<span class="tok-str">"/report"</span>, (req, res) =&gt; {
+  <span class="tok-key">let</span> total = <span class="tok-num">0</span>;
+  <span class="tok-key">for</span> (<span class="tok-key">let</span> i = <span class="tok-num">0</span>; i &lt; <span class="tok-num">1e10</span>; i++) total += i; <span class="tok-com">// CPU-bound, synchronous</span>
+  res.<span class="tok-fn">json</span>({ total });
+});
+
+<span class="tok-com">// ✅ Offload CPU work to a worker thread (see Worker Threads section)</span>
+<span class="tok-com">// ✅ Or keep handlers async and I/O-bound (await db, await fetch)</span></pre></div>
     </section>
 
     <!-- MODULES -->
