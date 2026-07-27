@@ -197,6 +197,22 @@
         <li><b>Virtual DOM + reconciliation</b> — diff and update only what changed.</li>
         <li><b>Unidirectional data flow</b> — props down, events up.</li>
       </ul>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>Without React, you build a page by manually finding elements and changing them (<code class="inline">document.querySelector(...).textContent = ...</code>). As an app grows, keeping the screen in sync with your data by hand becomes error-prone. React flips this: you write a function that <b>returns what the screen should look like for the current data</b>, and whenever the data changes, React re-runs your function and updates only the parts of the real page that actually changed.</p>
+      <div class="code"><div class="code-head"><span>Same counter: vanilla DOM vs React</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Vanilla: you manually read + write the DOM</span>
+<span class="tok-key">let</span> count = <span class="tok-num">0</span>;
+btn.<span class="tok-fn">addEventListener</span>(<span class="tok-str">"click"</span>, () =&gt; {
+  count++;
+  btn.textContent = count;   <span class="tok-com">// remember to update every place by hand</span>
+});
+
+<span class="tok-com">// React: you describe the UI; React keeps the DOM in sync</span>
+<span class="tok-key">function</span> <span class="tok-fn">Counter</span>() {
+  <span class="tok-key">const</span> [count, setCount] = <span class="tok-fn">useState</span>(<span class="tok-num">0</span>);
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;button</span> onClick={() =&gt; <span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>)}<span class="tok-tag">&gt;</span>{count}<span class="tok-tag">&lt;/button&gt;</span>;
+}</pre></div>
+      <div class="callout"><b>Library vs framework:</b> React only handles the view (UI). Routing, data fetching, and build tooling come from companion libraries (React Router, React Query, Vite) — you assemble them. That's why React is called a <em>library</em>, not a full framework like Angular.</div>
+      <div class="callout tip"><b>Getting started:</b> the modern way to create a React app is <code class="inline">npm create vite@latest my-app -- --template react</code>, then <code class="inline">npm install</code> and <code class="inline">npm run dev</code>. A component is just a JavaScript function whose name starts with a Capital letter and returns JSX.</div>
       <div class="callout tip"><b>Interview importance:</b> React is the most in-demand frontend skill. Hooks, rendering behavior, performance, and state management dominate interviews.</div>
     </section>
 
@@ -214,6 +230,25 @@
         <li>Expressions in <code class="inline">{ }</code>; must return a single root (use fragments <code class="inline">&lt;&gt;...&lt;/&gt;</code>).</li>
         <li>JSX prevents XSS by escaping values by default.</li>
       </ul>
+      <h3>The JSX rules beginners trip on</h3>
+      <div class="code"><div class="code-head"><span>Common JSX patterns</span><button class="copy">Copy</button></div><pre><span class="tok-com">// 1. Return ONE parent. Wrap siblings in a fragment &lt;&gt;...&lt;/&gt;</span>
+<span class="tok-key">return</span> (
+  <span class="tok-tag">&lt;&gt;</span>
+    <span class="tok-tag">&lt;h1&gt;</span>Title<span class="tok-tag">&lt;/h1&gt;</span>
+    <span class="tok-tag">&lt;p&gt;</span>Body<span class="tok-tag">&lt;/p&gt;</span>
+  <span class="tok-tag">&lt;/&gt;</span>
+);
+
+<span class="tok-com">// 2. {} runs JavaScript; braces hold expressions, not statements</span>
+<span class="tok-tag">&lt;p&gt;</span>{isVip ? <span class="tok-str">"VIP"</span> : <span class="tok-str">"Guest"</span>}<span class="tok-tag">&lt;/p&gt;</span>   <span class="tok-com">// ✅ ternary works</span>
+<span class="tok-com">// &lt;p&gt;{ if (x) {...} }&lt;/p&gt; ❌ — no if-statements inside JSX</span>
+
+<span class="tok-com">// 3. Inline styles are an OBJECT with camelCase keys</span>
+<span class="tok-tag">&lt;div</span> style={{ backgroundColor: <span class="tok-str">"red"</span>, fontSize: <span class="tok-num">14</span> }} <span class="tok-tag">/&gt;</span>
+
+<span class="tok-com">// 4. Show/hide with &amp;&amp; (renders nothing if condition is false)</span>
+{error &amp;&amp; <span class="tok-tag">&lt;p</span> className=<span class="tok-str">"err"</span><span class="tok-tag">&gt;</span>{error}<span class="tok-tag">&lt;/p&gt;</span>}</pre></div>
+      <div class="callout warn"><b>Gotcha:</b> <code class="inline">0 &amp;&amp; &lt;X/&gt;</code> renders <code class="inline">0</code> on screen (0 is falsy but still a valid React child). Guard with a real boolean: <code class="inline">count &gt; 0 &amp;&amp; &lt;X/&gt;</code>.</div>
     </section>
 
     <!-- COMPONENTS -->
@@ -228,6 +263,17 @@
         <li><b>children</b> prop enables composition: <code class="inline">&lt;Card&gt;...&lt;/Card&gt;</code>.</li>
         <li>Prefer <b>function components</b> + hooks over classes.</li>
       </ul>
+      <h3>What a component and props really are</h3>
+      <p>A <b>component</b> is a function that returns UI. <b>Props</b> are the arguments you pass to that function — just like function parameters, but written as HTML-like attributes. Data flows <b>one way</b>: a parent passes props down to a child; the child cannot change them. To send information back up, the parent passes a <b>callback function</b> as a prop.</p>
+      <div class="code"><div class="code-head"><span>Props down, events up</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">Parent</span>() {
+  <span class="tok-key">const</span> [msg, setMsg] = <span class="tok-fn">useState</span>(<span class="tok-str">""</span>);
+  <span class="tok-com">// pass DATA down (label) and a CALLBACK up (onClick)</span>
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;Child</span> label=<span class="tok-str">"Save"</span> onClick={() =&gt; <span class="tok-fn">setMsg</span>(<span class="tok-str">"clicked!"</span>)} <span class="tok-tag">/&gt;</span>;
+}
+<span class="tok-key">function</span> <span class="tok-fn">Child</span>({ label, onClick }) {   <span class="tok-com">// receive props by name</span>
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;button</span> onClick={onClick}<span class="tok-tag">&gt;</span>{label}<span class="tok-tag">&lt;/button&gt;</span>;
+}</pre></div>
+      <div class="callout tip"><b>Analogy:</b> a component is a custom HTML tag you invented; props are its attributes. <code class="inline">&lt;Greeting name="Aria" /&gt;</code> is like calling <code class="inline">Greeting({ name: "Aria" })</code>.</div>
     </section>
 
     <!-- STATE -->
@@ -238,6 +284,17 @@
   <span class="tok-key">return</span> <span class="tok-tag">&lt;button</span> onClick={() =&gt; <span class="tok-fn">setCount</span>(c =&gt; c + <span class="tok-num">1</span>)}<span class="tok-tag">&gt;</span>{count}<span class="tok-tag">&lt;/button&gt;</span>;
 }</pre></div>
       <div class="callout warn"><b>State updates are async &amp; batched.</b> Use the functional updater <code class="inline">setCount(c =&gt; c + 1)</code> when the next value depends on the previous.</div>
+      <h3>The mental model: state is “memory that triggers a re-render”</h3>
+      <p>A normal variable inside a component is reset to its starting value every render, and changing it does <b>not</b> update the screen. <b>State</b> is special: React remembers it between renders, and calling the setter (1) saves the new value and (2) schedules a re-render so the UI reflects it.</p>
+      <div class="code"><div class="code-head"><span>Why a plain variable doesn't work</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">Broken</span>() {
+  <span class="tok-key">let</span> count = <span class="tok-num">0</span>;                 <span class="tok-com">// ❌ reset every render, no re-render on change</span>
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;button</span> onClick={() =&gt; count++}<span class="tok-tag">&gt;</span>{count}<span class="tok-tag">&lt;/button&gt;</span>; <span class="tok-com">// stays 0 on screen</span>
+}
+<span class="tok-key">function</span> <span class="tok-fn">Works</span>() {
+  <span class="tok-key">const</span> [count, setCount] = <span class="tok-fn">useState</span>(<span class="tok-num">0</span>); <span class="tok-com">// ✅ remembered + re-renders</span>
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;button</span> onClick={() =&gt; <span class="tok-fn">setCount</span>(count + <span class="tok-num">1</span>)}<span class="tok-tag">&gt;</span>{count}<span class="tok-tag">&lt;/button&gt;</span>;
+}</pre></div>
+      <div class="callout warn"><b>Never mutate state directly.</b> React detects changes by comparing references. Push into a new array/object instead: <code class="inline">setItems([...items, x])</code>, not <code class="inline">items.push(x)</code>. Mutating won't re-render.</div>
     </section>
 
     <!-- RENDERING -->
@@ -325,6 +382,17 @@
         <tr><td><code>[a, b]</code></td><td>When a or b changes</td></tr>
       </table>
       <div class="callout warn"><b>Mistakes:</b> missing dependencies (stale closures), infinite loops (setting state without deps), not cleaning up subscriptions/timers.</div>
+      <h3>Understanding the dependency array (the #1 useEffect confusion)</h3>
+      <p>The array at the end tells React <b>when to re-run the effect</b>: after render, React compares each dependency to its previous value; if any changed, it runs cleanup (if any) then the effect again. Read it as “run this effect again whenever these values change.”</p>
+      <div class="code"><div class="code-head"><span>Fetch on mount, re-fetch when id changes</span><button class="copy">Copy</button></div><pre><span class="tok-fn">useEffect</span>(() =&gt; {
+  <span class="tok-key">let</span> active = <span class="tok-key">true</span>;                 <span class="tok-com">// guard against race conditions</span>
+  <span class="tok-fn">fetch</span>(<span class="tok-str">`/api/users/${id}`</span>)
+    .<span class="tok-fn">then</span>(r =&gt; r.<span class="tok-fn">json</span>())
+    .<span class="tok-fn">then</span>(data =&gt; { <span class="tok-key">if</span> (active) <span class="tok-fn">setUser</span>(data); });
+  <span class="tok-key">return</span> () =&gt; { active = <span class="tok-key">false</span>; }; <span class="tok-com">// cleanup: ignore a stale response</span>
+}, [id]);  <span class="tok-com">// re-run only when `id` changes</span></pre></div>
+      <div class="callout warn"><b>Infinite loop trap:</b> setting state inside an effect that has no dependency array (or depends on the value it sets) re-renders → runs the effect → sets state → forever. Give it the right deps, or move the update into an event handler.</div>
+      <div class="callout tip"><b>Rule of thumb:</b> effects are for <em>synchronizing with the outside world</em> (network, timers, subscriptions, the DOM). If you're only computing a value from props/state, do it during render instead — you don't need an effect.</div>
     </section>
 
     <!-- useRef -->
