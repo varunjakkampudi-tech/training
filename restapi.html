@@ -186,6 +186,19 @@
         <li><b>Stateless</b> — each request carries all needed context.</li>
         <li><b>Representation-based</b> — usually JSON.</li>
       </ul>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>An <b>API</b> is a contract that lets two programs talk. A <b>REST API</b> is the most common style for that contract over the web: you treat your data as <b>resources</b> (users, orders, products), give each a <b>URL</b>, and use standard HTTP <b>verbs</b> to act on them — <code class="inline">GET</code> to read, <code class="inline">POST</code> to create, <code class="inline">PUT/PATCH</code> to update, <code class="inline">DELETE</code> to remove. The server replies with a <b>status code</b> (did it work?) and usually a <b>JSON</b> body (the data).</p>
+      <div class="code"><div class="code-head"><span>One request, one response</span><button class="copy">Copy</button></div><pre><span class="tok-com"># The client asks:</span>
+GET /users/42 HTTP/1.1
+Host: api.shop.com
+Accept: application/json
+
+<span class="tok-com"># The server answers:</span>
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{ <span class="tok-str">"id"</span>: <span class="tok-num">42</span>, <span class="tok-str">"name"</span>: <span class="tok-str">"Aria"</span>, <span class="tok-str">"email"</span>: <span class="tok-str">"aria@shop.com"</span> }</pre></div>
+      <div class="callout"><b>Analogy:</b> think of a restaurant. The <b>menu</b> is the API (what you can order and how). You (the client) place an order (request); the kitchen (server) prepares it and the waiter brings the result (response). You don't need to know how the kitchen works — just the menu's contract.</div>
       <div class="callout tip"><b>Interview importance:</b> HTTP methods/status codes, idempotency, versioning, auth, and caching are the core REST interview topics.</div>
     </section>
 
