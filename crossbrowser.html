@@ -178,6 +178,10 @@
         <li><b>Variables:</b> engine, version, OS, device, viewport, network, settings.</li>
         <li><b>Strategy:</b> standards + feature detection + graceful fallbacks + testing.</li>
       </ul>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>Every browser (Chrome, Safari, Firefox, Edge) contains its own <b>rendering engine</b> — the program that turns your HTML/CSS/JS into what you see. These engines are built by different companies and don't implement every feature at the same time or in exactly the same way. So the <em>same</em> code can look slightly different, or a brand-new feature can work in one browser and silently fail in another. Cross-browser work is about making sure your site still works and looks right for whichever browser your visitor happens to use.</p>
+      <div class="callout"><b>Concrete example:</b> you use the modern CSS <code class="inline">:has()</code> selector or the <code class="inline">dvh</code> unit. In an up-to-date Chrome it works; in an older Safari it does nothing, so your layout breaks. The fix isn't to avoid new features — it's to <b>detect support and provide a fallback</b> (covered below), so old browsers get a simpler version and new ones get the enhancement.</div>
+      <div class="callout tip"><b>Reassurance:</b> you rarely need to support ancient browsers like IE11 anymore. Most teams target “the last 2 versions” of the major browsers, and tools (Autoprefixer, Babel, Browserslist) automate most of the compatibility work for you.</div>
       <div class="callout tip"><b>Interview importance:</b> Feature detection vs browser sniffing, polyfills vs transpiling, vendor prefixes, and responsive strategies are the core topics.</div>
     </section>
 
