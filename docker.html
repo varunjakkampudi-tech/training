@@ -174,6 +174,16 @@
     <section id="intro">
       <h2><span class="num"></span> Overview</h2>
       <p class="lead">Docker packages an app and all its dependencies into a portable <b>image</b> that runs identically anywhere as a <b>container</b> — solving "works on my machine".</p>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>Software usually breaks when it moves between computers because each machine has different versions of languages, libraries, and settings. <b>Docker</b> fixes this by bundling your app <em>together with everything it needs to run</em> (the exact runtime, libraries, and config) into a single sealed package. That package runs the same on your laptop, a teammate's machine, and the production server.</p>
+      <div class="callout"><b>Shipping-container analogy:</b> before shipping containers, cargo was loaded piece by piece and often didn't fit the next truck or ship. Standard steel containers changed that — any crane, ship, or truck can carry any container. Docker does the same for software: a standard “box” that any machine with Docker can run, no matter what's inside.</p></div>
+      <table>
+        <tr><th>Term</th><th>Plain meaning</th></tr>
+        <tr><td><b>Image</b></td><td>The <em>recipe/blueprint</em> — a frozen snapshot of your app + its dependencies. Built once, never changes.</td></tr>
+        <tr><td><b>Container</b></td><td>A <em>running copy</em> of an image. You can start many containers from one image, like many objects from one class.</td></tr>
+        <tr><td><b>Dockerfile</b></td><td>The text file of steps that <em>builds</em> the image.</td></tr>
+        <tr><td><b>Registry</b></td><td>An app store for images (Docker Hub) — you <code>push</code> and <code>pull</code> images from it.</td></tr>
+      </table>
       <div class="vs-grid">
         <div class="vs-card a"><h4>🐳 Containers</h4><ul><li>Share the host kernel (lightweight)</li><li>Start in milliseconds</li><li>MBs in size</li><li>Process-level isolation</li></ul></div>
         <div class="vs-card b"><h4>🖥️ Virtual Machines</h4><ul><li>Full guest OS (heavy)</li><li>Boot in seconds/minutes</li><li>GBs in size</li><li>Hardware-level isolation</li></ul></div>
