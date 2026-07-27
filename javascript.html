@@ -206,6 +206,25 @@
         <li><b>Huge ecosystem</b> — npm is the largest package registry in the world.</li>
         <li><b>Event-driven &amp; non-blocking</b> — great for I/O-heavy apps.</li>
       </ul>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>JavaScript is a set of <b>instructions you write as text</b> that a program called an <b>engine</b> reads and runs. In a browser, that engine is built in — when a web page loads a <code class="inline">.js</code> file, the browser runs it top-to-bottom. That code can react to clicks, change what's on screen, talk to servers, and store data. On a server, the same language runs through <b>Node.js</b> (the browser engine, packaged to run outside the browser).</p>
+      <ul>
+        <li><b>High-level</b> — you don't manage memory or CPU registers by hand; the engine does it for you.</li>
+        <li><b>Dynamically typed</b> — a variable can hold a number now and a string later; you don't declare the type up front.</li>
+        <li><b>Single-threaded</b> — it does one thing at a time (more on why that's fine under “Event Loop”).</li>
+        <li><b>Interpreted &amp; compiled</b> — modern engines compile your code to fast machine code <em>while</em> it runs (JIT).</li>
+      </ul>
+      <div class="callout"><b>Analogy:</b> think of the engine as a chef and your code as a recipe. The chef reads each step in order, and can “put something in the oven” (an async task) and keep working on other steps until a timer dings — that timer-and-notify system is the event loop.</div>
+      <h3>The absolute basics (syntax you'll see everywhere)</h3>
+      <div class="code"><div class="code-head"><span>Variables, functions, output</span><button class="copy">Copy</button></div><pre><span class="tok-key">let</span> age = <span class="tok-num">25</span>;              <span class="tok-com">// a value that can change</span>
+<span class="tok-key">const</span> name = <span class="tok-str">"Aria"</span>;         <span class="tok-com">// a value that cannot be reassigned</span>
+
+<span class="tok-key">function</span> <span class="tok-fn">greet</span>(who) {        <span class="tok-com">// a reusable block of code</span>
+  <span class="tok-key">return</span> <span class="tok-str">`Hello, ${who}!`</span>;  <span class="tok-com">// template literal (backticks + ${})</span>
+}
+
+console.<span class="tok-fn">log</span>(<span class="tok-fn">greet</span>(name)); <span class="tok-com">// prints "Hello, Aria!" to the console</span></pre></div>
+      <p>Every example in this guide can be pasted into your browser's <b>DevTools Console</b> (press F12 → Console) or run with Node (<code class="inline">node file.js</code>) so you can see the output yourself.</p>
       <h3>Learning roadmap</h3>
       <table>
         <tr><th>Stage</th><th>Topics</th></tr>
@@ -240,6 +259,15 @@
 <span class="tok-fn">a</span>();
 <span class="tok-com">// Stack: a() -> b() -> console.log -> pops back up</span></pre></div>
       <div class="callout"><b>Single-threaded</b> means one call stack — only one thing runs at a time. Concurrency comes from the runtime (Web APIs / libuv) + event loop, not extra threads in your JS.</div>
+      <h3>What “JIT” actually means (in plain English)</h3>
+      <p>Older interpreters read and run code line-by-line every time, which is slow. Older compilers translate everything to machine code once, up front, which delays startup. <b>JIT (Just-In-Time)</b> gives you the best of both: the engine starts fast by interpreting bytecode, watches which functions run many times (“hot” code), and then <b>recompiles those into optimized machine code</b> in the background. If an assumption it made turns out wrong (e.g. a function that always got numbers suddenly gets a string), it <b>de-optimizes</b> back to bytecode. This is why keeping the <em>shape/type</em> of your data consistent makes JS faster.</p>
+      <div class="code"><div class="code-head"><span>Why consistent types stay fast</span><button class="copy">Copy</button></div><pre><span class="tok-com">// FAST: p always has the same shape {x, y} with number fields</span>
+<span class="tok-key">function</span> <span class="tok-fn">dist</span>(p) { <span class="tok-key">return</span> Math.<span class="tok-fn">hypot</span>(p.x, p.y); }
+
+<span class="tok-com">// SLOWER: mixing types forces the engine to de-optimize</span>
+<span class="tok-fn">dist</span>({ x: <span class="tok-num">3</span>, y: <span class="tok-num">4</span> });      <span class="tok-com">// numbers</span>
+<span class="tok-fn">dist</span>({ x: <span class="tok-str">"3"</span>, y: <span class="tok-str">"4"</span> });  <span class="tok-com">// strings -> new hidden shape -> slow path</span></pre></div>
+      <div class="callout tip"><b>Two engines, same idea:</b> V8 (Chrome, Edge, Node) uses <em>Ignition</em> (interpreter) + <em>TurboFan</em> (optimizer). Firefox's SpiderMonkey and Safari's JavaScriptCore work the same way with different names — you don't need to memorize them, just the concept.</div>
     </section>
 
     <!-- EXECUTION CONTEXT -->
@@ -259,6 +287,21 @@
       <div class="code"><div class="code-head"><span>Creation vs execution phase</span><button class="copy">Copy</button></div><pre>console.<span class="tok-fn">log</span>(x); <span class="tok-com">// undefined (hoisted, not yet assigned)</span>
 <span class="tok-key">var</span> x = <span class="tok-num">10</span>;
 console.<span class="tok-fn">log</span>(x); <span class="tok-com">// 10</span></pre></div>
+      <h3>What an execution context contains</h3>
+      <p>Think of each execution context as a labelled box the engine creates for a running piece of code. Inside that box are three things:</p>
+      <ul>
+        <li><b>Variable Environment</b> — the variables and function declarations that belong to this scope.</li>
+        <li><b>Scope chain</b> — a link to the outer box, so inner code can read outer variables (this is how lexical scope works).</li>
+        <li><b><code class="inline">this</code> binding</b> — what <code class="inline">this</code> points to while this code runs.</li>
+      </ul>
+      <h3>Step-by-step: how the call stack fills and empties</h3>
+      <div class="code"><div class="code-head"><span>Trace the stack</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">first</span>()  { <span class="tok-fn">second</span>(); console.<span class="tok-fn">log</span>(<span class="tok-str">"first done"</span>); }
+<span class="tok-key">function</span> <span class="tok-fn">second</span>() { <span class="tok-fn">third</span>();  console.<span class="tok-fn">log</span>(<span class="tok-str">"second done"</span>); }
+<span class="tok-key">function</span> <span class="tok-fn">third</span>()  { console.<span class="tok-fn">log</span>(<span class="tok-str">"third done"</span>); }
+<span class="tok-fn">first</span>();
+<span class="tok-com">// Stack grows:  [global] -> [first] -> [second] -> [third]</span>
+<span class="tok-com">// Then unwinds: third done -> second done -> first done</span></pre></div>
+      <div class="callout warn"><b>Stack overflow:</b> if a function calls itself forever with no base case, the stack keeps growing until the engine throws <code class="inline">RangeError: Maximum call stack size exceeded</code>. Every recursion needs a stopping condition.</div>
     </section>
 
     <!-- HOISTING -->
@@ -280,6 +323,23 @@ console.<span class="tok-fn">log</span>(b); <span class="tok-com">// ReferenceEr
         <tr><td>Reassignable</td><td>Yes</td><td>Yes</td><td>No</td></tr>
         <tr><td>Redeclarable</td><td>Yes</td><td>No</td><td>No</td></tr>
       </table>
+      <h3>Why hoisting exists (and how to picture it)</h3>
+      <p>During the <b>creation phase</b>, before running a single line, the engine scans the scope and “registers” every declaration. It's as if all <code class="inline">var</code> and <code class="inline">function</code> declarations were moved to the top. <code class="inline">var</code> gets a placeholder value of <code class="inline">undefined</code>; full <code class="inline">function</code> declarations get their whole body — which is why you can call a function <em>above</em> where it's written.</p>
+      <div class="code"><div class="code-head"><span>What the engine effectively sees</span><button class="copy">Copy</button></div><pre><span class="tok-com">// You write:</span>
+greet();
+<span class="tok-key">var</span> msg = <span class="tok-str">"hi"</span>;
+<span class="tok-key">function</span> <span class="tok-fn">greet</span>() { console.<span class="tok-fn">log</span>(msg); }
+
+<span class="tok-com">// Engine effectively treats it as:</span>
+<span class="tok-key">function</span> <span class="tok-fn">greet</span>() { console.<span class="tok-fn">log</span>(msg); } <span class="tok-com">// whole function hoisted</span>
+<span class="tok-key">var</span> msg;                <span class="tok-com">// declared, = undefined</span>
+greet();                <span class="tok-com">// runs -> logs undefined (msg not assigned yet!)</span>
+msg = <span class="tok-str">"hi"</span>;            <span class="tok-com">// assignment stays in place</span></pre></div>
+      <p><b>Function declarations vs function expressions:</b> only <em>declarations</em> are fully hoisted. A function stored in a <code class="inline">var</code>/<code class="inline">let</code>/<code class="inline">const</code> follows that variable's rules.</p>
+      <div class="code"><div class="code-head"><span>Expression is NOT callable early</span><button class="copy">Copy</button></div><pre>sayHi();                 <span class="tok-com">// ✅ works (declaration)</span>
+sayBye();                <span class="tok-com">// ❌ TypeError: sayBye is not a function</span>
+<span class="tok-key">function</span> <span class="tok-fn">sayHi</span>() {}
+<span class="tok-key">var</span> sayBye = <span class="tok-key">function</span>() {}; <span class="tok-com">// var is undefined until this line runs</span></pre></div>
       <div class="callout warn"><b>Common mistake:</b> Using <code class="inline">var</code> in loops with async callbacks captures the final value. Use <code class="inline">let</code> for per-iteration binding.</div>
     </section>
 
@@ -301,13 +361,32 @@ console.<span class="tok-fn">log</span>(b); <span class="tok-com">// ReferenceEr
         <li><b>Function scope</b> — variables inside a function.</li>
         <li><b>Block scope</b> — <code class="inline">let</code>/<code class="inline">const</code> inside <code class="inline">{ }</code>.</li>
       </ul>
+      <h3>“Lexical” = decided by where you write it</h3>
+      <p>The word <em>lexical</em> just means “related to where the text sits in the source.” JavaScript decides what an inner function can see by looking at <b>where the function was written</b>, not where it is later called. This is fixed at author time and never changes at runtime.</p>
+      <div class="code"><div class="code-head"><span>Written location wins, not call location</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> secret = <span class="tok-str">"A"</span>;
+<span class="tok-key">function</span> <span class="tok-fn">reveal</span>() { console.<span class="tok-fn">log</span>(secret); } <span class="tok-com">// bound to where it's WRITTEN</span>
+
+<span class="tok-key">function</span> <span class="tok-fn">wrapper</span>() {
+  <span class="tok-key">const</span> secret = <span class="tok-str">"B"</span>;   <span class="tok-com">// different scope</span>
+  <span class="tok-fn">reveal</span>();               <span class="tok-com">// still logs "A" — lexical, not dynamic</span>
+}
+<span class="tok-fn">wrapper</span>();</pre></div>
+      <div class="callout tip"><b>Rule of thumb:</b> to know what a variable refers to, read <em>outward</em> from where it's used — current block → enclosing function → … → global. The first match wins; this path is the <b>scope chain</b>.</div>
     </section>
 
     <!-- CLOSURES -->
     <section id="closures">
       <h2><span class="num"></span> Closures</h2>
       <p class="lead">A <b>closure</b> is a function that remembers variables from its lexical scope even after the outer function has returned. One of the most-asked interview topics.</p>
-      <div class="code"><div class="code-head"><span>Counter closure</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">createCounter</span>() {
+      <h3>Understand it in one sentence</h3>
+      <p>When a function is created, it keeps a <b>live reference to the variables around it</b> — not a copy. So even after the outer function finishes and its call frame is gone, the inner function can still read and update those variables, because they're kept alive as long as the inner function exists.</p>
+      <div class="code"><div class="code-head"><span>Why the variable survives</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">makeGreeter</span>(name) {   <span class="tok-com">// 1. name lives here</span>
+  <span class="tok-key">return</span> <span class="tok-key">function</span>() {          <span class="tok-com">// 2. this inner fn closes over name</span>
+    <span class="tok-key">return</span> <span class="tok-str">`Hi, ${name}`</span>;     <span class="tok-com">// 3. still readable later</span>
+  };
+}
+<span class="tok-key">const</span> greetAria = <span class="tok-fn">makeGreeter</span>(<span class="tok-str">"Aria"</span>); <span class="tok-com">// makeGreeter returned — but name stays alive</span>
+<span class="tok-fn">greetAria</span>(); <span class="tok-com">// "Hi, Aria"</span></pre></div>
   <span class="tok-key">let</span> count = <span class="tok-num">0</span>;              <span class="tok-com">// private state</span>
   <span class="tok-key">return</span> () =&gt; ++count;         <span class="tok-com">// closes over count</span>
 }
@@ -321,12 +400,29 @@ console.<span class="tok-fn">log</span>(b); <span class="tok-com">// ReferenceEr
       </ul>
       <div class="callout warn"><b>Classic bug:</b> <code class="inline">for (var i=0;i&lt;3;i++) setTimeout(()=&gt;console.log(i))</code> logs <code class="inline">3,3,3</code>. Fix with <code class="inline">let</code> (block-scoped per iteration) or an IIFE.</div>
       <div class="realworld"><h4>🌍 Real-world</h4><p>A <b>rate limiter</b> or <b>once()</b> helper uses a closure to remember how many times a function has run, without exposing that counter globally.</p></div>
+      <h3>Step-by-step fix for the classic loop bug</h3>
+      <div class="code"><div class="code-head"><span>Three ways to fix 3,3,3</span><button class="copy">Copy</button></div><pre><span class="tok-com">// ❌ BUG: var is one shared binding; all callbacks see final i = 3</span>
+<span class="tok-key">for</span> (<span class="tok-key">var</span> i = <span class="tok-num">0</span>; i &lt; <span class="tok-num">3</span>; i++) setTimeout(() =&gt; console.<span class="tok-fn">log</span>(i)); <span class="tok-com">// 3 3 3</span>
+
+<span class="tok-com">// ✅ FIX 1: let creates a NEW binding each iteration</span>
+<span class="tok-key">for</span> (<span class="tok-key">let</span> i = <span class="tok-num">0</span>; i &lt; <span class="tok-num">3</span>; i++) setTimeout(() =&gt; console.<span class="tok-fn">log</span>(i)); <span class="tok-com">// 0 1 2</span>
+
+<span class="tok-com">// ✅ FIX 2: IIFE captures the current value per iteration</span>
+<span class="tok-key">for</span> (<span class="tok-key">var</span> i = <span class="tok-num">0</span>; i &lt; <span class="tok-num">3</span>; i++) (<span class="tok-key">function</span>(j){ setTimeout(() =&gt; console.<span class="tok-fn">log</span>(j)); })(i);</pre></div>
+      <div class="callout tip"><b>Mental test for closures:</b> ask “what variables does this inner function name that live outside it?” Those are exactly what it closes over.</div>
     </section>
 
     <!-- TYPES -->
     <section id="types">
       <h2><span class="num"></span> Types &amp; Coercion</h2>
       <p class="lead">JS has 7 primitives (<code class="inline">string, number, boolean, null, undefined, symbol, bigint</code>) and objects. Primitives are immutable and copied by value; objects by reference.</p>
+      <h3>Value vs reference — the #1 beginner confusion</h3>
+      <p>A <b>primitive</b> is copied by its actual value: change the copy, the original is untouched. An <b>object</b> (including arrays and functions) is copied by <b>reference</b> — the copy points to the <em>same</em> box in memory, so changing one changes both.</p>
+      <div class="code"><div class="code-head"><span>Copy by value vs by reference</span><button class="copy">Copy</button></div><pre><span class="tok-key">let</span> a = <span class="tok-num">1</span>; <span class="tok-key">let</span> b = a; b = <span class="tok-num">99</span>;
+console.<span class="tok-fn">log</span>(a); <span class="tok-com">// 1  (b was a separate copy)</span>
+
+<span class="tok-key">const</span> o1 = { n: <span class="tok-num">1</span> }; <span class="tok-key">const</span> o2 = o1; o2.n = <span class="tok-num">99</span>;
+console.<span class="tok-fn">log</span>(o1.n); <span class="tok-com">// 99 (o1 and o2 point to the same object)</span></pre></div>
       <div class="code"><div class="code-head"><span>Coercion &amp; equality</span><button class="copy">Copy</button></div><pre><span class="tok-num">1</span> == <span class="tok-str">"1"</span>     <span class="tok-com">// true  (== coerces types)</span>
 <span class="tok-num">1</span> === <span class="tok-str">"1"</span>    <span class="tok-com">// false (=== checks type + value)</span>
 <span class="tok-key">null</span> == <span class="tok-key">undefined</span>  <span class="tok-com">// true</span>
@@ -334,6 +430,14 @@ NaN === NaN   <span class="tok-com">// false — use Number.isNaN()</span>
 [] + []       <span class="tok-com">// "" (arrays coerce to strings)</span>
 [] + {}       <span class="tok-com">// "[object Object]"</span></pre></div>
       <div class="callout tip"><b>Rule:</b> Always use <code class="inline">===</code> unless you specifically need <code class="inline">== null</code> to catch both <code class="inline">null</code> and <code class="inline">undefined</code>.</div>
+      <h3>Truthy &amp; falsy (memorize the falsy list)</h3>
+      <p>In any boolean context (<code class="inline">if</code>, <code class="inline">&amp;&amp;</code>, <code class="inline">||</code>, <code class="inline">!</code>), JS converts the value to <code class="inline">true</code> or <code class="inline">false</code>. There are exactly <b>8 falsy values</b> — everything else is truthy.</p>
+      <div class="code"><div class="code-head"><span>The complete falsy list</span><button class="copy">Copy</button></div><pre><span class="tok-key">false</span>, <span class="tok-num">0</span>, -<span class="tok-num">0</span>, <span class="tok-num">0n</span>, <span class="tok-str">""</span>, <span class="tok-key">null</span>, <span class="tok-key">undefined</span>, NaN
+<span class="tok-com">// Everything else is truthy — including these surprises:</span>
+<span class="tok-key">if</span> ([])  console.<span class="tok-fn">log</span>(<span class="tok-str">"empty array is TRUTHY"</span>);   <span class="tok-com">// runs</span>
+<span class="tok-key">if</span> ({})  console.<span class="tok-fn">log</span>(<span class="tok-str">"empty object is TRUTHY"</span>);  <span class="tok-com">// runs</span>
+<span class="tok-key">if</span> (<span class="tok-str">"0"</span>) console.<span class="tok-fn">log</span>(<span class="tok-str">"string zero is TRUTHY"</span>);   <span class="tok-com">// runs</span></pre></div>
+      <div class="callout warn"><b>Gotcha:</b> <code class="inline">||</code> treats <code class="inline">0</code> and <code class="inline">""</code> as “missing.” If <code class="inline">0</code> is a valid value, use <code class="inline">??</code> (nullish coalescing), which only falls back on <code class="inline">null</code>/<code class="inline">undefined</code>: <code class="inline">count ?? 10</code>.</div>
       <table>
         <tr><th>Check</th><th>Use</th></tr>
         <tr><td>Type of primitive</td><td><code>typeof x</code></td></tr>
@@ -377,6 +481,19 @@ nums.<span class="tok-fn">every</span>(n =&gt; n &gt; <span class="tok-num">0</s
         <tr><td><code>push, pop, shift, unshift, splice, sort, reverse</code></td><td><code>map, filter, reduce, slice, concat, spread</code></td></tr>
       </table>
       <div class="callout warn"><b>Gotcha:</b> <code class="inline">sort()</code> sorts as strings by default — <code class="inline">[10,2,1].sort()</code> → <code class="inline">[1,10,2]</code>. Pass a comparator: <code class="inline">sort((a,b)=&gt;a-b)</code>.</div>
+      <h3>Understanding <code class="inline">reduce</code> (the one beginners fear)</h3>
+      <p><code class="inline">reduce</code> boils an array down to a single value by carrying an <b>accumulator</b> from one item to the next. You give it (1) a reducer function <code class="inline">(acc, item) =&gt; newAcc</code> and (2) a starting value.</p>
+      <div class="code"><div class="code-head"><span>reduce, one step at a time</span><button class="copy">Copy</button></div><pre>[<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>].<span class="tok-fn">reduce</span>((acc, n) =&gt; acc + n, <span class="tok-num">0</span>);
+<span class="tok-com">// start acc = 0</span>
+<span class="tok-com">// n=1 -> acc = 0 + 1 = 1</span>
+<span class="tok-com">// n=2 -> acc = 1 + 2 = 3</span>
+<span class="tok-com">// n=3 -> acc = 3 + 3 = 6</span>
+<span class="tok-com">// n=4 -> acc = 6 + 4 = 10  (final result)</span>
+
+<span class="tok-com">// reduce can build anything — e.g. count occurrences into an object</span>
+[<span class="tok-str">"a"</span>,<span class="tok-str">"b"</span>,<span class="tok-str">"a"</span>].<span class="tok-fn">reduce</span>((acc, w) =&gt; { acc[w] = (acc[w] || <span class="tok-num">0</span>) + <span class="tok-num">1</span>; <span class="tok-key">return</span> acc; }, {});
+<span class="tok-com">// { a: 2, b: 1 }</span></pre></div>
+      <div class="callout tip"><b>Chain them:</b> <code class="inline">map</code> → transform each item, <code class="inline">filter</code> → keep some, <code class="inline">reduce</code> → combine into one. These three cover most data-shaping tasks without loops.</div>
     </section>
 
     <!-- STRINGS -->
@@ -397,8 +514,15 @@ s.<span class="tok-fn">padStart</span>(<span class="tok-num">12</span>, <span cl
     <section id="this">
       <h2><span class="num"></span> this / call / apply / bind</h2>
       <p class="lead"><code class="inline">this</code> is determined by <em>how a function is called</em>, not where it's defined (except arrow functions, which inherit <code class="inline">this</code> lexically).</p>
-      <table>
-        <tr><th>Call style</th><th><code>this</code> is</th></tr>
+      <h3>The one question that answers <code class="inline">this</code></h3>
+      <p>Every time a normal function runs, ask: <b>“what is to the left of the dot at the call site?”</b> That's <code class="inline">this</code>. If there's nothing to the left, <code class="inline">this</code> is <code class="inline">undefined</code> in strict mode (or the global object otherwise).</p>
+      <div class="code"><div class="code-head"><span>Left of the dot</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> user = {
+  name: <span class="tok-str">"Aria"</span>,
+  <span class="tok-fn">hello</span>() { <span class="tok-key">return</span> this.name; }
+};
+user.<span class="tok-fn">hello</span>();          <span class="tok-com">// "Aria"  — left of dot is `user`</span>
+<span class="tok-key">const</span> f = user.hello;
+<span class="tok-fn">f</span>();                   <span class="tok-com">// undefined — no object, `this` is lost</span></pre></div>
         <tr><td>Regular function (non-strict)</td><td>global object / undefined (strict)</td></tr>
         <tr><td>Method <code>obj.fn()</code></td><td>the object <code>obj</code></td></tr>
         <tr><td><code>new Fn()</code></td><td>the new instance</td></tr>
@@ -412,6 +536,16 @@ s.<span class="tok-fn">padStart</span>(<span class="tok-num">12</span>, <span cl
 <span class="tok-fn">greet</span>.<span class="tok-fn">apply</span>(user, [<span class="tok-str">"Hi"</span>]);   <span class="tok-com">// "Hi, Aria"  (args array)</span>
 <span class="tok-key">const</span> bound = <span class="tok-fn">greet</span>.<span class="tok-fn">bind</span>(user); <span class="tok-com">// returns a new function</span></pre></div>
       <div class="callout warn"><b>Interview classic:</b> Losing <code class="inline">this</code> when passing a method as a callback. Fix with <code class="inline">.bind(this)</code> or an arrow function.</div>
+      <div class="code"><div class="code-head"><span>Why arrow functions fix the callback case</span><button class="copy">Copy</button></div><pre><span class="tok-key">class</span> <span class="tok-fn">Timer</span> {
+  seconds = <span class="tok-num">0</span>;
+  <span class="tok-fn">start</span>() {
+    <span class="tok-com">// ❌ normal fn: `this` inside is undefined when the timer fires</span>
+    setInterval(<span class="tok-key">function</span>() { this.seconds++; }, <span class="tok-num">1000</span>);
+    <span class="tok-com">// ✅ arrow fn: inherits `this` from start(), so it stays the instance</span>
+    setInterval(() =&gt; { this.seconds++; }, <span class="tok-num">1000</span>);
+  }
+}</pre></div>
+      <div class="callout tip"><b>Rule:</b> arrow functions have <em>no</em> <code class="inline">this</code> of their own — they look outward to the enclosing scope. That's exactly why they're perfect for callbacks, and wrong for object methods that need their own <code class="inline">this</code>.</div>
     </section>
 
     <!-- PROTOTYPE -->
@@ -425,6 +559,13 @@ Animal.prototype.<span class="tok-fn">speak</span> = <span class="tok-key">funct
 dog.<span class="tok-fn">speak</span>();                 <span class="tok-com">// found on Animal.prototype</span>
 Object.<span class="tok-fn">getPrototypeOf</span>(dog) === Animal.prototype; <span class="tok-com">// true</span></pre></div>
       <div class="callout"><b>Chain:</b> <code class="inline">dog</code> → <code class="inline">Animal.prototype</code> → <code class="inline">Object.prototype</code> → <code class="inline">null</code>. Methods live on the prototype (shared), not per-instance (memory-efficient).</div>
+      <h3>What “prototype” means without the jargon</h3>
+      <p>Every object has a hidden link to a <b>fallback object</b>. When you read <code class="inline">obj.something</code> and <code class="inline">obj</code> doesn't have it, JS follows that link and checks the fallback, then the fallback's fallback, and so on — until it finds the property or hits <code class="inline">null</code>. That chain of fallbacks <em>is</em> inheritance in JavaScript.</p>
+      <div class="code"><div class="code-head"><span>Lookups walk the chain</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> arr = [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>];
+arr.<span class="tok-fn">map</span>;   <span class="tok-com">// not on arr itself...</span>
+<span class="tok-com">// arr -> Array.prototype (has map, filter, ...) -> Object.prototype -> null</span>
+arr.<span class="tok-fn">hasOwnProperty</span>(<span class="tok-str">"length"</span>); <span class="tok-com">// true: length is own; map is inherited</span></pre></div>
+      <div class="callout warn"><b>Don't confuse</b> <code class="inline">__proto__</code> (the link an instance follows) with <code class="inline">Constructor.prototype</code> (the object new instances will link to). <code class="inline">dog.__proto__ === Animal.prototype</code>.</div>
     </section>
 
     <!-- CLASSES -->
@@ -441,12 +582,43 @@ Object.<span class="tok-fn">getPrototypeOf</span>(dog) === Animal.prototype; <sp
   <span class="tok-key">static</span> <span class="tok-fn">create</span>(n) { <span class="tok-key">return</span> <span class="tok-key">new</span> <span class="tok-fn">Dog</span>(n); } <span class="tok-com">// static method</span>
 }
 <span class="tok-key">new</span> <span class="tok-fn">Dog</span>(<span class="tok-str">"Rex"</span>).<span class="tok-fn">speak</span>(); <span class="tok-com">// "Rex barks"</span></pre></div>
+      <table>
+        <tr><th>Keyword</th><th>What it does</th></tr>
+        <tr><td><code>constructor</code></td><td>Runs once when you <code>new</code> the class; sets up instance fields</td></tr>
+        <tr><td><code>extends</code></td><td>Inherit from a parent class (sets up the prototype chain)</td></tr>
+        <tr><td><code>super()</code></td><td>Call the parent constructor (required before using <code>this</code> in a subclass)</td></tr>
+        <tr><td><code>static</code></td><td>Method/field on the class itself, not on instances</td></tr>
+        <tr><td><code>#field</code></td><td>Truly private — unreadable outside the class</td></tr>
+        <tr><td><code>get</code>/<code>set</code></td><td>Computed properties that run a function on access/assignment</td></tr>
+      </table>
+      <div class="callout tip"><b>Sugar, not magic:</b> a <code class="inline">class</code> still uses prototypes underneath — methods you define go on <code class="inline">ClassName.prototype</code>. Classes just give you cleaner syntax, private fields, and <code class="inline">super</code>.</div>
     </section>
 
     <!-- CALLBACKS & PROMISES -->
     <section id="callbacks">
       <h2><span class="num"></span> Callbacks &amp; Promises</h2>
       <p class="lead">Async work uses callbacks, promises, or async/await. Promises solve "callback hell" and provide chaining + error propagation.</p>
+      <h3>The problem promises solve</h3>
+      <p>A <b>callback</b> is just a function you hand to another function to run “later” (when data arrives, a timer fires, etc.). Nesting many callbacks creates deeply indented, hard-to-read code known as <b>callback hell</b>, where error handling has to be repeated at every level.</p>
+      <div class="code"><div class="code-head"><span>Callback hell vs promise chain</span><button class="copy">Copy</button></div><pre><span class="tok-com">// ❌ Nested callbacks — hard to read, error handling duplicated</span>
+<span class="tok-fn">getUser</span>(<span class="tok-num">1</span>, (u) =&gt; {
+  <span class="tok-fn">getOrders</span>(u.id, (o) =&gt; {
+    <span class="tok-fn">getItems</span>(o[<span class="tok-num">0</span>], (items) =&gt; { console.<span class="tok-fn">log</span>(items); });
+  });
+});
+
+<span class="tok-com">// ✅ Promise chain — flat, one .catch for all steps</span>
+<span class="tok-fn">getUser</span>(<span class="tok-num">1</span>)
+  .<span class="tok-fn">then</span>(u =&gt; <span class="tok-fn">getOrders</span>(u.id))
+  .<span class="tok-fn">then</span>(o =&gt; <span class="tok-fn">getItems</span>(o[<span class="tok-num">0</span>]))
+  .<span class="tok-fn">then</span>(items =&gt; console.<span class="tok-fn">log</span>(items))
+  .<span class="tok-fn">catch</span>(err =&gt; console.<span class="tok-fn">error</span>(err)); <span class="tok-com">// any step fails -> lands here</span></pre></div>
+      <p>A <b>promise</b> is an object representing a value that isn't ready yet. It's in one of three states and, once settled, never changes:</p>
+      <ul>
+        <li><b>pending</b> — still working.</li>
+        <li><b>fulfilled</b> — finished successfully (has a value); handled by <code class="inline">.then()</code>.</li>
+        <li><b>rejected</b> — failed (has a reason); handled by <code class="inline">.catch()</code>.</li>
+      </ul>
       <div class="code"><div class="code-head"><span>Promise states &amp; chaining</span><button class="copy">Copy</button></div><pre><span class="tok-com">// A promise is pending -> fulfilled | rejected</span>
 <span class="tok-key">const</span> p = <span class="tok-key">new</span> <span class="tok-fn">Promise</span>((resolve, reject) =&gt; {
   setTimeout(() =&gt; <span class="tok-fn">resolve</span>(<span class="tok-str">"done"</span>), <span class="tok-num">100</span>);
@@ -467,6 +639,20 @@ p.<span class="tok-fn">then</span>(v =&gt; v.<span class="tok-fn">toUpperCase</s
     <!-- ASYNC AWAIT -->
     <section id="async-await">
       <h2><span class="num"></span> Async / Await</h2>
+      <p class="lead"><code class="inline">async</code>/<code class="inline">await</code> is <b>syntax sugar over promises</b> that lets you write asynchronous code that <em>reads</em> like synchronous code — no <code class="inline">.then()</code> chains. It's the same promises underneath.</p>
+      <ul>
+        <li>Marking a function <code class="inline">async</code> makes it <b>always return a promise</b>.</li>
+        <li><code class="inline">await</code> pauses <em>inside that function</em> until the promise settles, then gives you the resolved value — it does <b>not</b> block the whole program (other code keeps running).</li>
+        <li>Wrap <code class="inline">await</code> in <code class="inline">try/catch</code> to handle a rejection, exactly like a synchronous <code class="inline">throw</code>.</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>Same logic: promise chain vs async/await</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Promise style</span>
+<span class="tok-key">function</span> <span class="tok-fn">load</span>() { <span class="tok-key">return</span> <span class="tok-fn">fetch</span>(<span class="tok-str">"/u"</span>).<span class="tok-fn">then</span>(r =&gt; r.<span class="tok-fn">json</span>()); }
+
+<span class="tok-com">// async/await style — clearer, same result</span>
+<span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">load</span>() {
+  <span class="tok-key">const</span> r = <span class="tok-key">await</span> <span class="tok-fn">fetch</span>(<span class="tok-str">"/u"</span>);
+  <span class="tok-key">return</span> r.<span class="tok-fn">json</span>();
+}</pre></div>
       <div class="code"><div class="code-head"><span>async/await with error handling</span><button class="copy">Copy</button></div><pre><span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">getUser</span>(id) {
   <span class="tok-key">try</span> {
     <span class="tok-key">const</span> res = <span class="tok-key">await</span> <span class="tok-fn">fetch</span>(<span class="tok-str">`/api/users/${id}`</span>);
@@ -538,6 +724,12 @@ clearTimeout(id);</pre></div>
     <!-- GENERATORS -->
     <section id="generators">
       <h2><span class="num"></span> Generators &amp; Iterators</h2>
+      <p class="lead">A <b>generator</b> is a function you can <b>pause and resume</b>. You write <code class="inline">function*</code> and use <code class="inline">yield</code> to hand a value out and freeze; calling <code class="inline">.next()</code> resumes from where it stopped. This makes it easy to produce values <b>lazily</b> (only when asked) — even infinite sequences.</p>
+      <ul>
+        <li>An <b>iterator</b> is any object with a <code class="inline">.next()</code> method returning <code class="inline">{ value, done }</code>.</li>
+        <li>An <b>iterable</b> is any object with a <code class="inline">[Symbol.iterator]()</code> method — that's what <code class="inline">for...of</code> and the spread <code class="inline">[...x]</code> use.</li>
+        <li>Generators are the easiest way to build both at once.</li>
+      </ul>
       <div class="code"><div class="code-head"><span>Generator function</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span>* <span class="tok-fn">idGen</span>() {
   <span class="tok-key">let</span> id = <span class="tok-num">1</span>;
   <span class="tok-key">while</span> (<span class="tok-key">true</span>) <span class="tok-key">yield</span> id++;   <span class="tok-com">// lazy, pauses at yield</span>
@@ -556,6 +748,14 @@ g.<span class="tok-fn">next</span>().value; <span class="tok-com">// 2</span>
     <!-- ES6 -->
     <section id="es6">
       <h2><span class="num"></span> ES6+ Features</h2>
+      <p class="lead">“ES6” (ECMAScript 2015) modernized JavaScript; new features ship yearly. These are the ones you'll use daily — know what each does and reads like.</p>
+      <ul>
+        <li><b>Destructuring</b> — pull values out of arrays/objects into variables: <code class="inline">const {name} = user</code>.</li>
+        <li><b>Spread <code class="inline">...</code></b> — expand an array/object into another: <code class="inline">[...a, ...b]</code>, <code class="inline">{...obj}</code>.</li>
+        <li><b>Rest <code class="inline">...</code></b> — gather leftover items into an array: <code class="inline">function f(...args)</code>.</li>
+        <li><b>Default params</b> — fallback values: <code class="inline">(x = 0) =&gt; ...</code>.</li>
+        <li><b>Optional chaining <code class="inline">?.</code></b> and <b>nullish <code class="inline">??</code></b> — safely read deep properties and provide fallbacks.</li>
+      </ul>
       <div class="code"><div class="code-head"><span>Modern syntax</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> add = (a, b = <span class="tok-num">0</span>) =&gt; a + b;        <span class="tok-com">// arrow + default params</span>
 <span class="tok-key">const</span> [x, y, ...rest] = [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>];  <span class="tok-com">// destructuring + rest</span>
 <span class="tok-key">const</span> merged = { ...a, ...b };            <span class="tok-com">// spread</span>
