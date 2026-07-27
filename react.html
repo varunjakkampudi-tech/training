@@ -778,6 +778,16 @@ axios.interceptors.request.<span class="tok-fn">use</span>(cfg =&gt; {
         <li><b>Micro-frontends</b> (Module Federation) split a large app across teams.</li>
         <li><b>Next.js</b> adds SSR/SSG/RSC, routing, and data fetching on top of React.</li>
       </ul>
+      <h3>Styling approaches</h3>
+      <p>React is unopinionated about CSS — pick one approach and stay consistent.</p>
+      <table>
+        <tr><th>Approach</th><th>How</th><th>Good for</th></tr>
+        <tr><td>CSS / CSS Modules</td><td><code>import s from "./x.module.css"</code> → scoped class names</td><td>Simple, zero-runtime, framework-agnostic</td></tr>
+        <tr><td>Utility CSS (Tailwind)</td><td>Class names in JSX: <code>className="p-4 flex gap-2"</code></td><td>Fast iteration, consistent design tokens</td></tr>
+        <tr><td>CSS-in-JS (styled-components, Emotion)</td><td>Styles as JS, props-driven</td><td>Dynamic theming, colocated styles (small runtime cost)</td></tr>
+        <tr><td>Component libraries (MUI, Chakra)</td><td>Prebuilt themed components</td><td>Dashboards/admin, speed + accessibility</td></tr>
+      </table>
+      <div class="callout tip"><b>Server Components (RSC):</b> in Next.js App Router, components render on the server by default (no JS shipped) and only interactive \"client components\" (marked <code class="inline">"use client"</code>) hydrate in the browser — smaller bundles and direct data access, but hooks/state only work in client components.</div>
     </section>
 
     <!-- TESTING -->

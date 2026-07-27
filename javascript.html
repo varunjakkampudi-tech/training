@@ -155,6 +155,9 @@
     <a href="#debounce">Debounce &amp; Throttle</a>
     <a href="#copy">Deep vs Shallow Copy</a>
     <a href="#polyfills">Polyfills</a>
+    <a href="#regex">Regular Expressions</a>
+    <a href="#errors">Error Handling</a>
+    <a href="#json">JSON &amp; Serialization</a>
     <a class="section-title">Browser &amp; Memory</a>
     <a href="#gc">Garbage Collection</a>
     <a href="#dom">DOM &amp; BOM</a>
@@ -883,6 +886,90 @@ Function.prototype.<span class="tok-fn">myBind</span> = <span class="tok-key">fu
   <span class="tok-key">const</span> fn = this;
   <span class="tok-key">return</span> (...args) =&gt; fn.<span class="tok-fn">apply</span>(ctx, [...pre, ...args]);
 };</pre></div>
+    </section>
+
+    <!-- REGEX -->
+    <section id="regex">
+      <h2><span class="num"></span> Regular Expressions</h2>
+      <p class="lead">A <b>regular expression</b> (regex) is a pattern for matching text — used for validation, search, and replace. In JS you write one between slashes <code class="inline">/pattern/flags</code> or with <code class="inline">new RegExp()</code>.</p>
+      <h3>The pieces you actually use</h3>
+      <table>
+        <tr><th>Token</th><th>Matches</th></tr>
+        <tr><td><code>\d \w \s</code></td><td>digit, word char, whitespace (uppercase = negation: <code>\D \W \S</code>)</td></tr>
+        <tr><td><code>. ^ $</code></td><td>any char, start, end</td></tr>
+        <tr><td><code>* + ?</code></td><td>0+, 1+, 0-or-1 (add <code>?</code> to make lazy)</td></tr>
+        <tr><td><code>{2,4}</code></td><td>between 2 and 4 times</td></tr>
+        <tr><td><code>[a-z] [^0-9]</code></td><td>character set / negated set</td></tr>
+        <tr><td><code>(...) (?:...)</code></td><td>capturing / non-capturing group</td></tr>
+        <tr><td><code>a|b</code></td><td>alternation (a or b)</td></tr>
+        <tr><td>flags <code>g i m s u y</code></td><td>global, ignore-case, multiline, dotAll, unicode, sticky</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Test, match, replace</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> email = <span class="tok-str">"aria@shop.com"</span>;
+/^[^@\s]+@[^@\s]+\.[^@\s]+$/.<span class="tok-fn">test</span>(email);   <span class="tok-com">// true — simple email check</span>
+
+<span class="tok-str">"2026-07-27"</span>.<span class="tok-fn">match</span>(/(\d{4})-(\d{2})-(\d{2})/); <span class="tok-com">// [full, "2026","07","27"]</span>
+
+<span class="tok-com">// named groups + replace</span>
+<span class="tok-str">"2026-07-27"</span>.<span class="tok-fn">replace</span>(/(?&lt;y&gt;\d{4})-(?&lt;m&gt;\d{2})-(?&lt;d&gt;\d{2})/, <span class="tok-str">"$&lt;d&gt;/$&lt;m&gt;/$&lt;y&gt;"</span>);
+<span class="tok-com">// "27/07/2026"</span>
+
+<span class="tok-com">// find all matches with groups</span>
+[...<span class="tok-str">"a1b2c3"</span>.<span class="tok-fn">matchAll</span>(/([a-z])(\d)/g)].<span class="tok-fn">map</span>(m =&gt; m[<span class="tok-num">1</span>] + m[<span class="tok-num">2</span>]);</pre></div>
+      <div class="callout warn"><b>Two real traps:</b> (1) A <code class="inline">/g</code> regex is <b>stateful</b> — <code class="inline">.test()</code>/<code class="inline">.exec()</code> remember <code class="inline">lastIndex</code>, so reusing one in a loop can skip matches. (2) <b>Catastrophic backtracking</b>: nested quantifiers like <code class="inline">(a+)+$</code> on long input can hang the page (a ReDoS attack) — keep patterns simple and anchored.</div>
+      <div class="callout tip"><b>Beginner advice:</b> don't try to validate complex things (emails, URLs) with giant regexes — use built-ins (<code class="inline">URL</code>, <code class="inline">input[type=email]</code>) and keep regex for simple, well-understood patterns.</div>
+    </section>
+
+    <!-- ERROR HANDLING -->
+    <section id="errors">
+      <h2><span class="num"></span> Error Handling</h2>
+      <p class="lead">Errors are objects you <code class="inline">throw</code> and <code class="inline">catch</code>. Handling them well is the difference between a helpful message and a blank white screen.</p>
+      <div class="code"><div class="code-head"><span>try / catch / finally + custom errors</span><button class="copy">Copy</button></div><pre><span class="tok-key">try</span> {
+  <span class="tok-key">const</span> data = JSON.<span class="tok-fn">parse</span>(input);   <span class="tok-com">// may throw SyntaxError</span>
+} <span class="tok-key">catch</span> (err) {
+  <span class="tok-key">if</span> (err <span class="tok-key">instanceof</span> SyntaxError) console.<span class="tok-fn">error</span>(<span class="tok-str">"Bad JSON"</span>);
+  <span class="tok-key">else</span> <span class="tok-key">throw</span> err;          <span class="tok-com">// re-throw what you can't handle</span>
+} <span class="tok-key">finally</span> {
+  cleanup();                    <span class="tok-com">// always runs (success OR error)</span>
+}
+
+<span class="tok-com">// Custom error type carries a status + name</span>
+<span class="tok-key">class</span> <span class="tok-fn">ApiError</span> <span class="tok-key">extends</span> Error {
+  <span class="tok-fn">constructor</span>(message, status) {
+    <span class="tok-key">super</span>(message);
+    this.name = <span class="tok-str">"ApiError"</span>; this.status = status;
+  }
+}
+<span class="tok-key">throw</span> <span class="tok-key">new</span> <span class="tok-fn">ApiError</span>(<span class="tok-str">"Not found"</span>, <span class="tok-num">404</span>);</pre></div>
+      <table>
+        <tr><th>Built-in error</th><th>Thrown when</th></tr>
+        <tr><td><code>TypeError</code></td><td>Wrong type / calling a non-function / reading prop of undefined</td></tr>
+        <tr><td><code>ReferenceError</code></td><td>Using a variable that doesn't exist (or TDZ)</td></tr>
+        <tr><td><code>SyntaxError</code></td><td>Invalid code / bad JSON</td></tr>
+        <tr><td><code>RangeError</code></td><td>Value out of range (stack overflow, bad array length)</td></tr>
+      </table>
+      <div class="callout warn"><b>Async errors need <code class="inline">await</code> or <code class="inline">.catch</code>:</b> a plain <code class="inline">try/catch</code> will NOT catch a rejected promise unless you <code class="inline">await</code> it. For fire-and-forget promises, attach <code class="inline">.catch()</code>, and add a global <code class="inline">window.addEventListener("unhandledrejection", ...)</code> safety net.</div>
+      <div class="callout tip"><b>Good practice:</b> throw <em>early</em> at boundaries (validate inputs), catch <em>where you can act</em> (retry, fallback, user message), never swallow errors silently (empty <code class="inline">catch {}</code>), and always preserve the original with <code class="inline">{ cause: err }</code>.</div>
+    </section>
+
+    <!-- JSON -->
+    <section id="json">
+      <h2><span class="num"></span> JSON &amp; Serialization</h2>
+      <p class="lead"><b>JSON</b> (JavaScript Object Notation) is the standard text format for sending data between apps. <b>Serialization</b> = turning a JS value into a string; <b>parsing</b> = turning it back.</p>
+      <div class="code"><div class="code-head"><span>stringify &amp; parse</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> user = { name: <span class="tok-str">"Aria"</span>, roles: [<span class="tok-str">"admin"</span>], joined: <span class="tok-key">new</span> <span class="tok-fn">Date</span>() };
+
+<span class="tok-key">const</span> text = JSON.<span class="tok-fn">stringify</span>(user);         <span class="tok-com">// object -&gt; string (for network/storage)</span>
+<span class="tok-key">const</span> back = JSON.<span class="tok-fn">parse</span>(text);             <span class="tok-com">// string -&gt; object</span>
+
+JSON.<span class="tok-fn">stringify</span>(user, <span class="tok-key">null</span>, <span class="tok-num">2</span>);              <span class="tok-com">// pretty-print with 2-space indent</span>
+JSON.<span class="tok-fn">stringify</span>(user, [<span class="tok-str">"name"</span>]);            <span class="tok-com">// allow-list fields -&gt; {"name":"Aria"}</span></pre></div>
+      <div class="callout warn"><b>What JSON drops:</b> <code class="inline">stringify</code> silently loses <code class="inline">undefined</code>, functions, and <code class="inline">Symbol</code>s; turns <code class="inline">Date</code> into a string and <code class="inline">NaN</code>/<code class="inline">Infinity</code> into <code class="inline">null</code>; and throws on <code class="inline">BigInt</code> or circular references. That's why <code class="inline">JSON.parse(JSON.stringify(obj))</code> is a lossy deep-clone — prefer <code class="inline">structuredClone()</code>.</div>
+      <div class="code"><div class="code-head"><span>replacer / reviver for custom types</span><button class="copy">Copy</button></div><pre><span class="tok-com">// reviver runs on every parsed value — restore Dates</span>
+<span class="tok-key">const</span> obj = JSON.<span class="tok-fn">parse</span>(text, (key, val) =&gt;
+  <span class="tok-key">typeof</span> val === <span class="tok-str">"string"</span> &amp;&amp; /^\d{4}-\d{2}-\d{2}T/.<span class="tok-fn">test</span>(val) ? <span class="tok-key">new</span> <span class="tok-fn">Date</span>(val) : val);
+
+<span class="tok-com">// toJSON() lets a class control its own serialization</span>
+<span class="tok-key">class</span> <span class="tok-fn">Money</span> { <span class="tok-fn">constructor</span>(c){ this.cents = c; } <span class="tok-fn">toJSON</span>(){ <span class="tok-key">return</span> this.cents / <span class="tok-num">100</span>; } }</pre></div>
+      <div class="callout warn"><b>Security:</b> never build objects from untrusted JSON keys without care — assigning a <code class="inline">__proto__</code> key can cause <b>prototype pollution</b>. Validate the shape (Zod/JSON Schema) and never <code class="inline">eval()</code> JSON.</div>
     </section>
 
     <!-- GC -->

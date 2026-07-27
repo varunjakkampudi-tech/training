@@ -432,17 +432,38 @@ oauth2 = <span class="tok-fn">OAuth2PasswordBearer</span>(tokenUrl=<span class="
     <!-- OBSERVABILITY -->
     <section id="observability">
       <h2><span class="num"></span> Observability</h2>
+      <p class="lead">Observability = being able to answer “is it healthy?” and “why is this request slow/failing?” from the outside. The three pillars are <b>logs</b>, <b>metrics</b>, and <b>traces</b>.</p>
       <ul>
         <li><b>Health/readiness:</b> <code class="inline">/healthz</code> &amp; <code class="inline">/readyz</code> endpoints.</li>
         <li><b>Metrics:</b> <code class="inline">prometheus-fastapi-instrumentator</code> or OpenTelemetry (latency, error rate, RPS).</li>
         <li><b>Structured logging</b> with request/correlation IDs via middleware.</li>
         <li><b>Tracing:</b> OpenTelemetry spans across services.</li>
       </ul>
+      <div class="code"><div class="code-head"><span>Correlation-ID middleware + Prometheus metrics</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> uuid
+<span class="tok-key">from</span> starlette.middleware.base <span class="tok-key">import</span> BaseHTTPMiddleware
+
+<span class="tok-key">class</span> <span class="tok-fn">RequestID</span>(BaseHTTPMiddleware):
+    <span class="tok-key">async def</span> <span class="tok-fn">dispatch</span>(self, request, call_next):
+        rid = request.headers.get(<span class="tok-str">"x-request-id"</span>, <span class="tok-fn">str</span>(uuid.<span class="tok-fn">uuid4</span>()))
+        response = <span class="tok-key">await</span> <span class="tok-fn">call_next</span>(request)
+        response.headers[<span class="tok-str">"x-request-id"</span>] = rid   <span class="tok-com"># echo back for tracing</span>
+        <span class="tok-key">return</span> response
+
+app.<span class="tok-fn">add_middleware</span>(RequestID)
+
+<span class="tok-com"># one line adds /metrics for Prometheus (RPS, latency histograms, error rate)</span>
+<span class="tok-key">from</span> prometheus_fastapi_instrumentator <span class="tok-key">import</span> Instrumentator
+Instrumentator().<span class="tok-fn">instrument</span>(app).<span class="tok-fn">expose</span>(app)
+
+<span class="tok-op">@app.get</span>(<span class="tok-str">"/healthz"</span>)
+<span class="tok-key">async def</span> <span class="tok-fn">health</span>(): <span class="tok-key">return</span> {<span class="tok-str">"status"</span>: <span class="tok-str">"ok"</span>}</pre></div>
+      <div class="callout tip"><b>Liveness vs readiness:</b> <code class="inline">/healthz</code> (liveness) says “the process is up”; <code class="inline">/readyz</code> (readiness) also checks dependencies (DB, cache) are reachable before the load balancer sends traffic.</div>
     </section>
 
     <!-- TESTING -->
     <section id="testing">
       <h2><span class="num"></span> Testing</h2>
+      <p class="lead">FastAPI's <code class="inline">TestClient</code> (built on <code class="inline">httpx</code>) lets you call your app in-process — no running server needed. Swap real dependencies (DB, auth) with fakes via <code class="inline">dependency_overrides</code>.</p>
       <div class="code"><div class="code-head"><span>TestClient + dependency override</span><button class="copy">Copy</button></div><pre><span class="tok-key">from</span> fastapi.testclient <span class="tok-key">import</span> TestClient
 app.dependency_overrides[get_db] = fake_db   <span class="tok-com"># swap real DB</span>
 client = <span class="tok-fn">TestClient</span>(app)
@@ -450,6 +471,22 @@ client = <span class="tok-fn">TestClient</span>(app)
 <span class="tok-key">def</span> <span class="tok-fn">test_create</span>():
     r = client.<span class="tok-fn">post</span>(<span class="tok-str">"/users"</span>, json={<span class="tok-str">"name"</span>: <span class="tok-str">"A"</span>, <span class="tok-str">"email"</span>: <span class="tok-str">"a@x.com"</span>, <span class="tok-str">"age"</span>: <span class="tok-num">3</span>})
     <span class="tok-key">assert</span> r.status_code == <span class="tok-num">201</span></pre></div>
+      <div class="code"><div class="code-head"><span>pytest fixtures + async tests</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> pytest
+<span class="tok-key">from</span> httpx <span class="tok-key">import</span> AsyncClient, ASGITransport
+
+<span class="tok-op">@pytest.fixture</span>
+<span class="tok-key">def</span> <span class="tok-fn">client</span>():
+    app.dependency_overrides[get_db] = fake_db
+    <span class="tok-key">yield</span> <span class="tok-fn">TestClient</span>(app)          <span class="tok-com"># setup before, teardown after</span>
+    app.dependency_overrides.<span class="tok-fn">clear</span>()
+
+<span class="tok-op">@pytest.mark.anyio</span>                    <span class="tok-com"># test async endpoints</span>
+<span class="tok-key">async def</span> <span class="tok-fn">test_async</span>():
+    transport = <span class="tok-fn">ASGITransport</span>(app=app)
+    <span class="tok-key">async with</span> <span class="tok-fn">AsyncClient</span>(transport=transport, base_url=<span class="tok-str">"http://test"</span>) <span class="tok-key">as</span> ac:
+        r = <span class="tok-key">await</span> ac.<span class="tok-fn">get</span>(<span class="tok-str">"/healthz"</span>)
+    <span class="tok-key">assert</span> r.<span class="tok-fn">json</span>() == {<span class="tok-str">"status"</span>: <span class="tok-str">"ok"</span>}</pre></div>
+      <div class="callout tip"><b>Test the pyramid:</b> many fast <b>unit</b> tests (pure functions, validators), fewer <b>integration</b> tests (route + real DB in a test container), and a few <b>end-to-end</b> tests. Use a throwaway test database, not production.</div>
     </section>
 
     <!-- DEPLOY -->

@@ -533,9 +533,19 @@ db.products.<span class="tok-fn">drop</span>()</pre></div>
   { name: <span class="tok-str">"Monitor"</span>,  price: <span class="tok-num">249.99</span>, stock: <span class="tok-num">15</span>  }
 ])</pre></div>
       <div class="callout tip"><b>Tip:</b> If you don't supply an <code class="inline">_id</code>, MongoDB auto-generates a unique <code class="inline">ObjectId</code>. Use <code class="inline">{ ordered: false }</code> in <code class="inline">insertMany</code> so one bad doc doesn't abort the batch.</div>
+      <h3>Bulk writes (mixed operations in one round trip)</h3>
+      <p><code class="inline">bulkWrite</code> sends many different operations (insert/update/delete) to the server in a single call — far faster than many individual queries when you have lots of changes.</p>
+      <div class="code"><div class="code-head"><span>bulkWrite</span><button class="copy">Copy</button></div><pre>db.products.<span class="tok-fn">bulkWrite</span>([
+  { insertOne: { document: { name: <span class="tok-str">"Cable"</span>, price: <span class="tok-num">9.99</span> } } },
+  { updateOne: { filter: { name: <span class="tok-str">"Mouse"</span> }, update: { $inc: { stock: <span class="tok-num">50</span> } } } },
+  { deleteOne: { filter: { name: <span class="tok-str">"Monitor"</span> } } }
+], { ordered: <span class="tok-key">false</span> })   <span class="tok-com">// unordered = run in parallel, don't stop on first error</span>
+
+<span class="tok-com">// upsert: update if exists, else insert</span>
+db.products.<span class="tok-fn">updateOne</span>({ sku: <span class="tok-str">"A1"</span> }, { $set: { price: <span class="tok-num">10</span> } }, { upsert: <span class="tok-key">true</span> })</pre></div>
       <div class="realworld">
         <h4>🌍 Real-world scenario</h4>
-        <p>A <b>signup flow</b> uses <code class="inline">insertOne</code> to create a user; a nightly <b>data import</b> job uses <code class="inline">insertMany</code> with <code class="inline">{ ordered: false }</code> for resilient bulk loading.</p>
+        <p>A <b>signup flow</b> uses <code class="inline">insertOne</code> to create a user; a nightly <b>data import</b> job uses <code class="inline">insertMany</code> with <code class="inline">{ ordered: false }</code> for resilient bulk loading; a <b>sync job</b> reconciling an external feed uses <code class="inline">bulkWrite</code> with upserts to apply thousands of adds/updates/deletes in one round trip.</p>
       </div>
     </section>
 
@@ -744,6 +754,7 @@ db.products.<span class="tok-fn">createIndex</span>({ description: <span class="
 
 db.products.<span class="tok-fn">getIndexes</span>()
 db.products.<span class="tok-fn">find</span>({ name: <span class="tok-str">"Laptop"</span> }).<span class="tok-fn">explain</span>(<span class="tok-str">"executionStats"</span>)</pre></div>
+      <div class="callout tip"><b>Basic text vs Atlas Search:</b> a <code class="inline">"text"</code> index gives simple keyword search. For real search — typo tolerance (fuzzy), autocomplete, relevance scoring, and faceting — use <b>Atlas Search</b> (Lucene-based) with the <code class="inline">$search</code> aggregation stage. For AI/semantic similarity (RAG apps), Atlas <b>Vector Search</b> uses <code class="inline">$vectorSearch</code> over embedding vectors.</div>
 
       <h3>Index types</h3>
       <table>

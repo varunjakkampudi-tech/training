@@ -423,11 +423,31 @@ process.<span class="tok-fn">on</span>(<span class="tok-str">"uncaughtException"
     <!-- LOGGING -->
     <section id="logging">
       <h2><span class="num"></span> Logging</h2>
+      <p class="lead">Logs are how you understand a running server. In production use <b>structured JSON logs</b> (machine-parseable) with severity levels, not bare <code class="inline">console.log</code>.</p>
       <ul>
         <li>Use structured JSON logs (<code class="inline">pino</code>, <code class="inline">winston</code>) with levels (info/warn/error).</li>
         <li>Add a request ID (correlation ID) for tracing across services.</li>
         <li>Never log secrets/PII; ship logs to a central store (ELK, CloudWatch).</li>
       </ul>
+      <div class="code"><div class="code-head"><span>pino: structured logs + per-request correlation ID</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> pino = <span class="tok-fn">require</span>(<span class="tok-str">"pino"</span>)();
+<span class="tok-key">const</span> { randomUUID } = <span class="tok-fn">require</span>(<span class="tok-str">"crypto"</span>);
+
+app.<span class="tok-fn">use</span>((req, res, next) =&gt; {
+  req.id = req.headers[<span class="tok-str">"x-request-id"</span>] || <span class="tok-fn">randomUUID</span>();
+  req.log = pino.<span class="tok-fn">child</span>({ reqId: req.id });   <span class="tok-com">// every log ties back to this request</span>
+  req.log.<span class="tok-fn">info</span>({ method: req.method, url: req.url }, <span class="tok-str">"request"</span>);
+  <span class="tok-fn">next</span>();
+});
+
+<span class="tok-com">// { "level":30, "time":..., "reqId":"...", "method":"GET", "url":"/x", "msg":"request" }</span></pre></div>
+      <table>
+        <tr><th>Level</th><th>Use for</th></tr>
+        <tr><td><code>error</code></td><td>Something failed and needs attention (exceptions, 5xx)</td></tr>
+        <tr><td><code>warn</code></td><td>Recoverable oddities (retries, deprecations, 4xx spikes)</td></tr>
+        <tr><td><code>info</code></td><td>Business events (request served, user signed up)</td></tr>
+        <tr><td><code>debug</code></td><td>Verbose detail, off in production</td></tr>
+      </table>
+      <div class="callout warn"><b>Don't <code class="inline">console.log</code> in hot paths:</b> it's synchronous and can block the event loop under load. Pino writes asynchronously and is ~5× faster. Redact secrets with pino's <code class="inline">redact</code> option.</div>
     </section>
 
     <!-- FILE UPLOAD -->

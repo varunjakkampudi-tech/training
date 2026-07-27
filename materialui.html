@@ -371,7 +371,37 @@
         <li><b>Table</b> for simple tabular data; <b>MUI X DataGrid</b> for sorting/filtering/pagination/virtualization at scale.</li>
         <li><b>Typography</b> for consistent text scale; <b>List</b>, <b>Card</b>, <b>Chip</b>, <b>Avatar</b>, <b>Tooltip</b>, <b>Badge</b>.</li>
       </ul>
-      <div class="callout tip"><b>MUI X</b> (DataGrid, Date Pickers, Charts) is a separate package — the free Community tier covers most needs; Pro/Premium add advanced features.</div>
+      <h3>Icons</h3>
+      <p>Import named icons from <code class="inline">@mui/icons-material</code> — they're React components you size/color like any MUI component.</p>
+      <div class="code"><div class="code-head"><span>Using icons</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> DeleteIcon <span class="tok-key">from</span> <span class="tok-str">"@mui/icons-material/Delete"</span>;
+
+<span class="tok-tag">&lt;IconButton</span> aria-label=<span class="tok-str">"delete"</span><span class="tok-tag">&gt;&lt;DeleteIcon</span> fontSize=<span class="tok-str">"small"</span><span class="tok-tag">/&gt;&lt;/IconButton&gt;</span>
+<span class="tok-tag">&lt;Button</span> startIcon={<span class="tok-tag">&lt;DeleteIcon/&gt;</span>} color=<span class="tok-str">"error"</span><span class="tok-tag">&gt;</span>Delete<span class="tok-tag">&lt;/Button&gt;</span>
+<span class="tok-tag">&lt;DeleteIcon</span> sx={{ color: <span class="tok-str">"error.main"</span>, fontSize: <span class="tok-num">32</span> }}<span class="tok-tag">/&gt;</span></pre></div>
+      <h3>Typography scale</h3>
+      <p>Use <code class="inline">variant</code> instead of raw font sizes so text is consistent and theme-driven.</p>
+      <div class="code"><div class="code-head"><span>Typography variants</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;Typography</span> variant=<span class="tok-str">"h4"</span> gutterBottom<span class="tok-tag">&gt;</span>Title<span class="tok-tag">&lt;/Typography&gt;</span>
+<span class="tok-tag">&lt;Typography</span> variant=<span class="tok-str">"body2"</span> color=<span class="tok-str">"text.secondary"</span><span class="tok-tag">&gt;</span>Subtitle<span class="tok-tag">&lt;/Typography&gt;</span>
+<span class="tok-com">// variants: h1–h6, subtitle1/2, body1/2, button, caption, overline</span>
+<span class="tok-com">// component prop keeps semantics: render an h2 that LOOKS like h4</span>
+<span class="tok-tag">&lt;Typography</span> variant=<span class="tok-str">"h4"</span> component=<span class="tok-str">"h2"</span><span class="tok-tag">&gt;</span>Accessible heading<span class="tok-tag">&lt;/Typography&gt;</span></pre></div>
+      <h3>Table vs DataGrid</h3>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>&lt;Table&gt; (core)</h4>
+          <div class="code"><div class="code-head"><span>simple table</span><button class="copy">Copy</button></div><pre><span class="tok-tag">&lt;Table&gt;&lt;TableHead&gt;&lt;TableRow&gt;</span>
+  <span class="tok-tag">&lt;TableCell&gt;</span>Name<span class="tok-tag">&lt;/TableCell&gt;&lt;TableCell</span> align=<span class="tok-str">"right"</span><span class="tok-tag">&gt;</span>Age<span class="tok-tag">&lt;/TableCell&gt;</span>
+<span class="tok-tag">&lt;/TableRow&gt;&lt;/TableHead&gt;&lt;TableBody&gt;</span>
+  {rows.<span class="tok-fn">map</span>(r =&gt; <span class="tok-tag">&lt;TableRow</span> key={r.id}<span class="tok-tag">&gt;&lt;TableCell&gt;</span>{r.name}<span class="tok-tag">&lt;/TableCell&gt;&lt;/TableRow&gt;</span>)}
+<span class="tok-tag">&lt;/TableBody&gt;&lt;/Table&gt;</span></pre></div>
+        </div>
+        <div class="vs-card b"><h4>&lt;DataGrid&gt; (MUI X)</h4>
+          <div class="code"><div class="code-head"><span>sortable/filterable/paged</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> { DataGrid } <span class="tok-key">from</span> <span class="tok-str">"@mui/x-data-grid"</span>;
+<span class="tok-key">const</span> columns = [{ field: <span class="tok-str">"name"</span>, headerName: <span class="tok-str">"Name"</span>, flex: <span class="tok-num">1</span> }];
+<span class="tok-tag">&lt;DataGrid</span> rows={rows} columns={columns}
+  pageSizeOptions={[<span class="tok-num">10</span>, <span class="tok-num">25</span>]} checkboxSelection<span class="tok-tag">/&gt;</span></pre></div>
+        </div>
+      </div>
+      <div class="callout tip"><b>MUI X</b> (DataGrid, Date Pickers, Charts) is a separate package — the free Community tier covers most needs (sorting, filtering, pagination, selection); Pro/Premium add virtualization for huge datasets, grouping, and Excel export.</div>
     </section>
 
     <!-- PERFORMANCE -->

@@ -376,12 +376,19 @@ WantedBy=multi-user.target</pre></div>
     <!-- TEXT -->
     <section id="text">
       <h2><span class="num"></span> Text Processing (grep/sed/awk)</h2>
+      <p class="lead">On Linux you process text by piping small tools together. <code class="inline">grep</code> filters lines, <code class="inline">sed</code> edits streams, <code class="inline">awk</code> works with columns, and <code class="inline">cut/sort/uniq</code> slice and count.</p>
       <div class="code"><div class="code-head"><span>The power trio + pipes</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">grep</span> -rin <span class="tok-str">"error"</span> /var/log   <span class="tok-com"># recursive, case-insensitive, line #</span>
 <span class="tok-cmd">sed</span> -i <span class="tok-str">'s/old/new/g'</span> file    <span class="tok-com"># in-place replace</span>
 <span class="tok-cmd">awk</span> <span class="tok-str">'{print $1, $9}'</span> access.log  <span class="tok-com"># columns</span>
 
 <span class="tok-com"># pipeline: top 10 IPs hitting the server</span>
 <span class="tok-cmd">awk</span> <span class="tok-str">'{print $1}'</span> access.log | <span class="tok-cmd">sort</span> | <span class="tok-cmd">uniq</span> -c | <span class="tok-cmd">sort</span> -rn | <span class="tok-cmd">head</span></pre></div>
+      <div class="code"><div class="code-head"><span>More everyday one-liners</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">grep</span> -v <span class="tok-str">"INFO"</span> app.log            <span class="tok-com"># invert: hide INFO lines</span>
+<span class="tok-cmd">grep</span> -E <span class="tok-str">"warn|error"</span> app.log        <span class="tok-com"># regex alternation</span>
+<span class="tok-cmd">cut</span> -d: -f1 /etc/passwd            <span class="tok-com"># field 1, ':' delimiter -> usernames</span>
+<span class="tok-cmd">awk</span> -F, <span class="tok-str">'$3 &gt; 100 {print $1}'</span> data.csv <span class="tok-com"># filter rows by a column value</span>
+<span class="tok-cmd">sed</span> -n <span class="tok-str">'10,20p'</span> file               <span class="tok-com"># print only lines 10-20</span></pre></div>
+      <div class="callout tip"><b>Backups &amp; sync:</b> pair these with <code class="inline">tar -czf backup.tar.gz /srv/app</code> (archive) and <code class="inline">rsync -avz --delete /srv/app/ user@host:/backups/app/</code> (efficient incremental copy, local or remote). Automate with <code class="inline">cron</code> and keep dated copies for point-in-time restore.</div>
     </section>
 
     <!-- SCRIPTING -->

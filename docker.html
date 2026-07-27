@@ -305,9 +305,28 @@
     <!-- ENV -->
     <section id="env">
       <h2><span class="num"></span> Environment &amp; Secrets</h2>
+      <p class="lead">Apps need configuration (ports, URLs) and secrets (passwords, API keys). Config is fine as environment variables; secrets need extra care because image layers and history are inspectable.</p>
       <div class="code"><div class="code-head"><span>Env vars &amp; files</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">docker</span> run -e NODE_ENV=production -e PORT=3000 myapp
 <span class="tok-cmd">docker</span> run --env-file .env myapp   <span class="tok-com"># load from file</span></pre></div>
-      <div class="callout warn"><b>Never bake secrets into images</b> (they persist in layers/history). Use runtime env vars, Docker/BuildKit secrets, or a secrets manager. Add <code class="inline">.env</code> to <code class="inline">.dockerignore</code>.</div>
+      <div class="code"><div class="code-head"><span>BuildKit build-time secret (never stored in the image)</span><button class="copy">Copy</button></div><pre><span class="tok-com"># Dockerfile — mount a secret only for one RUN, leaves no layer trace</span>
+<span class="tok-key">RUN</span> --mount=type=secret,id=npmtoken \
+    NPM_TOKEN=$(cat /run/secrets/npmtoken) npm ci
+
+<span class="tok-com"># build, passing the secret from a file or env</span>
+<span class="tok-cmd">docker</span> build --secret id=npmtoken,src=./.npmtoken -t app .
+
+<span class="tok-com"># Runtime secrets in Compose (mounted at /run/secrets/db_password)</span>
+<span class="tok-com"># services: api: { secrets: [db_password] }</span>
+<span class="tok-com"># secrets: db_password: { file: ./db_password.txt }</span></pre></div>
+      <table>
+        <tr><th>Where</th><th>Use</th></tr>
+        <tr><td><code>ARG</code></td><td>Build-time only, visible in image history — <b>not for secrets</b></td></tr>
+        <tr><td><code>ENV</code></td><td>Runtime config, baked into the image — not for secrets</td></tr>
+        <tr><td><code>--env-file</code> / <code>-e</code></td><td>Runtime config/secrets injected at <code>run</code> time</td></tr>
+        <tr><td>BuildKit <code>--mount=type=secret</code></td><td>Build-time secrets that leave no layer</td></tr>
+        <tr><td>Secrets manager (Vault, AWS SM)</td><td>Best for production runtime secrets</td></tr>
+      </table>
+      <div class="callout warn"><b>Never bake secrets into images</b> (they persist in layers/history). Use runtime env vars, Docker/BuildKit secrets, or a secrets manager. Add <code class="inline">.env</code> to <code class="inline">.dockerignore</code>. To inspect a leaked layer: <code class="inline">docker history --no-trunc image</code>.</div>
     </section>
 
     <!-- COMPOSE -->

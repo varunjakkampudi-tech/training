@@ -230,6 +230,18 @@
         <tr><td>Properties</td><td><code>aria-label</code>, <code>aria-labelledby</code>, <code>aria-describedby</code>, <code>aria-controls</code></td></tr>
       </table>
       <div class="callout warn"><b>First rule of ARIA:</b> Don't use ARIA if a native element works. Bad ARIA is worse than none. ARIA changes semantics only — it does <em>not</em> add behavior (you still wire keyboard handling yourself).</div>
+      <h3>Common widget patterns (ARIA Authoring Practices)</h3>
+      <p>The <b>ARIA APG</b> defines the exact roles, states, and keyboard behavior for interactive widgets. When you build a custom one, follow the recipe — don't invent your own.</p>
+      <table>
+        <tr><th>Widget</th><th>Key roles/states</th><th>Expected keys</th></tr>
+        <tr><td>Tabs</td><td><code>tablist</code>, <code>tab</code>, <code>tabpanel</code>, <code>aria-selected</code></td><td>← → switch tabs, Tab moves to panel</td></tr>
+        <tr><td>Accordion</td><td><code>button</code> + <code>aria-expanded</code> + <code>aria-controls</code></td><td>Enter/Space toggles</td></tr>
+        <tr><td>Menu</td><td><code>menu</code>, <code>menuitem</code>, <code>aria-haspopup</code></td><td>↑ ↓ navigate, Esc closes</td></tr>
+        <tr><td>Combobox / autocomplete</td><td><code>combobox</code>, <code>aria-expanded</code>, <code>aria-activedescendant</code></td><td>↑ ↓ options, Enter selects</td></tr>
+        <tr><td>Dialog (modal)</td><td><code>dialog</code>, <code>aria-modal="true"</code>, <code>aria-labelledby</code></td><td>Focus trapped, Esc closes</td></tr>
+        <tr><td>Disclosure</td><td><code>button</code> + <code>aria-expanded</code></td><td>Enter/Space toggles</td></tr>
+      </table>
+      <div class="callout tip"><b>Prefer proven components:</b> building an accessible combobox or menu from scratch is genuinely hard (focus, <code class="inline">aria-activedescendant</code>, screen-reader announcements). Use a headless, accessibility-first library (Radix, React Aria, Headless UI) unless you have a strong reason not to.</div>
     </section>
 
     <!-- KEYBOARD -->

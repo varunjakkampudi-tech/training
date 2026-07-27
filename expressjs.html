@@ -393,8 +393,17 @@ app.<span class="tok-fn">post</span>(<span class="tok-str">"/avatar"</span>, upl
     <!-- LOGGING -->
     <section id="logging">
       <h2><span class="num"></span> Logging</h2>
-      <div class="code"><div class="code-head"><span>Morgan / pino-http</span><button class="copy">Copy</button></div><pre>app.<span class="tok-fn">use</span>(<span class="tok-fn">morgan</span>(<span class="tok-str">"combined"</span>));  <span class="tok-com">// HTTP access logs</span>
-<span class="tok-com">// pino-http for structured JSON + request IDs in production</span></pre></div>
+      <p class="lead">Two kinds of logs matter: <b>access logs</b> (every HTTP request) and <b>application logs</b> (what your code did). In production use structured JSON so tools can search/aggregate them.</p>
+      <div class="code"><div class="code-head"><span>Morgan (access) vs pino-http (structured + request IDs)</span><button class="copy">Copy</button></div><pre>app.<span class="tok-fn">use</span>(<span class="tok-fn">morgan</span>(<span class="tok-str">"combined"</span>));  <span class="tok-com">// human-readable HTTP access logs (dev/simple)</span>
+
+<span class="tok-com">// Production: structured JSON + a correlation ID per request</span>
+<span class="tok-key">const</span> pinoHttp = <span class="tok-fn">require</span>(<span class="tok-str">"pino-http"</span>);
+app.<span class="tok-fn">use</span>(<span class="tok-fn">pinoHttp</span>({
+  genReqId: (req) =&gt; req.headers[<span class="tok-str">"x-request-id"</span>] || <span class="tok-fn">crypto</span>.<span class="tok-fn">randomUUID</span>(),
+  redact: [<span class="tok-str">"req.headers.authorization"</span>, <span class="tok-str">"req.body.password"</span>]  <span class="tok-com">// never log secrets</span>
+}));
+app.<span class="tok-fn">get</span>(<span class="tok-str">"/x"</span>, (req, res) =&gt; { req.log.<span class="tok-fn">info</span>({ userId: req.user?.id }, <span class="tok-str">"served"</span>); res.<span class="tok-fn">end</span>(); });</pre></div>
+      <div class="callout tip"><b>Correlation IDs</b> let you trace one request across services: read <code class="inline">x-request-id</code> if present (from an upstream/gateway), otherwise generate one, attach it to every log line, and pass it downstream. In your central error handler, log <code class="inline">err</code> with the request ID so a user's error report maps to exact logs.</div>
     </section>
 
     <!-- TESTING -->
