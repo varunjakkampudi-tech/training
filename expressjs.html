@@ -185,6 +185,16 @@
         <li><b>Unopinionated</b> — you choose structure, DB, auth, etc.</li>
         <li><b>Huge ecosystem</b> — helmet, cors, morgan, multer, passport.</li>
       </ul>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>A <b>web framework</b> is a toolkit for answering HTTP requests. Node's built-in <code class="inline">http</code> module can do it, but you'd hand-write URL matching, body parsing, and response formatting for every app. <b>Express</b> gives you those pieces so you write far less boilerplate: you say “when a GET request comes to <code class="inline">/users</code>, run this function.”</p>
+      <div class="code"><div class="code-head"><span>Raw Node http vs Express</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Raw http: you parse the URL and method yourself</span>
+<span class="tok-fn">require</span>(<span class="tok-str">"http"</span>).<span class="tok-fn">createServer</span>((req, res) =&gt; {
+  <span class="tok-key">if</span> (req.url === <span class="tok-str">"/users"</span> &amp;&amp; req.method === <span class="tok-str">"GET"</span>) { <span class="tok-com">/* ... */</span> }
+}).<span class="tok-fn">listen</span>(<span class="tok-num">3000</span>);
+
+<span class="tok-com">// Express: declarative routing, JSON handled for you</span>
+app.<span class="tok-fn">get</span>(<span class="tok-str">"/users"</span>, (req, res) =&gt; res.<span class="tok-fn">json</span>(users));</pre></div>
+      <div class="callout"><b>Mental model:</b> an Express app is a <b>pipeline</b>. Each request enters at the top and flows down through a stack of functions (middleware). Any function can respond and stop the flow, or call <code class="inline">next()</code> to pass the request to the next one.</div>
       <div class="callout tip"><b>Interview importance:</b> Middleware order, error handling, and auth/security are the most-asked Express topics.</div>
     </section>
 
@@ -243,6 +253,14 @@ app.<span class="tok-fn">get</span>(<span class="tok-str">"/secure"</span>, auth
         <tr><td>Error</td><td><code>(err, req, res, next)</code> — 4 args</td></tr>
       </table>
       <div class="callout warn"><b>Order is everything:</b> body parsers must come before routes; error handlers must be registered <em>last</em>; a middleware that forgets <code class="inline">next()</code> hangs the request.</div>
+      <h3>The request's journey (airport security analogy)</h3>
+      <p>Think of middleware as checkpoints at an airport. A passenger (the request) passes through each in order: check-in (parse body), ID check (authentication), boarding-pass scan (authorization), then the gate (your route handler). Any checkpoint can stop the passenger (send a response) or wave them through with <code class="inline">next()</code>. If something goes wrong, they're sent to a special desk (the error handler).</p>
+      <div class="code"><div class="code-head"><span>Full request lifecycle, top to bottom</span><button class="copy">Copy</button></div><pre>app.<span class="tok-fn">use</span>(<span class="tok-fn">express.json</span>());              <span class="tok-com">// 1. parse the JSON body</span>
+app.<span class="tok-fn">use</span>(<span class="tok-fn">morgan</span>(<span class="tok-str">"dev"</span>));               <span class="tok-com">// 2. log the request</span>
+app.<span class="tok-fn">use</span>(authenticate);                <span class="tok-com">// 3. verify token, set req.user</span>
+app.<span class="tok-fn">get</span>(<span class="tok-str">"/me"</span>, (req, res) =&gt; res.<span class="tok-fn">json</span>(req.user)); <span class="tok-com">// 4. handler responds</span>
+app.<span class="tok-fn">use</span>((req, res) =&gt; res.<span class="tok-fn">sendStatus</span>(<span class="tok-num">404</span>)); <span class="tok-com">// 5. nothing matched</span>
+app.<span class="tok-fn">use</span>((err, req, res, next) =&gt; res.<span class="tok-fn">sendStatus</span>(<span class="tok-num">500</span>)); <span class="tok-com">// 6. any error lands here</span></pre></div>
     </section>
 
     <!-- REQ RES -->
