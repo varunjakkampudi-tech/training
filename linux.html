@@ -175,6 +175,13 @@
     <section id="intro">
       <h2><span class="num"></span> Overview</h2>
       <p class="lead">Linux runs most servers, containers, and cloud infrastructure. Administration means managing files, users, processes, services, networking, storage, and security from the command line.</p>
+      <h3>In plain English (start here if you're new)</h3>
+      <p><b>Linux</b> is an operating system, like Windows or macOS, but it's free, open-source, and dominates servers because it's stable, lightweight, and scriptable. On a server there's usually no desktop — you control everything by typing commands into a <b>shell</b> (a text prompt, also called the terminal). Learning Linux administration is really about learning that handful of commands and how they fit together.</p>
+      <div class="code"><div class="code-head"><span>How to read a command</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">ls</span> -lah /var/log
+<span class="tok-com"># │   │    └ argument: WHAT to act on (a path here)</span>
+<span class="tok-com"># │   └ options/flags: HOW to do it (-l long, -a all, -h human sizes)</span>
+<span class="tok-com"># └ the command: WHAT to run (list directory contents)</span></pre></div>
+      <div class="callout tip"><b>Your survival kit:</b> <code class="inline">pwd</code> (where am I?), <code class="inline">ls</code> (what's here?), <code class="inline">cd</code> (go somewhere), <code class="inline">cat</code>/<code class="inline">less</code> (read a file), <code class="inline">man command</code> (built-in manual), and <code class="inline">--help</code> after any command. When stuck, <code class="inline">man ls</code> or <code class="inline">ls --help</code> explains every option.</div>
       <table>
         <tr><th>Concept</th><th>Meaning</th></tr>
         <tr><td>Kernel</td><td>Core that manages hardware, processes, memory</td></tr>
