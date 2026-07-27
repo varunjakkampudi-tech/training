@@ -2221,6 +2221,68 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- CLOUD & AWS FUNDAMENTALS (beginner primer — kept inside #overview so it always shows first, before the module pager) -->
+                <div class="section-header">
+                    <div>
+                        <span class="module-tag"><span class="icon-dot"></span> Start Here</span>
+                        <h2>Cloud &amp; AWS Fundamentals (start here if you're new)</h2>
+                        <p>The plain-English foundation to read before the modules below.</p>
+                    </div>
+                    <span class="pill">Beginner Primer</span>
+                </div>
+
+                <div class="card" data-searchable>
+                    <h3>What is "the cloud"?</h3>
+                    <p><strong>The cloud is just someone else's computers that you rent over the internet.</strong> Instead of buying physical servers, keeping them in a room, powering, cooling, and repairing them, you rent computing power, storage, and databases from a provider and pay only for what you use — like electricity from the grid instead of running your own generator.</p>
+                    <p><strong>AWS (Amazon Web Services)</strong> is the largest such provider. It offers 200+ on-demand services (servers, storage, databases, networking, AI, and more) that you turn on in minutes from a web console or command line, and turn off when you're done.</p>
+                    <div class="callout">
+                        <strong>Analogy:</strong> owning servers is like buying a car (big upfront cost, you maintain it, it sits idle most of the day). The cloud is like a taxi/ride-share — you summon exactly what you need, use it, and pay per trip. That shift from <em>owning</em> to <em>renting</em> is the heart of cloud computing.
+                    </div>
+                    <h4>Why teams use it</h4>
+                    <ul>
+                        <li><strong>No upfront hardware</strong> — swap large capital purchases for pay-as-you-go pricing.</li>
+                        <li><strong>Elastic scale</strong> — grow from one user to millions by requesting more resources; shrink back down automatically when traffic drops.</li>
+                        <li><strong>Global reach</strong> — deploy close to users in data centers worldwide in minutes.</li>
+                        <li><strong>Managed services</strong> — AWS runs the undifferentiated heavy lifting (patching, backups, replication) so you focus on your app.</li>
+                    </ul>
+                </div>
+
+                <div class="card" data-searchable>
+                    <h3>The three cloud service models</h3>
+                    <p>How much AWS manages vs. how much you manage. A pizza analogy: <em>IaaS</em> = buy ingredients and cook at home; <em>PaaS</em> = takeaway you plate yourself; <em>SaaS</em> = eat at the restaurant.</p>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Model</th><th>You manage</th><th>AWS manages</th><th>Example</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>IaaS</strong> (Infrastructure)</td><td>OS, runtime, app, data</td><td>Servers, storage, network, virtualization</td><td>EC2 (a virtual server)</td></tr>
+                                <tr><td><strong>PaaS</strong> (Platform)</td><td>App + data only</td><td>OS, runtime, scaling, servers</td><td>Elastic Beanstalk, Lambda</td></tr>
+                                <tr><td><strong>SaaS</strong> (Software)</td><td>Just use it</td><td>Everything</td><td>Gmail, Amazon WorkMail</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" data-searchable>
+                    <h3>The words you'll see everywhere</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Term</th><th>Plain meaning</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>Region</strong></td><td>A geographic area with AWS data centers (e.g. <code>us-east-1</code> in Virginia). You pick one close to your users.</td></tr>
+                                <tr><td><strong>Availability Zone (AZ)</strong></td><td>One or more isolated data centers inside a Region. Running across multiple AZs survives a single data-center failure.</td></tr>
+                                <tr><td><strong>EC2</strong></td><td>A rentable virtual server (a computer in the cloud you can SSH into).</td></tr>
+                                <tr><td><strong>S3</strong></td><td>Unlimited file/object storage (images, backups, static sites).</td></tr>
+                                <tr><td><strong>IAM</strong></td><td>The permission system — who can do what. Controls all access.</td></tr>
+                                <tr><td><strong>VPC</strong></td><td>Your own private network inside AWS where your resources live.</td></tr>
+                                <tr><td><strong>Lambda</strong></td><td>Run code without managing any server ("serverless"); pay per execution.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="callout">
+                        <strong>How the pieces fit:</strong> you put your servers (EC2) and databases inside a private network (VPC), spread them across Availability Zones for reliability, store files in S3, control who can touch them with IAM, and pay only for what runs. Every module below is a deeper look at one of these building blocks.
+                    </div>
+                </div>
             </section>
 
             <!-- MODULE 10: MIGRATION TO AWS CLOUD -->
