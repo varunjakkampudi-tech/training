@@ -2053,96 +2053,109 @@
             }
         }
     </style>
+    <style>
+      /* === Shared Tech-Library shell (matches the other training guides) === */
+      body { display: flex; margin: 0; background: var(--bg); color: var(--text);
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif; line-height: 1.65; }
+      #sidebar { width: 288px; flex-shrink: 0; height: 100vh; position: sticky; top: 0;
+        overflow-y: auto; background: #fff; border-right: 1px solid var(--border); padding: 24px 0 40px; }
+      #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px;
+        font-weight: 800; font-size: 1.15rem; color: var(--accent-2); }
+      #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px;
+        background: var(--surface-3); border: 1px solid var(--border); border-radius: 8px;
+        font-size: .82rem; font-weight: 600; color: var(--accent-2); text-align: center; text-decoration: none; }
+      #sidebar .home-link:hover { background: var(--surface-2); }
+      #sidebar .search { margin: 0 18px 16px; }
+      #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px;
+        border: 1px solid var(--border); background: #fff; color: var(--text); font-size: .85rem; outline: none; }
+      #sidebar .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,.15); }
+      #sidebar nav a { display: block; padding: 7px 22px; color: var(--muted); font-size: .9rem;
+        border-left: 3px solid transparent; text-decoration: none; transition: all .15s ease; }
+      #sidebar nav a:hover { color: var(--accent-2); background: var(--surface-2); }
+      #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: .08em;
+        font-size: .7rem; color: var(--accent); font-weight: 800; pointer-events: none; }
+      #sidebar nav a.active { color: var(--accent-2); border-left-color: var(--accent);
+        background: var(--surface-2); font-weight: 600; }
+      main { flex: 1; min-width: 0; }
+      header.hero { display: block; padding: 64px 48px 48px; border-bottom: 1px solid var(--border);
+        background: linear-gradient(160deg, var(--surface-3), var(--surface)); }
+      header.hero h1 { font-size: 2.8rem; line-height: 1.1; margin: 0 0 14px; color: var(--text); letter-spacing: -.02em; }
+      header.hero h1 .g { background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text; background-clip: text; color: transparent; }
+      header.hero p { max-width: 780px; color: var(--muted); font-size: 1.1rem; margin: 0; }
+      header.hero .badges { margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+      header.hero .badge { background: #fff; border: 1px solid var(--border); color: var(--accent-2);
+        padding: 6px 14px; border-radius: 999px; font-size: .82rem; font-weight: 600; }
+      main .content { display: block; max-width: 1080px; margin: 0; padding: 24px 48px 90px; }
+      .site-footer { padding: 30px 48px; color: var(--muted); font-size: .85rem;
+        border-top: 1px solid var(--border); background: var(--surface-2); }
+      .site-footer a { color: var(--accent-2); }
+      #overview > .hero-topbar, #overview > .hero-panel, #overview > .hero-metrics { display: none !important; }
+      .menu-btn { display: none; }
+      @media (max-width: 900px) {
+        body { display: block; }
+        #sidebar { position: fixed; z-index: 50; transform: translateX(-100%);
+          transition: transform .25s; box-shadow: 0 14px 40px rgba(0,0,0,.2); }
+        #sidebar.open { transform: translateX(0); }
+        .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60;
+          background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 13px;
+          font-size: 1.1rem; cursor: pointer; font-weight: 700; }
+        header.hero { padding: 64px 20px 36px; }
+        header.hero h1 { font-size: 2rem; }
+        main .content { padding: 20px 20px 70px; }
+      }
+    </style>
 </head>
 <body>
-    <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
-    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
-    <div class="app">
-        <aside class="sidebar" id="sideNav" tabindex="-1" aria-hidden="true">
-            <div class="brand">
-                <div class="brand-mark">AWS</div>
-                <div>
-                    <h1>AWS</h1>
-                    <p>AWS handbook</p>
-                </div>
-            </div>
+  <button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+  <aside id="sidebar">
+    <div class="brand">☁️ AWS Guide</div>
+    <a class="home-link" href="./index.html">← Learning Library</a>
+    <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+    <nav id="nav">
+      <a class="section-title">Get Started</a>
+      <a href="#overview">Overview &amp; Cloud Basics</a>
+      <a class="section-title">Modules</a>
+      <a href="#module-1">1 · AWS Foundations</a>
+      <a href="#module-2">2 · Compute, Scaling &amp; Monitoring</a>
+      <a href="#module-3">3 · Serverless &amp; Containers</a>
+      <a href="#module-4">4 · IaC &amp; Region Selection</a>
+      <a href="#module-5">5 · Storage Services</a>
+      <a href="#module-6">6 · Networking &amp; Delivery</a>
+      <a href="#module-7">7 · Databases &amp; Caching</a>
+      <a href="#module-8">8 · Security &amp; Identity</a>
+      <a href="#module-9">9 · Pricing &amp; Cost</a>
+      <a href="#module-10">10 · Migration</a>
+      <a href="#module-11">11 · Well-Architected</a>
+      <a href="#module-12">12 · Hands-On: Lambda &amp; API GW</a>
+      <a href="#module-13">13 · Messaging Deep Dive</a>
+      <a class="section-title">Revision Hub</a>
+      <a href="#comparisons">Comparison Tables</a>
+      <a href="#architecture-flows">Architecture Flows</a>
+      <a href="#revision">Revision Notes</a>
+      <a href="#rapid-fire">Rapid-Fire Recap</a>
+      <a href="#one-line">One-Line Recap</a>
+      <a href="#memory-tricks">Memory Tricks</a>
+      <a href="#daily-cheatsheet">Cheat Sheet</a>
+    </nav>
+  </aside>
 
-            <div class="search-box">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                    <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.8"></circle>
-                </svg>
-                <input id="searchInput" type="search" placeholder="Search services, comparisons, answers..." aria-label="Search documentation">
-                <span class="search-shortcut">Ctrl + K</span>
-                <button id="clearSearch" title="Clear search" aria-label="Clear search" class="control-btn" style="margin-left:8px;">Clear</button>
-                <span id="searchCount" style="margin-left:8px;color:var(--muted);font-weight:600;">0 results</span>
-            </div>
+  <main>
+    <header class="hero">
+      <h1>The Complete <span class="g">AWS</span> Study Guide</h1>
+      <p>Cloud fundamentals, compute, storage, networking, databases, security, serverless, containers, cost optimization, architecture, and interview recap — beginner-friendly, in one continuous handbook.</p>
+      <div class="badges">
+        <span class="badge">Cloud Foundations</span>
+        <span class="badge">Compute &amp; Serverless</span>
+        <span class="badge">Storage &amp; Databases</span>
+        <span class="badge">Security</span>
+        <span class="badge">Architecture</span>
+        <span class="badge">Interview Ready</span>
+      </div>
+    </header>
 
-            <div class="nav-title">Quick Navigation</div>
-                <nav class="nav-list" aria-label="Page sections">
-                <a class="nav-link" href="#overview"><span class="nav-icon">⌂</span><span>Overview</span></a>
-                <a class="nav-link" href="#module-1"><span class="nav-icon">□</span><span>Module 1</span></a>
-                <a class="nav-link" href="#module-2"><span class="nav-icon">□</span><span>Module 2</span></a>
-                <a class="nav-link" href="#module-3"><span class="nav-icon">□</span><span>Module 3</span></a>
-                <a class="nav-link" href="#module-4"><span class="nav-icon">□</span><span>Module 4</span></a>
-                <a class="nav-link" href="#module-5"><span class="nav-icon">□</span><span>Module 5</span></a>
-                <a class="nav-link" href="#module-6"><span class="nav-icon">□</span><span>Module 6</span></a>
-                <a class="nav-link" href="#module-7"><span class="nav-icon">□</span><span>Module 7</span></a>
-                    <a class="nav-link" href="#module-8"><span class="nav-icon">□</span><span>Module 8</span></a>
-                    <a class="nav-link" href="#module-9"><span class="nav-icon">□</span><span>Module 9</span></a>
-                    <a class="nav-link" href="#module-10"><span class="nav-icon">□</span><span>Module 10</span></a>
-                    <a class="nav-link" href="#module-11"><span class="nav-icon">□</span><span>Module 11</span></a>
-                    <a class="nav-link" href="#module-12"><span class="nav-icon">⚡</span><span>Hands-On: Lambda &amp; API Gateway</span></a>
-                    <a class="nav-link" href="#module-13"><span class="nav-icon">✉</span><span>Deep Dive: SQS, SNS &amp; Messaging</span></a>
-            </nav>
-
-            <div class="nav-title">Revision Hub</div>
-                <nav class="nav-list" aria-label="Revision sections">
-                <a class="nav-link" href="#comparisons"><span class="nav-icon">≣</span><span>Comparison Tables</span></a>
-                <a class="nav-link" href="#architecture-flows"><span class="nav-icon">⇄</span><span>Architecture Flows</span></a>
-                <a class="nav-link" href="#revision"><span class="nav-icon">✎</span><span>Revision Notes</span></a>
-                <a class="nav-link" href="#memory-tricks"><span class="nav-icon">◌</span><span>Memory Tricks</span></a>
-            </nav>
-
-            <div class="theme-switch" aria-label="Theme switcher preview">
-                <div class="theme-option active">☼ <span>Light</span></div>
-                <div class="theme-option">☾ <span>Dark</span></div>
-            </div>
-
-            <div class="side-panel">
-                <h2>Study Loop</h2>
-                <div class="summary-list">
-                    <div class="summary-item">1. Read one module.</div>
-                    <div class="summary-item">2. Compare the related services.</div>
-                    <div class="summary-item">3. Recite one architecture flow.</div>
-                    <div class="summary-item">4. Review one comparison table.</div>
-                    <div class="summary-item">5. Finish with a rapid-fire recap.</div>
-                </div>
-            </div>
-
-            <div class="side-panel">
-                <h2>Topic Coverage</h2>
-                <ul class="list-tight">
-                    <li>Foundations</li>
-                    <li>Compute</li>
-                    <li>Storage</li>
-                    <li>Networking</li>
-                    <li>Databases</li>
-                    <li>Security</li>
-                    <li>Monitoring</li>
-                    <li>Organizations</li>
-                    <li>Governance</li>
-                    <li>Serverless</li>
-                    <li>Containers</li>
-                    <li>Pricing & Billing</li>
-                    <li>Cost Optimization</li>
-                    <li>Architecture</li>
-                </ul>
-            </div>
-        </aside>
-
-        <main class="content">
-            <section class="hero section-anchor" id="overview">
+    <div class="content">
+            <section class="section section-anchor" id="overview" data-searchable>
                 <div class="hero-topbar">
                     <div class="hero-top-meta">◔ <span>Last updated: May 12, 2025</span></div>
                     <div class="hero-top-actions">
@@ -12389,10 +12402,14 @@ Return  Query DB
                     </ul>
                 </div>
             </section>
-        </main>
-    </div>
+        </div>
+        <footer class="site-footer">
+          <p>☁️ <b>AWS — The Complete Study Guide</b> · Part of the Tech Learning Library. Cloud foundations, compute, storage, networking, databases, security, serverless, cost, architecture, and interview recap.</p>
+          <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+        </footer>
+    </main>
 
-    <script>
+    <script type="text/plain" data-legacy-spa>
         const searchInput = document.getElementById('searchInput');
         const clearSearchBtn = document.getElementById('clearSearch');
         const searchCount = document.getElementById('searchCount');
@@ -13260,6 +13277,55 @@ Return  Query DB
             updatePageProgress();
             updateActiveNav();
         }, { once: true });
+    </script>
+
+    <script>
+      (function () {
+        // Continuous scroll: place module sections in numeric order right after the overview.
+        var content = document.querySelector('.content');
+        var overview = document.getElementById('overview');
+        if (content && overview) {
+          var num = function (el) { var m = el.id.match(/\d+/); return m ? +m[0] : 999; };
+          var modules = Array.prototype.slice.call(content.querySelectorAll('section[id^="module-"]'))
+            .sort(function (a, b) { return num(a) - num(b); });
+          var anchor = overview;
+          modules.forEach(function (m) { anchor.after(m); anchor = m; });
+        }
+        // Copy buttons (if any code blocks exist).
+        document.querySelectorAll('.code .copy').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var pre = btn.closest('.code').querySelector('pre');
+            if (!pre) return;
+            navigator.clipboard.writeText(pre.innerText).then(function () {
+              btn.textContent = 'Copied!';
+              setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+            });
+          });
+        });
+        // Sidebar: active-link highlight on scroll, filter, and mobile toggle.
+        var links = Array.prototype.slice.call(document.querySelectorAll("#nav a[href^='#']"));
+        var sections = links.map(function (l) { return document.querySelector(l.getAttribute('href')); }).filter(Boolean);
+        var spy = function () {
+          var current = sections[0];
+          sections.forEach(function (s) { if (s.getBoundingClientRect().top <= 120) current = s; });
+          links.forEach(function (l) { l.classList.toggle('active', l.getAttribute('href') === '#' + (current && current.id)); });
+        };
+        window.addEventListener('scroll', spy, { passive: true }); spy();
+        var search = document.getElementById('navSearch');
+        if (search) search.addEventListener('input', function () {
+          var q = search.value.toLowerCase();
+          links.forEach(function (l) {
+            if (l.classList.contains('section-title')) return;
+            l.style.display = l.textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+          });
+        });
+        var sidebar = document.getElementById('sidebar');
+        var menuBtn = document.getElementById('menuBtn');
+        if (menuBtn && sidebar) menuBtn.addEventListener('click', function () { sidebar.classList.toggle('open'); });
+        document.querySelectorAll("#nav a[href^='#']").forEach(function (a) {
+          a.addEventListener('click', function () { if (sidebar) sidebar.classList.remove('open'); });
+        });
+      })();
     </script>
 </body>
 </html>
