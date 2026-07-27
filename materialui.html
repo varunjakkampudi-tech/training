@@ -179,6 +179,14 @@
         <li><b>Emotion-based styling</b> — the <code class="inline">sx</code> prop &amp; <code class="inline">styled</code> API.</li>
         <li><b>Accessible</b> — ARIA + keyboard behavior built in.</li>
       </ul>
+      <h3>In plain English (start here if you're new)</h3>
+      <p>A <b>component library</b> is a ready-made set of UI building blocks (buttons, form fields, dialogs, menus) that already look good, work on mobile, and are accessible. Instead of writing CSS for a button from scratch — including hover, focus, disabled, and dark-mode states — you import <code class="inline">&lt;Button&gt;</code> and it just works. MUI is the most popular such library for React, based on Google's <b>Material Design</b> look.</p>
+      <div class="code"><div class="code-head"><span>Plain CSS button vs MUI button</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Without MUI: you style everything yourself</span>
+<span class="tok-tag">&lt;button</span> className=<span class="tok-str">"btn"</span><span class="tok-tag">&gt;</span>Save<span class="tok-tag">&lt;/button&gt;</span>  <span class="tok-com">// + 30 lines of CSS for states</span>
+
+<span class="tok-com">// With MUI: variants, colors, icons, ripple, a11y all built in</span>
+<span class="tok-tag">&lt;Button</span> variant=<span class="tok-str">"contained"</span> color=<span class="tok-str">"primary"</span><span class="tok-tag">&gt;</span>Save<span class="tok-tag">&lt;/Button&gt;</span></pre></div>
+      <div class="callout"><b>When to use it:</b> great for dashboards, admin panels, and internal tools where you want a consistent, professional look fast. If you need a highly custom brand design, you can still fully restyle MUI via theming and <code class="inline">styled</code> — or reach for a lower-level option like Tailwind.</div>
       <div class="callout tip"><b>Interview importance:</b> Theming, the <code class="inline">sx</code> prop vs <code class="inline">styled</code>, responsive breakpoints, and customization/overrides are the most-asked MUI topics.</div>
     </section>
 
@@ -286,6 +294,12 @@
         <li><b>variants</b> — define custom variants reusable via <code class="inline">variant="pill"</code>.</li>
         <li>Access anywhere with <code class="inline">useTheme()</code>.</li>
       </ul>
+      <h3>What “theme” and “design tokens” mean</h3>
+      <p>A <b>theme</b> is one central object holding your design decisions — brand colors, fonts, spacing scale, corner radius. Components read from it, so changing <code class="inline">primary.main</code> in one place recolors every primary button, link, and highlight across the whole app. Those named values (like <code class="inline">primary.main</code> or <code class="inline">spacing</code>) are called <b>design tokens</b>.</p>
+      <p>The <b>spacing</b> token is why numbers in <code class="inline">sx</code> aren't pixels: <code class="inline">p: 2</code> means <code class="inline">theme.spacing(2)</code> = <b>16px</b> (the default scale is 8px per unit). This keeps spacing consistent everywhere.</p>
+      <div class="code"><div class="code-head"><span>One change, app-wide effect</span><button class="copy">Copy</button></div><pre><span class="tok-com">// Change the brand color once...</span>
+<span class="tok-key">const</span> theme = <span class="tok-fn">createTheme</span>({ palette: { primary: { main: <span class="tok-str">"#0ea5e9"</span> } } });
+<span class="tok-com">// ...every &lt;Button color="primary"&gt;, &lt;Switch&gt;, &lt;Tabs&gt; etc. updates automatically</span></pre></div>
     </section>
 
     <!-- RESPONSIVE -->
