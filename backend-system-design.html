@@ -170,13 +170,20 @@
     <a href="#ha">35 · High Availability</a>
     <a href="#dr">36 · Disaster Recovery</a>
     <a href="#resilience">37 · Resilience Patterns</a>
+    <a class="section-title">Distributed Systems Depth</a>
+    <a href="#consensus">38 · Consensus (Raft, Paxos)</a>
+    <a href="#consistent-hashing">39 · Consistent Hashing</a>
+    <a href="#distributed-transactions">40 · Distributed Transactions</a>
+    <a href="#event-driven">41 · Event-Driven, CQRS &amp; ES</a>
+    <a href="#db-internals">42 · Database Internals</a>
+    <a href="#service-mesh">43 · Service Mesh &amp; Backpressure</a>
     <a class="section-title">Mastery</a>
-    <a href="#production">38 · Production Architecture</a>
-    <a href="#case-studies">39 · Case Studies</a>
-    <a href="#decision-matrix">40 · Decision Matrix</a>
-    <a href="#mistakes">41 · Common Mistakes</a>
-    <a href="#interview">42 · Interview Questions</a>
-    <a href="#checklist">43 · Mastery Checklist</a>
+    <a href="#production">44 · Production Architecture</a>
+    <a href="#case-studies">45 · Case Studies</a>
+    <a href="#decision-matrix">46 · Decision Matrix</a>
+    <a href="#mistakes">47 · Common Mistakes</a>
+    <a href="#interview">48 · Interview Questions</a>
+    <a href="#checklist">49 · Mastery Checklist</a>
   </nav>
 </aside>
 
@@ -866,6 +873,213 @@ deploy strategies: rolling · blue-green (instant switch) · canary (1%→100%)<
     </section>
 
     <!-- 38 -->
+    <section id="consensus">
+      <h2><span class="num"></span> Consensus (Raft, Paxos, Quorums)</h2>
+      <p class="lead"><b>What:</b> how a group of nodes agree on a single value (e.g. "who is the leader?", "what is the next log entry?") <b>even when some nodes crash or messages are lost</b>. Consensus is the beating heart of every replicated database, config store, and coordination service.</p>
+      <p><b>The problem it solves:</b> with replication you have many copies of the data. If two nodes accept conflicting writes, the system diverges (split-brain). Consensus guarantees all healthy nodes apply the <em>same operations in the same order</em>, so replicas stay consistent.</p>
+
+      <h3>Quorums — the math behind agreement</h3>
+      <p>A <b>quorum</b> is a majority of nodes. With <code class="inline">N</code> nodes, a write quorum <code class="inline">W</code> and read quorum <code class="inline">R</code> guarantee strong consistency when <code class="inline">W + R &gt; N</code> (read and write sets always overlap) and <code class="inline">W &gt; N/2</code> (no two writes commit without overlapping).</p>
+      <div class="diagram">N = 5 nodes → majority = 3
+Write needs 3 acks, Read needs 3 responses → W(3)+R(3)=6 &gt; N(5) ✓ overlap guaranteed
+Tolerates failures: a cluster of N survives ⌊(N-1)/2⌋ node failures
+   3 nodes → survive 1   |   5 nodes → survive 2   |   7 nodes → survive 3
+(That's why clusters use ODD counts — 4 nodes tolerate the same 1 failure as 3.)</div>
+
+      <h3>Raft — understandable consensus (used by etcd, Consul, CockroachDB, TiKV)</h3>
+      <p>Raft breaks consensus into three sub-problems: <b>leader election</b>, <b>log replication</b>, and <b>safety</b>.</p>
+      <div class="diagram">Roles: Follower ──(election timeout)──▶ Candidate ──(wins majority vote)──▶ Leader
+        Leader ──(higher term seen)──▶ Follower
+
+Normal operation (one leader per "term"):
+  client → Leader appends entry to its log
+  Leader → replicates entry to followers (AppendEntries RPC)
+  once a MAJORITY have stored it → entry is COMMITTED → applied to state machine
+  Leader tells followers the new commit index → they apply too
+
+Leader failure:
+  followers stop hearing heartbeats → election timeout fires
+  a follower becomes Candidate, increments term, requests votes
+  node with the most up-to-date log wins → new Leader → continues the log</div>
+      <table>
+        <tr><th>Raft concept</th><th>Why it matters</th></tr>
+        <tr><td><b>Term</b></td><td>Logical clock; every term has ≤1 leader; stale leaders step down when they see a higher term</td></tr>
+        <tr><td><b>Log matching</b></td><td>If two logs agree on an entry's index+term, all prior entries are identical → simple, provable safety</td></tr>
+        <tr><td><b>Commit = majority</b></td><td>An entry is durable once a quorum stores it; survives any minority failure</td></tr>
+        <tr><td><b>Heartbeats</b></td><td>Leader sends empty AppendEntries to assert authority and prevent needless elections</td></tr>
+      </table>
+
+      <div class="vs-grid">
+        <div class="vs-card a"><b>Paxos</b><ul><li>The original (Lamport). Proven correct, powers Google Chubby &amp; Spanner.</li><li>Notoriously hard to understand &amp; implement correctly.</li><li>Multi-Paxos adds a stable leader for efficiency.</li></ul></div>
+        <div class="vs-card b"><b>Raft</b><ul><li>Designed for <em>understandability</em>; same guarantees as Multi-Paxos.</li><li>Strong leader + explicit terms make it easier to reason about.</li><li>The modern default (etcd, Consul, CockroachDB).</li></ul></div>
+      </div>
+
+      <div class="callout tip"><b>Where you meet consensus in real life:</b> Kubernetes stores all cluster state in <b>etcd</b> (Raft). Kafka's controller quorum (KRaft) uses Raft. ZooKeeper (ZAB, a Paxos-like protocol) coordinates HBase/older Kafka. Any time a system needs a single source of truth for leadership or config, a consensus protocol is underneath.</div>
+      <div class="callout warn"><b>Cost:</b> consensus requires a network round-trip to a majority on every write → higher latency. Keep consensus groups small (3–5 nodes) and only put <em>metadata</em> (leadership, config, small critical state) through them — not your bulk data throughput.</div>
+    </section>
+
+    <!-- 39 -->
+    <section id="consistent-hashing">
+      <h2><span class="num"></span> Consistent Hashing</h2>
+      <p class="lead"><b>What:</b> a hashing scheme that maps both <em>keys</em> and <em>servers</em> onto the same ring, so adding or removing a server moves only a small fraction of keys instead of remapping everything.</p>
+      <p><b>The problem it solves:</b> naive sharding uses <code class="inline">server = hash(key) % N</code>. The moment <code class="inline">N</code> changes (a node joins or dies), almost every key maps to a different server → a cache-wide miss storm and a massive data reshuffle. Consistent hashing makes that cost proportional to <code class="inline">1/N</code>.</p>
+      <div class="diagram">Hash ring (0 … 2^32-1), servers placed at hash(serverID):
+
+            ┌───────── A ─────────┐
+        (keys go clockwise to     )
+        (the next server on ring  )
+     D ◀                           ▶ B
+        \                         /
+         └────────── C ──────────┘
+
+Lookup: key → hash(key) → walk clockwise → first server owns it.
+Add server E between A and B → only keys in (A,E] move from B to E.
+Remove C → only C's keys move to the next server (D). Everything else stays put.</div>
+
+      <h3>Virtual nodes (vnodes) — fixing lopsided rings</h3>
+      <p>With few servers, random placement creates uneven load. The fix: hash each physical server to <b>many</b> points on the ring (e.g. 100–200 vnodes each). This smooths distribution and lets more-powerful nodes hold more vnodes (weighting).</p>
+      <table>
+        <tr><th>Aspect</th><th>Modulo hashing</th><th>Consistent hashing</th></tr>
+        <tr><td>Keys moved when N changes</td><td>≈ all (N-1)/N</td><td>≈ 1/N</td></tr>
+        <tr><td>Load balance</td><td>Even</td><td>Even <em>with vnodes</em></td></tr>
+        <tr><td>Used by</td><td>Simple fixed clusters</td><td>DynamoDB, Cassandra, Riak, Redis Cluster (slot variant), CDNs, memcached clients</td></tr>
+      </table>
+      <div class="callout tip"><b>Redis Cluster nuance:</b> Redis uses <b>16384 fixed hash slots</b> (a bounded, explicit variant of the same idea): <code class="inline">slot = CRC16(key) mod 16384</code>. Slots are assigned to nodes; resharding moves whole slots. Same goal — minimal, predictable data movement — with simpler bookkeeping.</div>
+    </section>
+
+    <!-- 40 -->
+    <section id="distributed-transactions">
+      <h2><span class="num"></span> Distributed Transactions (2PC, Saga, Outbox, Idempotency)</h2>
+      <p class="lead"><b>The problem:</b> a single business action (place order → charge payment → reserve stock) spans multiple services/databases. There is no shared <code class="inline">BEGIN/COMMIT</code>. How do you keep them consistent when any step can fail?</p>
+
+      <h3>Two-Phase Commit (2PC) — strong but fragile</h3>
+      <div class="diagram">Coordinator asks all participants:  PHASE 1 "PREPARE" (can you commit?)
+  all reply YES → PHASE 2 "COMMIT"   |   any replies NO → "ABORT" (rollback all)
+
+Problem: if the coordinator crashes after PREPARE, participants are BLOCKED
+holding locks until it recovers. Synchronous, low throughput, single point of failure.
+Used inside a DB / XA transactions — rarely across microservices at scale.</div>
+
+      <h3>Saga — the microservices answer</h3>
+      <p>A saga is a sequence of <b>local</b> transactions; each step publishes an event that triggers the next. If a step fails, previously-completed steps are undone with <b>compensating transactions</b> (semantic rollback — e.g. "refund payment", not a DB rollback).</p>
+      <div class="vs-grid">
+        <div class="vs-card a"><b>Choreography</b><ul><li>Services react to each other's events — no central brain.</li><li>Simple for a few steps; decoupled.</li><li>Hard to follow &amp; debug as steps grow (event spaghetti).</li></ul></div>
+        <div class="vs-card b"><b>Orchestration</b><ul><li>A central orchestrator tells each service what to do next.</li><li>Explicit, easy to visualize &amp; monitor the flow.</li><li>Orchestrator becomes a critical component to keep available.</li></ul></div>
+      </div>
+      <div class="diagram">Order Saga (orchestrated):
+  create order(pending) → charge payment → reserve inventory → confirm order
+  If inventory fails ▶ compensate: refund payment → cancel order
+Sagas give ATOMICITY-of-outcome via compensation, but only EVENTUAL consistency
+(there are brief windows where payment succeeded but order not yet confirmed).</div>
+
+      <h3>The dual-write problem &amp; the Outbox pattern</h3>
+      <p>You must "update my DB <em>and</em> publish an event". Doing both directly is unsafe — a crash between them loses the event or double-sends it. The <b>Transactional Outbox</b> writes the event into an <code class="inline">outbox</code> table <em>in the same DB transaction</em> as the business change. A separate relay (often CDC via Debezium) reads the outbox and publishes to the broker — guaranteeing the event is sent <em>iff</em> the data was committed.</p>
+      <div class="diagram">One local TX:  UPDATE orders ...  +  INSERT INTO outbox(event) ...   ✓ atomic
+Relay/CDC:     tail outbox / DB log → publish to Kafka → mark sent
+Result: no lost events, no phantom events. At-least-once delivery downstream.</div>
+
+      <h3>Idempotency — the glue that makes retries safe</h3>
+      <p>Because async delivery is <b>at-least-once</b>, consumers WILL sometimes see a message twice. Idempotency makes processing the same message twice have the same effect as once.</p>
+      <table>
+        <tr><th>Technique</th><th>How</th></tr>
+        <tr><td><b>Idempotency key</b></td><td>Client sends a unique key per request; server stores it and returns the prior result on replay (payments APIs do this)</td></tr>
+        <tr><td><b>Dedup table / processed-IDs</b></td><td>Record each handled message ID; skip if already seen</td></tr>
+        <tr><td><b>Natural idempotency</b></td><td>Design ops as "set state to X" (idempotent) rather than "increment" (not)</td></tr>
+        <tr><td><b>Upsert / conditional writes</b></td><td>Use unique constraints or compare-and-set so duplicates collapse</td></tr>
+      </table>
+      <div class="callout warn"><b>Exactly-once is a lie (mostly):</b> across a network you get at-most-once or at-least-once. "Exactly-once processing" is really at-least-once delivery + idempotent consumers (or transactional dedup, as in Kafka's EOS). Design for duplicates — don't assume they can't happen.</div>
+    </section>
+
+    <!-- 41 -->
+    <section id="event-driven">
+      <h2><span class="num"></span> Event-Driven Architecture, CQRS &amp; Event Sourcing</h2>
+      <p class="lead"><b>What:</b> instead of services calling each other synchronously, they emit <b>events</b> ("OrderPlaced", "PaymentCaptured") to a broker; interested services react. This decouples producers from consumers in time, scale, and deployment.</p>
+      <div class="vs-grid">
+        <div class="vs-card a"><b>Request/response (sync)</b><ul><li>Caller waits; tight coupling.</li><li>Simple, immediate consistency.</li><li>Cascading failure: a slow dependency slows the caller.</li></ul></div>
+        <div class="vs-card b"><b>Event-driven (async)</b><ul><li>Fire-and-forget; loose coupling.</li><li>Elastic — consumers scale independently, absorb spikes via the log.</li><li>Eventual consistency; harder to trace end-to-end.</li></ul></div>
+      </div>
+
+      <h3>CQRS — Command Query Responsibility Segregation</h3>
+      <p>Split the model that <b>writes</b> (commands) from the model that <b>reads</b> (queries). Writes go to a normalized store optimized for consistency; a projection builds denormalized read models (often in a fast store like Redis/Elasticsearch) optimized for the query shapes your UI needs.</p>
+      <div class="diagram">Command side:  API → validate → write to store → emit event
+                                                     │
+Read side:     event → projector → materialized read view(s) (Redis/ES/SQL view)
+Queries hit the pre-shaped read model → blazing fast, independently scalable.
+Trade-off: read model is EVENTUALLY consistent with the write model.</div>
+
+      <h3>Event Sourcing — the log IS the source of truth</h3>
+      <p>Instead of storing current state, store the full ordered sequence of events. Current state is derived by <b>replaying</b> events. Gives you a perfect audit log, time-travel, and the ability to build new projections from history.</p>
+      <table>
+        <tr><th>Benefit</th><th>Cost / caution</th></tr>
+        <tr><td>Complete audit trail &amp; temporal queries</td><td>Replays get slow → use <b>snapshots</b></td></tr>
+        <tr><td>Rebuild any read model from scratch</td><td>Event schema evolution is hard (versioning/upcasting)</td></tr>
+        <tr><td>Natural fit with CQRS &amp; Kafka</td><td>Higher complexity — don't use it everywhere</td></tr>
+      </table>
+      <div class="callout tip"><b>Pragmatic advice:</b> most systems only need plain event-driven messaging + maybe CQRS for a few hot read paths. Reserve full event sourcing for domains where the <em>history itself</em> is the product (ledgers, banking, order lifecycles, audit-heavy systems).</div>
+    </section>
+
+    <!-- 42 -->
+    <section id="db-internals">
+      <h2><span class="num"></span> Database Internals (WAL, B-Tree vs LSM, MVCC, Pooling)</h2>
+      <p class="lead">Knowing <em>how</em> a database stores and protects data lets you choose the right engine and explain performance in interviews.</p>
+
+      <h3>Write-Ahead Log (WAL) — durability without slow random writes</h3>
+      <p>Before changing data pages, the DB appends the change to a sequential <b>WAL</b> and fsyncs it. A sequential append is fast; the actual pages are updated later (asynchronously). On crash, the WAL is <b>replayed</b> to recover committed changes. This is the "D" in ACID and the basis of replication (ship the log to replicas).</p>
+
+      <h3>B-Tree vs LSM-Tree — the two storage-engine families</h3>
+      <div class="vs-grid">
+        <div class="vs-card a"><b>B-Tree (read-optimized)</b><ul><li>Balanced tree of pages, updated in place.</li><li>Great random reads; predictable latency.</li><li>Writes touch pages randomly → more write amplification.</li><li>Postgres, MySQL/InnoDB, most RDBMS.</li></ul></div>
+        <div class="vs-card b"><b>LSM-Tree (write-optimized)</b><ul><li>Buffer writes in memory (memtable) → flush sorted files (SSTables) → compact in background.</li><li>Excellent write throughput; sequential I/O.</li><li>Reads may check several levels → bloom filters help.</li><li>Cassandra, RocksDB, LevelDB, ScyllaDB, HBase.</li></ul></div>
+      </div>
+      <div class="diagram">LSM write path:  write → memtable (RAM) + WAL
+                 memtable full → flush → immutable SSTable (disk, sorted)
+                 background COMPACTION merges SSTables, drops tombstones
+LSM read path:   memtable → bloom filter → SSTable levels (newest→oldest)</div>
+
+      <h3>MVCC — readers don't block writers</h3>
+      <p><b>Multi-Version Concurrency Control:</b> each write creates a new version of a row tagged with a transaction timestamp. Readers see a consistent snapshot as of their start; they never block writers and vice-versa. Old versions are cleaned up later (Postgres <code class="inline">VACUUM</code>). This is how "repeatable read"/"snapshot isolation" is implemented without heavy locking.</p>
+
+      <h3>Connection pooling — don't pay TCP+auth per query</h3>
+      <p>Opening a DB connection is expensive (TCP handshake, TLS, auth, backend process). A <b>pool</b> keeps a set of warm connections and hands them out. Size it near <code class="inline">cores × 2</code>-ish (not thousands) — too many connections thrash the DB. For serverless/high-fanout, front the DB with a pooler (PgBouncer, RDS Proxy).</p>
+      <div class="callout warn"><b>Pool exhaustion</b> is a classic outage: a slow query holds connections, the pool drains, new requests queue and time out. Fix with query timeouts, right-sized pools, circuit breakers, and killing long-running queries.</div>
+    </section>
+
+    <!-- 43 -->
+    <section id="service-mesh">
+      <h2><span class="num"></span> Service Mesh &amp; Backpressure</h2>
+      <p class="lead"><b>Service mesh:</b> a dedicated infrastructure layer that handles service-to-service networking — retries, mTLS, timeouts, load balancing, traffic shifting, and telemetry — <em>without changing app code</em>, by injecting a <b>sidecar</b> proxy (e.g. Envoy) next to every service.</p>
+      <div class="diagram">Without mesh: each service reimplements retries/TLS/metrics/tracing in code (per language!)
+With mesh:
+   ┌── Pod ──────────────┐        ┌── Pod ──────────────┐
+   │ app ⇄ [Envoy sidecar]│ ⇄ mTLS ⇄ │[Envoy sidecar] ⇄ app │
+   └─────────┬───────────┘        └───────────┬─────────┘
+        DATA PLANE (sidecars carry all traffic)
+        CONTROL PLANE (Istio/Linkerd) configures every sidecar centrally
+Gives: mTLS everywhere, uniform retries/timeouts, canary/blue-green routing,
+       circuit breaking, and golden metrics/traces — language-agnostic.</div>
+      <table>
+        <tr><th>Concern</th><th>Mesh handles it</th></tr>
+        <tr><td>Security</td><td>Automatic mutual TLS + service identity</td></tr>
+        <tr><td>Traffic</td><td>Canary, blue-green, traffic mirroring, weighted routing</td></tr>
+        <tr><td>Resilience</td><td>Retries, timeouts, circuit breaking, outlier ejection</td></tr>
+        <tr><td>Observability</td><td>Consistent metrics, logs, distributed traces for every call</td></tr>
+      </table>
+      <div class="callout warn"><b>Not free:</b> a sidecar per pod adds latency, memory, and operational complexity. Adopt a mesh when you have <em>many</em> services in <em>multiple languages</em> needing uniform security/observability — not for a handful of services.</div>
+
+      <h3>Backpressure &amp; flow control</h3>
+      <p><b>Backpressure</b> is a consumer signalling "slow down, I'm overwhelmed" so a fast producer can't drown it. Without it, queues grow unbounded → memory blows up → the whole pipeline collapses.</p>
+      <table>
+        <tr><th>Mechanism</th><th>How it applies backpressure</th></tr>
+        <tr><td><b>Bounded queues</b></td><td>Full queue blocks/rejects producers instead of growing forever</td></tr>
+        <tr><td><b>Pull-based consumers</b></td><td>Consumer requests N items when ready (Kafka, Reactive Streams)</td></tr>
+        <tr><td><b>TCP flow control</b></td><td>Receive window naturally throttles a fast sender</td></tr>
+        <tr><td><b>Load shedding</b></td><td>Drop/deprioritize excess load (429s) to protect the core</td></tr>
+        <tr><td><b>Rate limiting &amp; concurrency caps</b></td><td>Cap in-flight work so downstreams aren't overrun</td></tr>
+      </table>
+      <div class="callout tip"><b>Rule of thumb:</b> every queue must be bounded and every unbounded buffer is a future out-of-memory outage. Design the whole pipeline so the slowest stage can push back on the fastest.</div>
+    </section>
+
+    <!-- 44 -->
     <section id="production">
       <h2><span class="num"></span> Production Architecture (the big picture)</h2>
       <p class="lead">How the pieces assemble into a real, scalable, observable system.</p>
@@ -885,7 +1099,7 @@ Reliability: multi-AZ · read replicas · backups/DR · circuit breakers</div>
       <div class="callout tip"><b>The recipe:</b> stateless services behind a gateway + LB, each owning its data, a cache in front of hot reads, a queue/stream for async fan-out, full observability, orchestrated by Kubernetes with CI/CD, made reliable with replication + DR + resilience patterns.</div>
     </section>
 
-    <!-- 39 -->
+    <!-- 45 -->
     <section id="case-studies">
       <h2><span class="num"></span> Case Studies</h2>
       <p class="lead">Apply the toolkit. For each: requirements → estimation → data model → architecture → bottlenecks.</p>
@@ -926,7 +1140,7 @@ Data: posts (KV/Cassandra), feed cache (Redis), media (S3+CDN); rank + paginate 
       <div class="callout tip"><b>How to shine:</b> clarify scale (estimation) → propose components → name the key trade-off (e.g. fan-out on write vs read) → go deep where probed → mention bottlenecks &amp; how you'd monitor them.</div>
     </section>
 
-    <!-- 40 -->
+    <!-- 46 -->
     <section id="decision-matrix">
       <h2><span class="num"></span> Decision Matrix</h2>
       <table>
@@ -949,7 +1163,7 @@ Data: posts (KV/Cassandra), feed cache (Redis), media (S3+CDN); rank + paginate 
       </table>
     </section>
 
-    <!-- 41 -->
+    <!-- 47 -->
     <section id="mistakes">
       <h2><span class="num"></span> Common Mistakes &amp; Anti-Patterns</h2>
       <table>
@@ -969,7 +1183,7 @@ Data: posts (KV/Cassandra), feed cache (Redis), media (S3+CDN); rank + paginate 
       </table>
     </section>
 
-    <!-- 42 -->
+    <!-- 48 -->
     <section id="interview">
       <h2><span class="num"></span> Interview Questions</h2>
       <h3>🟢 Fundamentals</h3>
@@ -992,7 +1206,7 @@ Data: posts (KV/Cassandra), feed cache (Redis), media (S3+CDN); rank + paginate 
       <details class="qa"><summary>Design a rate limiter for a distributed API.</summary><div class="ans"><p>Token bucket or sliding window with counters in Redis (atomic INCR + EXPIRE, or a Lua script for accuracy) so all gateway instances share state. Return 429 + Retry-After; enforce at the gateway; shard/replicate Redis and consider a local pre-check to cut Redis load.</p></div></details>
     </section>
 
-    <!-- 43 -->
+    <!-- 49 -->
     <section id="checklist">
       <h2><span class="num"></span> Mastery Checklist</h2>
       <table>
