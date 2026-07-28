@@ -328,7 +328,7 @@ Today         (App Router + PPR + Turbopack)</div>
           <li>Server Actions, PPR — the future</li>
         </ul></div>
         <div class="vs-card b"><h4>Pages Router (<code>pages/</code>)</h4><ul>
-          <li>Client Components by default</li>
+          <li>Traditional React model (no Server Components)</li>
           <li><code>getServerSideProps</code>/<code>getStaticProps</code></li>
           <li>Simpler, mature, still supported</li>
           <li>No new features being added</li>
@@ -412,6 +412,7 @@ app/layout.tsx  ──▶  app/dashboard/layout.tsx  ──▶  app/dashboard/se
   <span class="tok-key">return</span> posts.<span class="tok-fn">map</span>((p) =&gt; ({ slug: p.slug })); <span class="tok-com">// each becomes a static route at build</span>
 }</pre></div>
       <div class="callout warn"><b>Common mistake:</b> forgetting to <code class="inline">await params</code> in Next 15 — <code class="inline">params</code>/<code class="inline">searchParams</code> are Promises now. Destructuring them synchronously throws.</div>
+      <div class="callout tip"><b>Why are they Promises?</b> Making <code class="inline">params</code>/<code class="inline">searchParams</code> async lets Next start rendering the static parts of the page before these dynamic values resolve — it fits React's async rendering model and the <code class="inline">use()</code> API, and keeps a page from being forced fully-dynamic just to read a param.</div>
     </section>
 
     <!-- 8. LAYOUTS -->
@@ -528,6 +529,7 @@ router.<span class="tok-fn">push</span>(<span class="tok-str">"/login"</span>); 
 }</pre></div>
       <div class="callout warn"><b>Server Components can't:</b> use hooks (<code class="inline">useState</code>/<code class="inline">useEffect</code>), use browser APIs, or attach event handlers (<code class="inline">onClick</code>). Those require a Client Component.</div>
       <div class="callout tip"><b>Best practice:</b> keep components on the server as long as possible; push the <code class="inline">"use client"</code> boundary <em>down</em> to the smallest interactive leaf (e.g. a like button), not up at the page. This minimizes shipped JS.</div>
+      <div class="callout warn"><b>Enforce the boundary:</b> add <code class="inline">import "server-only"</code> to modules that must never reach the browser (they use secrets/DB) — the build errors if a Client Component imports them. Use <code class="inline">import "client-only"</code> for browser-only modules to catch the reverse mistake.</div>
     </section>
 
     <!-- 13. CLIENT COMPONENTS -->
@@ -571,7 +573,7 @@ router.<span class="tok-fn">push</span>(<span class="tok-str">"/login"</span>); 
         <tr><td><b>ISR</b> (Incremental)</td><td>Build time, then <b>re-generated</b> on a timer/on-demand</td><td>Content that changes occasionally (product pages)</td><td><code>fetch(url,{next:{revalidate:60}})</code></td></tr>
         <tr><td><b>SSR</b> (Dynamic)</td><td>On <b>every request</b></td><td>Personalized/real-time (dashboards, auth'd data)</td><td><code>cache:"no-store"</code> or reading cookies/headers</td></tr>
         <tr><td><b>CSR</b> (Client)</td><td>In the <b>browser</b> after load</td><td>Highly interactive widgets behind auth</td><td>Client Component + client fetch</td></tr>
-        <tr><td><b>PPR</b> (Partial Prerender)</td><td>Static shell instantly + dynamic holes streamed</td><td>Pages mixing static + personalized parts</td><td>Experimental: static page with Suspense'd dynamic parts</td></tr>
+        <tr><td><b>PPR</b> (Partial Prerender)</td><td>Static shell instantly + dynamic holes streamed</td><td>Pages mixing static + personalized parts</td><td>Experimental (available on supported Next.js releases/targets): static page with Suspense'd dynamic parts</td></tr>
       </table>
       <div class="callout"><b>Key idea:</b> in the App Router you don't pick a strategy with a special export — you pick it by <b>how you fetch</b>. Cached fetch → static; <code class="inline">no-store</code> or dynamic APIs (cookies/headers) → per-request SSR; a revalidate time → ISR. This is the single most-asked Next.js interview concept.</div>
       <div class="diagram">SSG:  build ──▶ [HTML on CDN] ──▶ user (fastest, but stale until rebuild)
@@ -618,7 +620,7 @@ PPR:  static shell now  +  dynamic parts streamed in  (best of both)</div>
         <tr><td><b>Full Route Cache</b></td><td>Rendered HTML/RSC of static routes</td><td>Redeploy, <code>revalidatePath</code></td></tr>
         <tr><td><b>Router Cache</b> (client)</td><td>Visited routes in the browser</td><td><code>router.refresh()</code>, time</td></tr>
       </table>
-      <div class="code"><div class="code-head"><span>Control caching per fetch</span><button class="copy">Copy</button></div><pre><span class="tok-fn">fetch</span>(url, { cache: <span class="tok-str">"force-cache"</span> });                 <span class="tok-com">// static (default-ish): cache forever</span>
+      <div class="code"><div class="code-head"><span>Control caching per fetch</span><button class="copy">Copy</button></div><pre><span class="tok-fn">fetch</span>(url, { cache: <span class="tok-str">"force-cache"</span> });                 <span class="tok-com">// explicitly opt into caching (static)</span>
 <span class="tok-fn">fetch</span>(url, { next: { revalidate: 60 } });              <span class="tok-com">// ISR: refresh at most every 60s</span>
 <span class="tok-fn">fetch</span>(url, { cache: <span class="tok-str">"no-store"</span> });                    <span class="tok-com">// SSR: always fresh, never cache</span>
 <span class="tok-fn">fetch</span>(url, { next: { tags: [<span class="tok-str">"posts"</span>] } });            <span class="tok-com">// tag it for on-demand invalidation</span></pre></div>
@@ -676,6 +678,7 @@ PPR:  static shell now  +  dynamic parts streamed in  (best of both)</div>
         <li><b>Security:</b> validate inputs (Zod) and check auth <em>inside</em> the action — it's a public entry point, treat it like an API route.</li>
       </ul>
       <div class="callout warn"><b>Common mistake:</b> trusting Server Action input. Anyone can invoke it; always authenticate and validate server-side.</div>
+      <div class="callout tip"><b><code class="inline">"use server"</code> placement:</b> put it at the <b>top of a file</b> to make every exported function an action, or <b>inline</b> as the first line inside a function for a single action. Actions must be <code class="inline">async</code> and can be imported into Client Components and passed to <code class="inline">&lt;form action={...}&gt;</code>.</div>
       <div class="keytk"><h4>✅ Key takeaways</h4><ul>
         <li>Server Actions = server mutations callable from components/forms, no API boilerplate.</li>
         <li>They enable progressive enhancement; still require auth + validation server-side.</li>
@@ -891,6 +894,15 @@ module.exports = { output: <span class="tok-str">"standalone"</span> };  <span c
         <li><b>Caching tiers:</b> CDN (full-route) → Data Cache → Redis (app cache) → DB.</li>
         <li><b>Observability:</b> distributed tracing across Next → services; feature flags; canary deploys.</li>
       </ul>
+      <div class="diagram">Browser
+   ↓ CDN                (static assets, Full Route Cache)
+   ↓ Edge Middleware    (auth gate, redirects, geo)
+   ↓ App Router         (route matching)
+   ↓ Server Components  (render + data)
+   ↓ Database
+   ↓ Redis              (cache / sessions / rate limit)
+   ↓ Queue              (async jobs, emails, webhooks)
+   ↓ Background Worker  (process the queue)</div>
       <div class="callout tip"><b>Design decision:</b> don't force all backend logic into Next. Use it as the presentation + BFF tier and keep durable/domain services separate for independent scaling and ownership.</div>
     </section>
 
@@ -947,7 +959,7 @@ Reconcile with HTML → Hydration of Client Components only</div>
       <table>
         <tr><th>React 19 API</th><th>Role in Next.js</th></tr>
         <tr><td><code>async</code> components</td><td>Server Components can be async and <code>await</code> data directly.</td></tr>
-        <tr><td><code>use()</code></td><td>Unwrap a promise/context in render (e.g. read a passed-down data promise in a client child).</td></tr>
+        <tr><td><code>use()</code></td><td>Unwrap a promise/context in render (e.g. read a passed-down data promise in a client child). A <b>React</b> API, not a Next.js one.</td></tr>
         <tr><td>Server Actions (<code>"use server"</code>)</td><td>Functions callable from the client that execute on the server.</td></tr>
         <tr><td><code>useOptimistic</code>, <code>useFormStatus</code></td><td>Optimistic UI &amp; pending state around Actions.</td></tr>
       </table>
