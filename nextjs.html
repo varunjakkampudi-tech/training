@@ -162,8 +162,22 @@
     <a class="section-title">Mastery</a>
     <a href="#project">30 · Mini Project</a>
     <a href="#enterprise">31 · Enterprise Architecture</a>
-    <a href="#interview">32 · Interview Questions</a>
-    <a href="#checklist">33 · Mastery Checklist</a>
+    <a class="section-title">Internals &amp; Depth</a>
+    <a href="#lifecycle">32 · Rendering Lifecycle</a>
+    <a href="#rsc-internals">33 · RSC &amp; React 19 Internals</a>
+    <a href="#hydration">34 · Hydration &amp; Navigation</a>
+    <a href="#caching-internals">35 · Caching Internals &amp; Segment Config</a>
+    <a href="#build">36 · Runtimes, Compiler &amp; Bundling</a>
+    <a href="#action-mw-internals">37 · Action &amp; Middleware Internals</a>
+    <a href="#asset-internals">38 · Image &amp; Font Internals</a>
+    <a href="#prod-auth">39 · Production Authentication</a>
+    <a href="#deploy-observe">40 · Deploy, Monitor &amp; Profile</a>
+    <a href="#structure-migration">41 · Structure, API &amp; Migration</a>
+    <a href="#decision-matrix">42 · Decision Matrix</a>
+    <a href="#mistakes">43 · Common Production Mistakes</a>
+    <a class="section-title">Interview</a>
+    <a href="#interview">44 · Interview Questions</a>
+    <a href="#checklist">45 · Mastery Checklist</a>
   </nav>
 </aside>
 
@@ -865,9 +879,362 @@ module.exports = { output: <span class="tok-str">"standalone"</span> };  <span c
       <div class="callout tip"><b>Design decision:</b> don't force all backend logic into Next. Use it as the presentation + BFF tier and keep durable/domain services separate for independent scaling and ownership.</div>
     </section>
 
-    <!-- 32. INTERVIEW -->
+    <!-- 32. RENDERING LIFECYCLE -->
+    <section id="lifecycle">
+      <h2><span class="num"></span> Rendering Lifecycle &amp; Timeline</h2>
+      <p class="lead">The single most valuable mental model: exactly what happens, in order, from a URL to an interactive page. Memorize this timeline — most Next.js questions are "where in this pipeline does X happen?"</p>
+      <div class="diagram">Request (URL)
+   ↓
+Middleware            (edge: auth gate, redirects, rewrites, headers)
+   ↓
+Route Matching        (map URL → app/ segments; layouts nest)
+   ↓
+Server Component Render   (run async components on the server)
+   ↓
+Data Fetch            (fetch/DB) ──▶ Cache lookup (memo → data cache)
+   ↓
+HTML  +  RSC Payload  (HTML for instant paint; Flight payload describes the tree)
+   ↓
+Stream to Browser     (chunked; Suspense boundaries flush as they resolve)
+   ↓
+Hydration             (Client Components attach state + event handlers)
+   ↓
+Interactive</div>
+      <div class="callout"><b>Read it as two halves:</b> the <b>server half</b> (middleware → render → data → HTML/RSC) produces content fast and SEO-friendly; the <b>client half</b> (stream → hydrate) makes it interactive. Static routes skip the per-request server work (served from cache/CDN); dynamic routes run it every request.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Order: middleware → routing → server render → data/cache → HTML+RSC → stream → hydrate → interactive.</li>
+        <li>Static = precomputed; dynamic = per-request; PPR = static shell + streamed dynamic holes.</li>
+      </ul></div>
+    </section>
+
+    <!-- 33. RSC INTERNALS -->
+    <section id="rsc-internals">
+      <h2><span class="num"></span> RSC &amp; React 19 Internals</h2>
+      <p class="lead">Beyond "Server Components render on the server" — how they actually reach the browser, and how React 19 powers Next.js.</p>
+      <h3>The Flight protocol &amp; RSC payload</h3>
+      <p>The server doesn't send Server Components as HTML only. It serializes the rendered tree into a compact streaming format called the <b>RSC Payload</b> (the "React Flight" protocol) — a description of the component tree, their props, and placeholders (references) for Client Components. The browser uses it to reconcile with the HTML and to know <em>where</em> Client Components go.</p>
+      <div class="diagram">Browser
+   ↓ (navigates / requests)
+Client Component (reference only)
+   ↓ Flight request
+Server Component Tree (rendered on server)
+   ↓ serialize
+RSC Payload  (tree + props + client-component references)
+   ↓ stream to browser
+Reconcile with HTML → Hydration of Client Components only</div>
+      <h3>Why hooks and event handlers aren't allowed in Server Components</h3>
+      <ul>
+        <li><b>Hooks (<code class="inline">useState</code>/<code class="inline">useEffect</code>):</b> require a persistent instance that lives across renders <em>in the browser</em>. A Server Component runs once on the server and is gone — there's no client instance to hold state.</li>
+        <li><b>Event handlers (<code class="inline">onClick</code>):</b> a function can't be serialized into the RSC payload and sent over the wire; interactivity must live in a Client Component that ships its own JS.</li>
+        <li><b>Serialization boundary:</b> props passed from a Server to a Client Component must be serializable (no functions, class instances, etc.) — they cross the network.</li>
+      </ul>
+      <h3>React 19 features that make this work</h3>
+      <table>
+        <tr><th>React 19 API</th><th>Role in Next.js</th></tr>
+        <tr><td><code>async</code> components</td><td>Server Components can be async and <code>await</code> data directly.</td></tr>
+        <tr><td><code>use()</code></td><td>Unwrap a promise/context in render (e.g. read a passed-down data promise in a client child).</td></tr>
+        <tr><td>Server Actions (<code>"use server"</code>)</td><td>Functions callable from the client that execute on the server.</td></tr>
+        <tr><td><code>useOptimistic</code>, <code>useFormStatus</code></td><td>Optimistic UI &amp; pending state around Actions.</td></tr>
+      </table>
+      <div class="callout tip"><b>Interview gold:</b> "A Server Component is serialized to an RSC/Flight payload — a tree description with references to Client Components — streamed to the browser, which hydrates only those client leaves. Hooks/handlers are impossible in Server Components because there's no persistent client instance and functions can't be serialized."</div>
+    </section>
+
+    <!-- 34. HYDRATION -->
+    <section id="hydration">
+      <h2><span class="num"></span> Hydration &amp; Navigation Internals</h2>
+      <p class="lead"><b>Hydration</b> is React attaching event listeners and state to the already-rendered server HTML so it becomes interactive without re-rendering it from scratch.</p>
+      <table>
+        <tr><th>Term</th><th>Meaning</th></tr>
+        <tr><td>Hydration</td><td>Attach JS behavior to server HTML (reuse the DOM).</td></tr>
+        <tr><td>Partial hydration</td><td>Only interactive islands (Client Components) hydrate — the RSC model is partial hydration by design.</td></tr>
+        <tr><td>Progressive hydration</td><td>Hydrate pieces as they stream in / as needed, not all at once.</td></tr>
+        <tr><td>Hydration mismatch</td><td>Server HTML ≠ first client render → React warns and may re-render.</td></tr>
+      </table>
+      <h3>Why hydration mismatches happen (and how to fix)</h3>
+      <p>Any value that differs between server and client on first render causes a mismatch:</p>
+      <div class="code"><div class="code-head"><span>Mismatch sources</span><button class="copy">Copy</button></div><pre><span class="tok-fn">Date</span>.<span class="tok-fn">now</span>()      <span class="tok-com">// time differs server vs client</span>
+<span class="tok-fn">Math</span>.<span class="tok-fn">random</span>()  <span class="tok-com">// different value each render</span>
+window / navigator / localStorage  <span class="tok-com">// don't exist on the server</span>
+<span class="tok-com">// Fix: render such values in useEffect (client-only), or guard with a mounted flag,</span>
+<span class="tok-com">// or use suppressHydrationWarning for intentionally-different content (e.g. a timestamp).</span></pre></div>
+      <h3>Navigation internals — why it feels instant</h3>
+      <div class="diagram">&lt;Link&gt; enters viewport
+   ↓ Prefetch  (fetch the route's RSC payload in the background)
+   ↓ Router Cache  (store it client-side)
+click ↓ Navigation  (no full page load)
+   ↓ Partial Rendering  (only the changed segment re-renders; shared layouts stay)</div>
+      <div class="callout"><b>Why it's fast:</b> <code class="inline">&lt;Link&gt;</code> prefetches the destination, stores it in the client Router Cache, and on click only the changed route segment re-renders while shared layouts persist — no full reload, no re-fetch of unchanged shells.</div>
+    </section>
+
+    <!-- 35. CACHING INTERNALS -->
+    <section id="caching-internals">
+      <h2><span class="num"></span> Caching Internals &amp; Route Segment Config</h2>
+      <p class="lead">The four caches, in the order a request hits them — with lifetime, scope, and how each is invalidated. This is the #1 confusion in Next.js.</p>
+      <div class="diagram">Request Memoization   (per-render, dedupe identical fetches)
+   ↓
+Data Cache            (persistent, across requests/users, on the server)
+   ↓
+Full Route Cache      (rendered HTML+RSC of static routes)
+   ↓
+Router Cache          (client-side, visited routes in the browser)</div>
+      <table>
+        <tr><th>Cache</th><th>Scope</th><th>Lifetime</th><th>Invalidate</th></tr>
+        <tr><td>Request Memoization</td><td>One render pass</td><td>Duration of that request</td><td>Automatic</td></tr>
+        <tr><td>Data Cache</td><td>All users, server</td><td>Until revalidated</td><td><code>revalidate</code>, <code>revalidateTag</code>, <code>no-store</code></td></tr>
+        <tr><td>Full Route Cache</td><td>All users, server/CDN</td><td>Until redeploy/revalidate</td><td><code>revalidatePath</code>, redeploy</td></tr>
+        <tr><td>Router Cache</td><td>Single user, browser</td><td>Session / time</td><td><code>router.refresh()</code>, time</td></tr>
+      </table>
+      <h3>Route Segment Config — per-route overrides</h3>
+      <p>Export these consts from a <code class="inline">layout.tsx</code>/<code class="inline">page.tsx</code>/<code class="inline">route.ts</code> to control rendering &amp; caching for that segment:</p>
+      <div class="code"><div class="code-head"><span>Segment config options</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">const</span> dynamic = <span class="tok-str">"force-dynamic"</span>;   <span class="tok-com">// "auto"|"force-dynamic"|"error"|"force-static"</span>
+<span class="tok-key">export</span> <span class="tok-key">const</span> dynamicParams = <span class="tok-key">true</span>;         <span class="tok-com">// allow params not in generateStaticParams</span>
+<span class="tok-key">export</span> <span class="tok-key">const</span> revalidate = 60;               <span class="tok-com">// ISR window (seconds) | false | 0</span>
+<span class="tok-key">export</span> <span class="tok-key">const</span> fetchCache = <span class="tok-str">"default-cache"</span>;   <span class="tok-com">// override fetch caching for the segment</span>
+<span class="tok-key">export</span> <span class="tok-key">const</span> runtime = <span class="tok-str">"nodejs"</span>;             <span class="tok-com">// "nodejs" | "edge"</span>
+<span class="tok-key">export</span> <span class="tok-key">const</span> preferredRegion = <span class="tok-str">"iad1"</span>;        <span class="tok-com">// deploy edge fn close to your DB</span>
+<span class="tok-key">export</span> <span class="tok-key">const</span> maxDuration = 10;               <span class="tok-com">// max seconds the function may run</span></pre></div>
+      <div class="callout warn"><b>Most-confused point:</b> the Data Cache is shared across <em>all users</em> — never cache per-user/private data with it. Use <code class="inline">no-store</code> (or dynamic APIs like <code class="inline">cookies()</code>) for anything personalized.</div>
+    </section>
+
+    <!-- 36. BUILD -->
+    <section id="build">
+      <h2><span class="num"></span> Runtimes, Compiler &amp; Bundling</h2>
+      <h3>Edge Runtime vs Node Runtime</h3>
+      <div class="diagram">Node Runtime                     Edge Runtime
+─────────────                    ─────────────
+full Node APIs                   V8 isolate (Web APIs only)
+filesystem, crypto, TCP          fast cold start, runs globally
+DB drivers (pg, mongodb)         limited Node APIs (no fs/native drivers)
+higher cold start                great for auth/redirects/personalization</div>
+      <table>
+        <tr><th>Choose</th><th>When</th></tr>
+        <tr><td><b>Node</b> (default)</td><td>DB access, native libs, heavy compute, most pages/route handlers</td></tr>
+        <tr><td><b>Edge</b></td><td>Middleware, geo/personalization, tiny fast handlers close to users</td></tr>
+      </table>
+      <h3>The compiler (SWC) &amp; bundling</h3>
+      <p>Next.js compiles with <b>SWC</b> (a Rust-based compiler, ~20× faster than Babel) and bundles with webpack (or <b>Turbopack</b>, the Rust successor).</p>
+      <div class="diagram">Your code
+   ↓ SWC: Transpilation (TS/JSX → JS)
+   ↓ Minification
+   ↓ Tree Shaking (drop unused exports)
+   ↓ Code Splitting / Chunking (per-route + dynamic imports)
+   ↓ Bundle → served to the browser</div>
+      <ul>
+        <li><b>Turbopack:</b> Rust-based, incremental compilation (only recompiles what changed) → very fast dev refresh; gradually replacing webpack.</li>
+        <li><b>Code splitting:</b> automatic per route; <code class="inline">next/dynamic</code> / <code class="inline">import()</code> splits heavy client components into separate chunks loaded on demand (lazy loading).</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>Lazy-load a heavy client component</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> dynamic <span class="tok-key">from</span> <span class="tok-str">"next/dynamic"</span>;
+<span class="tok-key">const</span> Chart = <span class="tok-fn">dynamic</span>(() =&gt; <span class="tok-fn">import</span>(<span class="tok-str">"./Chart"</span>), { ssr: <span class="tok-key">false</span>, loading: () =&gt; <span class="tok-tag">&lt;Spinner /&gt;</span> });</pre></div>
+    </section>
+
+    <!-- 37. ACTION/MIDDLEWARE INTERNALS -->
+    <section id="action-mw-internals">
+      <h2><span class="num"></span> Server Action &amp; Middleware Internals</h2>
+      <h3>How a Server Action executes</h3>
+      <div class="diagram">&lt;form action={fn}&gt;
+   ↓ POST  (to a generated, encrypted action ID — not a URL you write)
+Server Action runs on the server
+   ↓ Mutation (DB write)
+   ↓ revalidatePath / revalidateTag
+   ↓ Updated UI streamed back (new RSC payload)</div>
+      <ul>
+        <li><b>Action IDs:</b> Next generates an encrypted reference to the function; the client never sees the code, only the ID it POSTs to.</li>
+        <li><b>Serialization:</b> arguments and return values cross the wire, so they must be serializable.</li>
+        <li><b>Security:</b> it's a public endpoint — always authenticate + validate (Zod) inside the action. Bind sensitive args on the server, don't trust client-passed IDs.</li>
+      </ul>
+      <h3>Middleware execution order</h3>
+      <div class="diagram">Incoming request
+   ↓ headers / rewrites (config)
+   ↓ redirects (config)
+   ↓ middleware.ts        (your code — runs on the edge, before routing)
+   ↓ filesystem routes    (static files, public/)
+   ↓ dynamic routes       (app/ pages, route handlers)
+   ↓ Response</div>
+      <div class="callout warn"><b>Keep middleware tiny:</b> it runs on <em>every</em> matched request on the edge. Do cheap work (read a cookie, verify a JWT signature); never hit a database or do heavy compute there.</div>
+    </section>
+
+    <!-- 38. ASSET INTERNALS -->
+    <section id="asset-internals">
+      <h2><span class="num"></span> Image &amp; Font Internals</h2>
+      <h3>How <code class="inline">next/image</code> optimizes</h3>
+      <div class="diagram">Browser requests image
+   ↓ /_next/image?url=...&amp;w=...&amp;q=...
+   ↓ Image Optimizer (on-demand resize)
+   ↓ AVIF / WebP (modern format by Accept header)
+   ↓ CDN cache
+   ↓ Browser cache</div>
+      <ul>
+        <li>Serves the right size per device (<code class="inline">sizes</code>), modern formats, and reserves space via <code class="inline">width/height</code> to prevent <b>CLS</b>.</li>
+        <li><code class="inline">priority</code> preloads the LCP image; others lazy-load by default.</li>
+      </ul>
+      <h3>Fonts &amp; layout stability</h3>
+      <table>
+        <tr><th>Term</th><th>Meaning</th></tr>
+        <tr><td>FOIT</td><td>Flash of Invisible Text (text hidden until font loads)</td></tr>
+        <tr><td>FOUT</td><td>Flash of Unstyled Text (fallback shown, then swaps)</td></tr>
+        <tr><td>CLS</td><td>Layout shift when the swap changes metrics</td></tr>
+      </table>
+      <p><code class="inline">next/font</code> self-hosts the font (no external request), <b>subsets</b> it (ship only needed glyphs), preloads it, and matches fallback metrics to eliminate CLS. Prefer <b>variable fonts</b> (one file, many weights).</p>
+    </section>
+
+    <!-- 39. PROD AUTH -->
+    <section id="prod-auth">
+      <h2><span class="num"></span> Production Authentication</h2>
+      <p class="lead">"Use NextAuth" isn't an architecture. Here's the full picture you should be able to design and defend.</p>
+      <table>
+        <tr><th>Piece</th><th>Detail</th></tr>
+        <tr><td><b>Sessions vs JWT</b></td><td>Server sessions (opaque id → server store, easy revoke) vs stateless JWT (self-contained, scales, harder to revoke).</td></tr>
+        <tr><td><b>Refresh tokens</b></td><td>Short-lived access token + long-lived refresh token (rotated) to balance security &amp; UX.</td></tr>
+        <tr><td><b>Cookies</b></td><td><code>httpOnly</code>, <code>Secure</code>, <code>SameSite=Lax/Strict</code>; never store tokens in <code>localStorage</code> (XSS-readable).</td></tr>
+        <tr><td><b>CSRF</b></td><td>Cookie-based auth needs CSRF protection (SameSite + token) for state-changing requests.</td></tr>
+        <tr><td><b>OAuth / OIDC</b></td><td>Social/enterprise login (Google, GitHub, Okta) via Auth.js/Clerk.</td></tr>
+        <tr><td><b>RBAC</b></td><td>Roles/permissions checked in Server Actions/Route Handlers where the data lives.</td></tr>
+        <tr><td><b>Middleware protection</b></td><td>Cheap edge gate (session cookie present) → real check on the server.</td></tr>
+      </table>
+      <div class="diagram">Login → issue access(15m) + refresh(7d) tokens → httpOnly cookies
+Request → middleware: cookie present? → Server Component: verify + load user
+Access expired → silently exchange refresh → new access token
+Mutation → Server Action: re-verify session + RBAC (never trust the client)</div>
+      <div class="callout warn"><b>Golden rule (again):</b> authentication AND authorization must be enforced server-side at the data/mutation point. Middleware is a convenience gate that can be bypassed.</div>
+    </section>
+
+    <!-- 40. DEPLOY/OBSERVE -->
+    <section id="deploy-observe">
+      <h2><span class="num"></span> Deployment Architecture, Monitoring &amp; Profiling</h2>
+      <h3>Every hop from browser to database</h3>
+      <div class="diagram">Browser
+   ↓ CDN            (static assets, Full Route Cache, images)
+   ↓ Edge           (middleware: auth/redirects/geo)
+   ↓ Server         (Node functions: Server Components, Route Handlers, Actions)
+   ↓ Database / external APIs</div>
+      <p>On Vercel these map to the CDN, Edge Functions, and Serverless/Node Functions automatically. Self-hosting: a CDN in front of a Node server (from <code class="inline">output: "standalone"</code>) behind a reverse proxy.</p>
+      <h3>Monitoring</h3>
+      <ul>
+        <li><b>Web Vitals:</b> report LCP/INP/CLS from real users (<code class="inline">useReportWebVitals</code>).</li>
+        <li><b>Tracing/metrics:</b> OpenTelemetry (Next has built-in instrumentation hooks) → your APM.</li>
+        <li><b>Errors:</b> Sentry for client + server exceptions with source maps.</li>
+        <li><b>Logs:</b> structured JSON logs with request IDs; alerts on error-rate/latency.</li>
+      </ul>
+      <h3>Performance profiling</h3>
+      <ul>
+        <li><b>Lighthouse</b> — lab Core Web Vitals + suggestions.</li>
+        <li><b>React DevTools Profiler</b> — find slow/over-rendering client components.</li>
+        <li><b>Chrome Performance</b> — main-thread work, long tasks (INP).</li>
+        <li><b>@next/bundle-analyzer</b> — visualize bundle size and find bloat.</li>
+      </ul>
+    </section>
+
+    <!-- 41. STRUCTURE/API/MIGRATION -->
+    <section id="structure-migration">
+      <h2><span class="num"></span> Enterprise Structure, API Design &amp; Migration</h2>
+      <h3>Layered enterprise structure</h3>
+      <div class="diagram">src/
+├─ app/           # routes only (thin)
+├─ components/    # shared presentational UI
+├─ features/      # feature modules (ui + logic per domain)
+├─ services/      # business logic (framework-agnostic)
+├─ repositories/  # data access (DB queries)
+├─ lib/           # db.ts, auth.ts, env.ts (server-only)
+├─ hooks/ types/ constants/ utils/ middleware/</div>
+      <p>Flow: <code class="inline">app/</code> page → <code class="inline">service</code> (business rules) → <code class="inline">repository</code> (DB). This keeps routes thin, logic testable, and data access swappable.</p>
+      <h3>API design — which tool for which job</h3>
+      <table>
+        <tr><th>Need</th><th>Use</th></tr>
+        <tr><td>Your own app's form mutation</td><td><b>Server Action</b></td></tr>
+        <tr><td>Public API / webhook / mobile client</td><td><b>Route Handler</b> (REST)</td></tr>
+        <tr><td>Read data for a page</td><td>Fetch directly in a <b>Server Component</b></td></tr>
+        <tr><td>Client-side revalidating reads</td><td>React Query/SWR → Route Handler</td></tr>
+      </table>
+      <h3>Migration: React SPA → Next.js</h3>
+      <div class="diagram">React SPA (Vite/CRA)
+   ↓ move to Next.js (Pages or App Router)
+   ↓ adopt App Router: pages → app/, data → Server Components
+   ↓ replace client fetches with server fetches + caching
+   ↓ add SSR/SSG/ISR where SEO/perf matters → Production</div>
+      <ul>
+        <li>Incremental: run the SPA inside a single Next route first, then peel pages into the App Router.</li>
+        <li>Swap <code class="inline">react-router</code> for file routes; move data fetching to Server Components; keep interactive parts as Client Components.</li>
+      </ul>
+    </section>
+
+    <!-- 42. DECISION MATRIX -->
+    <section id="decision-matrix">
+      <h2><span class="num"></span> Decision Matrix</h2>
+      <p class="lead">The cheat sheet interviewers love: given a problem, which Next.js tool/strategy?</p>
+      <table>
+        <tr><th>Problem</th><th>Use</th><th>Why</th></tr>
+        <tr><td>SEO landing/product page</td><td><b>SSR</b> or <b>ISR</b></td><td>Crawlable HTML; ISR if it changes occasionally</td></tr>
+        <tr><td>Blog / docs / marketing</td><td><b>SSG</b></td><td>Same for everyone; serve from CDN</td></tr>
+        <tr><td>Product page (price changes)</td><td><b>ISR</b> (<code>revalidate</code>)</td><td>Fresh-ish without rebuilds</td></tr>
+        <tr><td>Personalized dashboard</td><td><b>SSR</b> (dynamic) or <b>CSR</b></td><td>Per-user data; not cacheable across users</td></tr>
+        <tr><td>Highly interactive widget</td><td><b>Client Component</b> / CSR</td><td>Needs state, events, browser APIs</td></tr>
+        <tr><td>Form mutation</td><td><b>Server Action</b></td><td>No API boilerplate, progressive enhancement</td></tr>
+        <tr><td>Public API / webhook</td><td><b>Route Handler</b></td><td>REST endpoint for external clients</td></tr>
+        <tr><td>Global auth gate / redirect</td><td><b>Middleware</b></td><td>Runs at the edge before routing</td></tr>
+        <tr><td>Large images</td><td><b>next/image</b></td><td>Resizing, modern formats, no CLS</td></tr>
+        <tr><td>Mix of static + personalized</td><td><b>PPR</b> + Suspense</td><td>Static shell instant, dynamic streamed</td></tr>
+      </table>
+    </section>
+
+    <!-- 43. COMMON MISTAKES -->
+    <section id="mistakes">
+      <h2><span class="num"></span> Common Production Mistakes</h2>
+      <p class="lead">The failures that show up in real Next.js codebases — and how to avoid each.</p>
+      <table>
+        <tr><th>Mistake</th><th>Fix</th></tr>
+        <tr><td>Putting <code>"use client"</code> everywhere</td><td>Default to server; push the client boundary to interactive leaves</td></tr>
+        <tr><td>Fetching in Client Components unnecessarily</td><td>Fetch in Server Components (no waterfall to the browser)</td></tr>
+        <tr><td>Overfetching / request waterfalls</td><td><code>Promise.all</code> for independent data; Suspense for dependent</td></tr>
+        <tr><td>Cache misuse (stale data)</td><td>Be explicit: <code>no-store</code> for live, tags for on-demand</td></tr>
+        <tr><td>Accidental dynamic rendering</td><td>Don't read cookies/headers unless needed; it opts out of static</td></tr>
+        <tr><td>Secret leakage</td><td>Never <code>NEXT_PUBLIC_</code> a secret or read it in a client component</td></tr>
+        <tr><td>Server/client boundary errors</td><td>Don't import server-only code into client; use <code>import "server-only"</code></td></tr>
+        <tr><td>Trusting Server Action input</td><td>Authenticate + validate (Zod) inside every action</td></tr>
+        <tr><td><code>next/router</code> in App Router</td><td>Use <code>next/navigation</code></td></tr>
+        <tr><td>Hydration mismatches</td><td>Move <code>Date.now()</code>/<code>random</code>/<code>window</code> to <code>useEffect</code></td></tr>
+      </table>
+    </section>
+
+    <!-- 44. INTERVIEW -->
     <section id="interview">
       <h2><span class="num"></span> Interview Questions</h2>
+
+      <h3>🏢 Enterprise case study — an Amazon-style app</h3>
+      <p>Walk through which Next.js feature powers each part of a large e-commerce app and <em>why</em> — the end-to-end design question senior/staff interviews ask.</p>
+      <div class="diagram">Landing page      → SSG / ISR        (same for all, fast, SEO)
+Product page      → ISR + dynamic price via Suspense / PPR
+Search            → Route Handler + debounced client fetch, or Server Component w/ searchParams
+Cart              → Client Component + optimistic UI (useOptimistic); server persists
+Checkout          → Server Actions (mutations) + strict validation
+Authentication    → Middleware gate + httpOnly session + RBAC in actions
+Orders            → SSR (per-user, private, no shared cache)
+Streaming         → Suspense for slow recommendations without blocking the page
+Caching           → CDN (static) + Data Cache (catalog) + no-store (cart/orders)
+Deployment        → CDN → Edge (auth) → Node functions → DB, multi-region</div>
+      <div class="callout tip"><b>How to answer:</b> for each surface, state the data's shape (shared vs per-user, how often it changes) → derive the rendering strategy and cache policy. That reasoning <em>is</em> the senior-level answer.</div>
+
+      <h3>🟢 Beginner</h3>
+      <details class="qa"><summary>What is Next.js and why use it over plain React?</summary><div class="ans"><p>A React framework adding SSR, file-based routing, Server Components, caching, and an API layer — giving SEO, fast first paint, small bundles, and full-stack ability without stitching libraries together.</p></div></details>
+      <details class="qa"><summary>App Router vs Pages Router?</summary><div class="ans"><p>App Router (<code class="inline">app/</code>) is Server-Components-first with nested layouts, streaming, and Server Actions. Pages Router (<code class="inline">pages/</code>) is Client-Components-first with <code class="inline">getServerSideProps</code>/<code class="inline">getStaticProps</code> — mature but no new features.</p></div></details>
+      <details class="qa"><summary>How does file-based routing work?</summary><div class="ans"><p>Folders under <code class="inline">app/</code> are URL segments; a <code class="inline">page.tsx</code> makes a segment public. <code class="inline">[param]</code> is dynamic, <code class="inline">(group)</code> organizes without affecting the URL.</p></div></details>
+
+      <h3>🟡 Intermediate</h3>
+      <details class="qa"><summary>SSR vs SSG vs ISR — how do you choose in the App Router?</summary><div class="ans"><p>By how you fetch: cached fetch → SSG; <code class="inline">revalidate:N</code> → ISR; <code class="inline">no-store</code> or cookies/headers → SSR. Static/ISR for shareable content, SSR for personalized/real-time.</p></div></details>
+      <details class="qa"><summary>What is streaming and how does Suspense enable it?</summary><div class="ans"><p>The server flushes HTML in chunks as data resolves; wrapping a slow subtree in <code class="inline">&lt;Suspense fallback&gt;</code> lets the shell paint immediately and the slow part stream in — improving TTFB/FCP.</p></div></details>
+      <details class="qa"><summary>What is PPR (Partial Prerendering)?</summary><div class="ans"><p>Serves a static shell instantly and streams the dynamic/personalized holes (wrapped in Suspense) — combining SSG speed with SSR freshness on the same page.</p></div></details>
+
+      <h3>🔵 Senior / Architecture</h3>
+      <details class="qa"><summary>Explain the four Next.js caches and how to invalidate each.</summary><div class="ans"><p>Request Memoization (per-render fetch dedupe), Data Cache (fetch results across users → <code class="inline">revalidate</code>/<code class="inline">revalidateTag</code>/<code class="inline">no-store</code>), Full Route Cache (rendered static routes → <code class="inline">revalidatePath</code>/redeploy), Router Cache (client, visited routes → <code class="inline">router.refresh()</code>/time).</p></div></details>
+      <details class="qa"><summary>What is the RSC / Flight payload?</summary><div class="ans"><p>A serialized streaming description of the Server Component tree (props + references to Client Components). The browser reconciles it with the HTML and hydrates only the client leaves. Functions/handlers can't be serialized — that's why they're client-only.</p></div></details>
+      <details class="qa"><summary>Edge vs Node runtime — trade-offs?</summary><div class="ans"><p>Edge = V8 isolate, Web APIs only, fast global cold starts — great for middleware/personalization but no native Node APIs/DB drivers. Node = full APIs + DB access, heavier cold start — the default for most pages/handlers.</p></div></details>
+      <details class="qa"><summary>Design authentication for a Next.js app.</summary><div class="ans"><p>httpOnly Secure SameSite session cookie; short access + rotating refresh tokens; cheap middleware gate at the edge; verify session + enforce RBAC inside Server Actions/Route Handlers where the data lives (middleware can be bypassed); CSRF for cookie-based mutations.</p></div></details>
+
+      <h3>🟣 Debugging / Performance / Production</h3>
+      <details class="qa"><summary>What causes a hydration mismatch and how do you fix it?</summary><div class="ans"><p>Server HTML differing from the first client render — usually <code class="inline">Date.now()</code>, <code class="inline">Math.random()</code>, or <code class="inline">window</code>/<code class="inline">localStorage</code>. Move such values to <code class="inline">useEffect</code>, guard with a mounted flag, or use <code class="inline">suppressHydrationWarning</code>.</p></div></details>
+      <details class="qa"><summary>Your page's LCP is high — how do you debug it?</summary><div class="ans"><p>Lighthouse for lab vitals; optimize the LCP element with <code class="inline">next/image</code> + <code class="inline">priority</code>; use <code class="inline">next/font</code>; cut client JS (Server Components, code-split); stream slow parts with Suspense; verify caching/ISR; Bundle Analyzer for bloat; Chrome Performance for long tasks (INP).</p></div></details>
+      <details class="qa"><summary>How does <code class="inline">&lt;Link&gt;</code> make navigation feel instant?</summary><div class="ans"><p>It prefetches the destination's RSC payload, stores it in the client Router Cache, and on click only the changed segment re-renders while shared layouts persist — no full reload.</p></div></details>
+
+      <h3>📚 More core questions</h3>
       <details class="qa"><summary>What are React Server Components and what problem do they solve?</summary><div class="ans"><p>Components that render only on the server and ship no JavaScript to the client. They reduce bundle size, allow direct data/DB access without an API, and keep secrets server-side. Only interactive Client Components hydrate in the browser.</p></div></details>
       <details class="qa"><summary>How do you choose between SSR, SSG, and ISR in the App Router?</summary><div class="ans"><p>By how you fetch: cached fetch → static (SSG); <code class="inline">revalidate: N</code> → ISR; <code class="inline">no-store</code> or reading cookies/headers → per-request SSR. Static/ISR for shareable content, SSR for personalized/real-time data.</p></div></details>
       <details class="qa"><summary>Explain the Next.js caching layers.</summary><div class="ans"><p>Request Memoization (dedupes fetches in one render), Data Cache (fetch results across requests, revalidate/tags), Full Route Cache (rendered static routes), and the client Router Cache (visited routes). You invalidate with <code class="inline">revalidateTag</code>/<code class="inline">revalidatePath</code>, <code class="inline">no-store</code>, or <code class="inline">router.refresh()</code>.</p></div></details>
