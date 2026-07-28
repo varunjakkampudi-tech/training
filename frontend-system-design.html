@@ -162,12 +162,23 @@
     <a href="#micro-frontends">29 · Micro-Frontends</a>
     <a href="#design-systems">30 · Design Systems</a>
     <a href="#i18n">31 · i18n &amp; Real-Time</a>
+    <a class="section-title">Advanced Depth</a>
+    <a href="#rendering-matrix">32 · Rendering Strategies Matrix</a>
+    <a href="#react-internals">33 · React Rendering Internals</a>
+    <a href="#memory">34 · Memory Optimization</a>
+    <a href="#budgets">35 · Performance Budgets</a>
+    <a href="#css-arch">36 · CSS Architecture</a>
+    <a href="#animation">37 · Animation Architecture</a>
+    <a href="#storage">38 · Browser Storage</a>
+    <a href="#network">39 · Network Optimization</a>
+    <a href="#resilience">40 · Resilience Patterns</a>
+    <a href="#observability-deep">41 · Observability Deep-Dive</a>
     <a class="section-title">Mastery</a>
-    <a href="#case-studies">32 · Case Studies</a>
-    <a href="#decision-matrix">33 · Decision Matrix</a>
-    <a href="#mistakes">34 · Common Mistakes</a>
-    <a href="#interview">35 · Interview Questions</a>
-    <a href="#checklist">36 · Mastery Checklist</a>
+    <a href="#case-studies">42 · Case Studies</a>
+    <a href="#decision-matrix">43 · Decision Matrix</a>
+    <a href="#mistakes">44 · Common Mistakes</a>
+    <a href="#interview">45 · Interview Questions</a>
+    <a href="#checklist">46 · Mastery Checklist</a>
   </nav>
 </aside>
 
@@ -722,6 +733,8 @@ initial load ships only the current route's JS; rest loads on navigation</div>
         <li><b>Experiment flags</b> — A/B test variants, measure impact.</li>
         <li><b>Permission/entitlement flags</b> — gate by plan/role.</li>
         <li><b>Ops flags / kill switches</b> — disable a broken feature without a deploy.</li>
+        <li><b>Percentage rollouts &amp; canary</b> — expose to a small cohort, watch metrics, then widen.</li>
+        <li><b>Experiment lifecycle</b> — design → run → analyze → ship winner → <b>remove the flag</b>.</li>
       </ul>
       <div class="callout warn"><b>Design considerations:</b> evaluate flags without flicker (server-render the correct variant to avoid a flash), avoid shipping both variants' heavy code to everyone (split by flag), and clean up stale flags (they become tech debt). Tools: LaunchDarkly, Unleash, Statsig.</div>
     </section>
@@ -738,6 +751,15 @@ initial load ships only the current route's JS; rest loads on navigation</div>
         <tr><td>Route-based (shell)</td><td>A shell app routes to team-owned sub-apps</td></tr>
       </table>
       <div class="callout warn"><b>Trade-off:</b> micro-frontends solve an <em>organizational</em> scaling problem (many teams), at the cost of duplicated dependencies, version skew, and integration complexity. Don't adopt them for a single small team — the overhead outweighs the benefit.</div>
+      <table>
+        <tr><th>Hard problem</th><th>Approach</th></tr>
+        <tr><td>Shared dependency versioning</td><td>Module Federation <code>shared</code> singletons (React once); watch for version skew</td></tr>
+        <tr><td>Runtime communication</td><td>Custom events / a shared event bus / URL; avoid tight coupling</td></tr>
+        <tr><td>Auth sharing</td><td>One auth provider in the shell; pass token/context to remotes</td></tr>
+        <tr><td>Routing ownership</td><td>Shell owns top-level routes; each remote owns its sub-routes</td></tr>
+        <tr><td>Deployment</td><td>Independent deploys; version the remote entry; canary per remote</td></tr>
+        <tr><td>MF pitfalls</td><td>Duplicated bundles, CSS collisions, version drift, debugging across remotes</td></tr>
+      </table>
       <div class="keytk"><h4>✅ Key takeaways</h4><ul>
         <li>Micro-frontends = independent deploys per team; use Module Federation for runtime composition.</li>
         <li>They're an org-scaling tool, not a default — they add real integration cost.</li>
@@ -753,6 +775,9 @@ initial load ships only the current route's JS; rest loads on navigation</div>
         <li><b>Primitives</b> — accessible Button, Input, Modal, Menu (often headless + styled).</li>
         <li><b>Docs</b> — Storybook: browse, test, and document components in isolation.</li>
         <li><b>Versioning</b> — semver the package; a change ripples to every consumer, so test thoroughly.</li>
+        <li><b>Semantic tokens</b> — name by intent (<code class="inline">color.text.danger</code>), not value; enables theming &amp; dark mode.</li>
+        <li><b>Regression testing</b> — visual regression (Chromatic), accessibility regression (axe in CI), and Storybook interaction tests catch breakage before it ships.</li>
+        <li><b>Token pipeline</b> — design → code sync (Figma → Style Dictionary → CSS vars/TS) keeps design and code in lockstep.</li>
       </ul>
       <div class="callout tip"><b>Why it's a system-design topic:</b> a design system is how you keep 50 engineers producing consistent, accessible, performant UI without re-solving buttons and modals in every feature. It encodes your a11y and perf decisions once.</div>
     </section>
@@ -772,9 +797,181 @@ Use cases:  notifications (SSE)  ·  chat/collab (WS)  ·  presence/cursors (WS)
 Concerns:   reconnection/backoff, ordering, dedupe, optimistic + reconcile,
             conflict resolution (CRDT/OT for collaborative editing)</div>
       <div class="callout tip"><b>Collaboration (Google-Docs-style):</b> concurrent edits need conflict resolution — <b>OT</b> (Operational Transform) or <b>CRDTs</b> — plus presence, cursors, and offline reconciliation. A staff-level topic worth naming in interviews.</div>
+      <table>
+        <tr><th>Concern</th><th>Detail</th></tr>
+        <tr><td>Presence protocol</td><td>Who's online + their cursor/selection, broadcast over the socket</td></tr>
+        <tr><td>Operational ordering</td><td>Consistent op order across clients (server sequence / vector clocks)</td></tr>
+        <tr><td>Offline merge</td><td>Queue local ops offline; CRDT merge (or OT transform) on reconnect</td></tr>
+        <tr><td>Conflict visualization</td><td>Show concurrent changes / who edited what</td></tr>
+        <tr><td>Awareness state</td><td>Ephemeral, non-persisted state (cursors, typing) separate from the doc</td></tr>
+      </table>
     </section>
 
-    <!-- 32 -->
+    <!-- 32 RENDERING MATRIX -->
+    <section id="rendering-matrix">
+      <h2><span class="num"></span> Rendering Strategies Matrix</h2>
+      <p class="lead">The go-to interview reference: where each rendering strategy paints HTML, and its trade-offs across latency, SEO, interactivity, cacheability, and server cost.</p>
+      <table>
+        <tr><th>Strategy</th><th>HTML built</th><th>SEO</th><th>Interactivity</th><th>Cacheable</th><th>Server cost</th><th>Best for</th></tr>
+        <tr><td><b>CSR</b></td><td>In browser after JS</td><td>Weak</td><td>Full (after hydrate)</td><td>Static shell only</td><td>Low</td><td>Dashboards behind auth</td></tr>
+        <tr><td><b>SSR</b></td><td>Per request (server)</td><td>Strong</td><td>After hydration</td><td>Hard (per-user)</td><td>High</td><td>Personalized, SEO pages</td></tr>
+        <tr><td><b>SSG</b></td><td>At build</td><td>Strong</td><td>After hydration</td><td>Fully (CDN)</td><td>None (serve)</td><td>Blogs, docs, marketing</td></tr>
+        <tr><td><b>ISR</b></td><td>Build + revalidate</td><td>Strong</td><td>After hydration</td><td>Yes (with TTL)</td><td>Low</td><td>Catalogs, semi-dynamic</td></tr>
+        <tr><td><b>Streaming SSR</b></td><td>Per request, chunked</td><td>Strong</td><td>Progressive</td><td>Partial</td><td>High</td><td>Slow-data pages (fast TTFB)</td></tr>
+        <tr><td><b>Islands</b></td><td>Static + interactive islands</td><td>Strong</td><td>Only islands hydrate</td><td>Mostly</td><td>Low</td><td>Content sites w/ few widgets</td></tr>
+        <tr><td><b>Partial/Progressive hydration</b></td><td>SSR + selective hydrate</td><td>Strong</td><td>Prioritized/lazy</td><td>Partial</td><td>Medium</td><td>Big pages, limit JS cost</td></tr>
+      </table>
+      <div class="callout tip"><b>Hydration is the hidden cost:</b> SSR/SSG paint fast but the page isn't interactive until JS hydrates. Islands / partial / progressive hydration reduce that cost by hydrating only what's interactive, when it matters.</div>
+    </section>
+
+    <!-- 33 REACT INTERNALS -->
+    <section id="react-internals">
+      <h2><span class="num"></span> React Rendering Internals (design-relevant)</h2>
+      <p class="lead">Enough of React's engine to explain <em>why</em> architecture decisions affect performance — not API trivia.</p>
+      <div class="diagram">setState → Render phase (build new virtual tree, run components)  ← interruptible
+              → Reconciliation (diff new vs old, Fiber tree)
+              → Commit phase (apply DOM mutations)                ← synchronous, not interruptible
+              → Browser paints</div>
+      <ul>
+        <li><b>Reconciliation cost:</b> re-rendering a big subtree diffs many nodes. <code class="inline">memo</code>/stable props/keys and colocated state shrink the diff.</li>
+        <li><b>Fiber:</b> React's incremental unit of work — lets rendering be split and paused.</li>
+        <li><b>Render vs commit:</b> render is pure &amp; interruptible; commit applies DOM changes and must finish. Side effects belong in effects, not render.</li>
+        <li><b>Concurrent rendering + transitions:</b> <code class="inline">useTransition</code> marks non-urgent updates so typing/clicks stay responsive; the scheduler prioritizes urgent work.</li>
+        <li><b>Design impact:</b> re-render storms come from state placed too high or unstable references — colocate state, memoize, split components.</li>
+      </ul>
+      <div class="callout warn"><b>Common mistake:</b> a single top-level store update re-renders the whole tree. Use selectors/memo and push state down so only affected leaves re-render.</div>
+    </section>
+
+    <!-- 34 MEMORY -->
+    <section id="memory">
+      <h2><span class="num"></span> Memory Optimization</h2>
+      <p class="lead">CPU and network get all the attention, but memory leaks kill long-lived SPAs (dashboards, editors) — a senior interview favorite.</p>
+      <table>
+        <tr><th>Leak source</th><th>Fix</th></tr>
+        <tr><td>Detached DOM held by JS</td><td>Null references; remove nodes and their handlers together</td></tr>
+        <tr><td>Uncleared timers/intervals/observers</td><td>Clean up in effect teardown</td></tr>
+        <tr><td>Un-removed event listeners</td><td><code>removeEventListener</code>; use <code>AbortController</code> signals</td></tr>
+        <tr><td>Retained closures / large caches</td><td>Bound cache size (LRU); release when done; <code>WeakMap</code></td></tr>
+        <tr><td>Image memory (huge decoded bitmaps)</td><td>Right-size images; virtualization unmounts off-screen ones</td></tr>
+      </table>
+      <div class="callout tip"><b>Diagnose:</b> Chrome DevTools <b>Memory panel</b> — take heap snapshots before/after an action; a growing heap or rising detached-node count across repeated navigations reveals a leak. Virtualization's biggest hidden win is memory: off-screen rows are unmounted.</div>
+    </section>
+
+    <!-- 35 BUDGETS -->
+    <section id="budgets">
+      <h2><span class="num"></span> Performance Budgets</h2>
+      <p class="lead">Turn "make it fast" into enforceable numbers so performance can't silently regress.</p>
+      <table>
+        <tr><th>Budget</th><th>Example limit</th></tr>
+        <tr><td>JS (initial route)</td><td>&lt; 170KB gzipped</td></tr>
+        <tr><td>CSS</td><td>&lt; 60KB</td></tr>
+        <tr><td>Images (above fold)</td><td>&lt; 500KB</td></tr>
+        <tr><td>Fonts</td><td>&lt; 100KB, ≤ 2 families</td></tr>
+        <tr><td>Total bundle / route</td><td>Threshold that fails CI</td></tr>
+        <tr><td>Lighthouse perf score</td><td>≥ 90 in CI</td></tr>
+      </table>
+      <div class="callout tip"><b>Enforce in CI:</b> bundlesize / size-limit fail the build if a chunk grows; Lighthouse-CI gates PRs on Core Web Vitals + a performance budget. Budgets make perf a team habit, not a heroic cleanup.</div>
+    </section>
+
+    <!-- 36 CSS ARCH -->
+    <section id="css-arch">
+      <h2><span class="num"></span> CSS Architecture</h2>
+      <p class="lead">How you organize styles is a scaling decision — pick one approach and apply it consistently.</p>
+      <table>
+        <tr><th>Approach</th><th>Idea</th><th>Best for</th></tr>
+        <tr><td>CSS Modules</td><td>Scoped class names per file</td><td>Zero-runtime, component-scoped</td></tr>
+        <tr><td>Utility-first (Tailwind)</td><td>Compose utilities in markup</td><td>Fast iteration, consistent tokens</td></tr>
+        <tr><td>CSS-in-JS (styled/Emotion)</td><td>Styles as JS, props-driven</td><td>Dynamic theming (small runtime cost)</td></tr>
+        <tr><td>BEM / conventions</td><td>Naming discipline on plain CSS</td><td>No build magic, legacy</td></tr>
+        <tr><td>Atomic CSS</td><td>One-property classes, deduped</td><td>Tiny CSS at huge scale</td></tr>
+        <tr><td>Design tokens</td><td>Named design values</td><td>Theming + cross-platform consistency</td></tr>
+      </table>
+      <div class="callout tip"><b>At scale:</b> tokens + a component library (any styling engine) beat ad-hoc CSS. Prefer zero/low-runtime approaches (CSS Modules, compiled Tailwind) for performance-sensitive apps.</div>
+    </section>
+
+    <!-- 37 ANIMATION -->
+    <section id="animation">
+      <h2><span class="num"></span> Animation Architecture</h2>
+      <p class="lead">Smooth animation = staying on the compositor and off the layout/paint path (ties back to the rendering pipeline).</p>
+      <table>
+        <tr><th>Tool</th><th>Use</th></tr>
+        <tr><td>CSS transitions/animations</td><td>Declarative, GPU-friendly (transform/opacity)</td></tr>
+        <tr><td><code>requestAnimationFrame</code></td><td>JS-driven, frame-synced visual updates</td></tr>
+        <tr><td>Web Animations API</td><td>Imperative control (play/pause/reverse) with compositor perf</td></tr>
+        <tr><td>Libraries (Framer Motion)</td><td>Spring physics, gestures, orchestration</td></tr>
+      </table>
+      <div class="callout warn"><b>Rule:</b> animate <code class="inline">transform</code> and <code class="inline">opacity</code> only (compositor-only). Animating <code class="inline">width/height/top/left</code> triggers layout every frame → jank. Use <code class="inline">will-change</code> sparingly to promote a layer; respect <code class="inline">prefers-reduced-motion</code>.</div>
+    </section>
+
+    <!-- 38 STORAGE -->
+    <section id="storage">
+      <h2><span class="num"></span> Browser Storage</h2>
+      <p class="lead">Pick the right client storage for the job — capacity, sync/async, and security differ sharply.</p>
+      <table>
+        <tr><th>Storage</th><th>Capacity</th><th>API</th><th>Sent to server</th><th>Use</th></tr>
+        <tr><td>Memory (JS)</td><td>RAM</td><td>Sync</td><td>No</td><td>Ephemeral app/cache state</td></tr>
+        <tr><td>localStorage</td><td>~5–10MB</td><td>Sync (blocks!)</td><td>No</td><td>Small persistent prefs</td></tr>
+        <tr><td>sessionStorage</td><td>~5MB</td><td>Sync</td><td>No</td><td>Per-tab temporary state</td></tr>
+        <tr><td>IndexedDB</td><td>Large (100s MB+)</td><td>Async</td><td>No</td><td>Offline data, big datasets</td></tr>
+        <tr><td>Cache API</td><td>Large</td><td>Async</td><td>No</td><td>Service Worker responses</td></tr>
+        <tr><td>Cookies</td><td>~4KB</td><td>Sync</td><td><b>Yes</b> (every request)</td><td>Auth session (httpOnly)</td></tr>
+      </table>
+      <div class="callout warn"><b>Security &amp; perf:</b> never store tokens in <code class="inline">localStorage</code> (XSS-readable) — use <code class="inline">httpOnly</code> cookies. Avoid large synchronous <code class="inline">localStorage</code> reads/writes on the main thread; use async IndexedDB for anything big.</div>
+    </section>
+
+    <!-- 39 NETWORK -->
+    <section id="network">
+      <h2><span class="num"></span> Network Optimization</h2>
+      <p class="lead">Beyond caching: how to move bytes faster and start earlier.</p>
+      <ul>
+        <li><b>HTTP/2 multiplexing:</b> many requests over one connection (no head-of-line blocking of HTTP/1).</li>
+        <li><b>HTTP/3 (QUIC):</b> UDP-based, faster connection setup, resilient to packet loss / network switches.</li>
+        <li><b>Priority Hints (<code class="inline">fetchpriority</code>):</b> tell the browser which resources matter (hero image high, below-fold low).</li>
+        <li><b>Early Hints (103):</b> server hints the browser to preconnect/preload before the full response.</li>
+        <li><b>Request batching / collapsing:</b> combine or dedupe concurrent identical requests (GraphQL batching, React Query dedupe).</li>
+        <li><b>Connection reuse / keep-alive &amp; <code class="inline">preconnect</code>:</b> warm connections to critical origins early.</li>
+      </ul>
+      <div class="callout tip"><b>Sequence, not just size:</b> what loads <em>first</em> matters as much as total bytes — preconnect to APIs/CDNs, preload the LCP asset, and defer the rest.</div>
+    </section>
+
+    <!-- 40 RESILIENCE -->
+    <section id="resilience">
+      <h2><span class="num"></span> Resilience Patterns</h2>
+      <p class="lead">Networks fail. A senior frontend degrades gracefully instead of showing a blank screen.</p>
+      <table>
+        <tr><th>Pattern</th><th>What it does</th></tr>
+        <tr><td>Retry + exponential backoff</td><td>Retry transient failures with increasing delay (+ jitter)</td></tr>
+        <tr><td>Circuit breaker</td><td>Stop hammering a failing endpoint; fail fast, recover later</td></tr>
+        <tr><td>Timeout</td><td>Abort slow requests (<code>AbortController</code>) so the UI isn't stuck</td></tr>
+        <tr><td>Graceful degradation</td><td>Show cached/partial data or a reduced feature instead of an error</td></tr>
+        <tr><td>Stale-if-error</td><td>Serve stale cache when the network fails</td></tr>
+        <tr><td>Fallback UI + error boundaries</td><td>Contain failures to a subtree; offer retry</td></tr>
+        <tr><td>Skeleton vs spinner</td><td>Skeletons for known layouts (less CLS/anxiety); spinners for unknown waits</td></tr>
+      </table>
+      <div class="callout tip"><b>UX rule:</b> every async surface needs four states — loading, empty, error (with retry), and success. Designing all four is what separates senior work from happy-path demos.</div>
+    </section>
+
+    <!-- 41 OBSERVABILITY DEEP -->
+    <section id="observability-deep">
+      <h2><span class="num"></span> Observability Deep-Dive</h2>
+      <p class="lead">The browser exposes precise performance APIs — use them for real-user telemetry, not just Lighthouse.</p>
+      <table>
+        <tr><th>API</th><th>Measures</th></tr>
+        <tr><td><code>PerformanceObserver</code></td><td>Subscribe to perf entries as they happen</td></tr>
+        <tr><td>Long Tasks API</td><td>Main-thread tasks &gt; 50ms (the cause of poor INP)</td></tr>
+        <tr><td>Event Timing API</td><td>Real interaction latency (powers INP)</td></tr>
+        <tr><td>User Timing API (<code>performance.mark/measure</code>)</td><td>Custom timings around your own code paths</td></tr>
+        <tr><td>Navigation/Resource Timing</td><td>Page &amp; asset load breakdowns</td></tr>
+      </table>
+      <ul>
+        <li><b>Correlation IDs</b> tie a frontend action to backend traces (distributed tracing).</li>
+        <li><b>Release health</b> — crash-free sessions/users per release (Sentry).</li>
+        <li><b>Feature-level metrics</b> — track performance/errors per feature, not just globally.</li>
+      </ul>
+      <div class="callout tip"><b>Custom marks example:</b> <code class="inline">performance.mark("feed:start")</code> … <code class="inline">performance.measure("feed", "feed:start")</code>, then report via <code class="inline">PerformanceObserver</code> to your analytics — measure what <em>your</em> users feel.</div>
+    </section>
+
+    <!-- 42 CASE STUDIES -->
     <section id="case-studies">
       <h2><span class="num"></span> Real-World Case Studies</h2>
       <p class="lead">Apply the framework to canonical prompts. For each: requirements → architecture → data → optimizations.</p>
@@ -798,6 +995,17 @@ CDN delivery → infinite scroll (cursor) → set dimensions (no CLS) → priori
       <h3>📝 Design a Collaborative Editor (Google Docs)</h3>
       <div class="diagram">WebSocket transport → CRDT/OT for concurrent edits → presence + remote cursors →
 optimistic local apply + server reconcile → offline queue + sync → autosave (debounced)</div>
+      <h3>End-to-end production architectures</h3>
+      <div class="diagram">News Feed:   Browser → CDN(assets) → Edge(auth) → BFF/API → Cache → DB
+                                        └→ WebSocket(new posts) → RUM/Monitoring
+E-commerce:  Browser → CDN → Edge → API → Cache → DB
+             ISR product pages · client cart · Server-Action checkout · payment svc
+Dashboard:   Browser(CSR) → BFF(aggregates microservices) → Cache → DBs
+             virtualized tables · web workers for heavy compute · URL state
+Chat:        Browser ⇄ WebSocket gateway → message svc → DB/queue
+             presence · optimistic send + reconcile · offline queue → Monitoring
+Video:       Browser → CDN(HLS/DASH segments) → adaptive bitrate
+             preload next segment · poster LCP · analytics beacons</div>
       <div class="callout tip"><b>How to shine:</b> state the requirements &amp; assumptions, draw the component + data diagram, then go deep on the 1–2 areas the interviewer probes (usually virtualization/pagination for feeds, or conflict resolution for editors).</div>
     </section>
 
