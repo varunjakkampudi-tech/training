@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Backend System Design — zero to staff level: architecture styles (monolith, layered, clean, hexagonal, microservices), communication (REST/GraphQL/gRPC/message queues), caching & Redis, databases (SQL/NoSQL), CAP, replication, sharding, indexing, load balancing, reverse proxy, API gateway, auth, observability (logging/monitoring/tracing), Docker/Kubernetes/CI-CD, scalability, high availability, disaster recovery, real-world case studies, and interview questions." />
+<title>Backend System Design — The Complete Zero-to-Staff Guide</title>
+<style>
+  :root {
+    --blue: #1c1917; --blue-dark: #0c0a09; --blue-mid: #ea580c; --sky: #fb923c;
+    --light-blue: #ffedd5; --light-blue-2: #fff7ed;
+    --bg: #ffffff; --bg-soft: #fffaf5; --panel: #ffffff;
+    --text: #1c1917; --muted: #57534e; --border: #f0e2d4;
+    --code-bg: #1a1410; --accent: #0d9488; --danger: #dc2626; --green: #16a34a;
+    --shadow: 0 8px 24px rgba(234, 88, 12, 0.10); --shadow-lg: 0 14px 40px rgba(28, 25, 23, 0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue-mid); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 320px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.12rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-mid); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); color: #3d1a04; }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 6px 22px; color: var(--muted); font-size: 0.87rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue-mid); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(234, 88, 12, 0.14), transparent), linear-gradient(160deg, #ffe9d5, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { background: linear-gradient(90deg, var(--blue-mid), var(--sky)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  header.hero p { max-width: 800px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-mid); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--sky)); color: #fff; width: 34px; height: 34px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.22rem; color: var(--blue-mid); margin: 26px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; font-size: 1.02rem; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  b, strong { color: var(--blue-dark); }
+  code.inline { background: var(--light-blue); color: var(--blue-mid); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #33261c; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #120d09; border-bottom: 1px solid #33261c; font-size: 0.75rem; color: #fdba74; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #f3e9e0; white-space: pre; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #5a4632; color: #fdba74; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(251,146,60,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #93857a; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-cmd { color: #fdba74; }
+  .tok-tag { color: #7fdfff; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #43352a; }
+  .callout.tip { border-color: var(--accent); background: #eefcfa; }
+  .callout.warn { border-color: var(--danger); background: #fdecec; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #0f766e; }
+  .callout.warn b { color: #b91c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue-mid); display: flex; align-items: center; gap: 8px; }
+  .keytk { background: linear-gradient(160deg, #ffffff, #f0fdf4); border: 1px solid #bbf7d0; border-left: 4px solid var(--green); border-radius: 12px; padding: 14px 20px; margin: 18px 0; }
+  .keytk h4 { margin-top: 0; color: #15803d; }
+  .keytk ul { margin-bottom: 4px; }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #3d332a; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-mid); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid var(--blue-mid); }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  .diagram { background: #1a1410; color: #f0e2d0; border-radius: 10px; padding: 18px 20px; margin: 16px 0; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.82rem; line-height: 1.65; overflow-x: auto; white-space: pre; box-shadow: var(--shadow); }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🏗️ Backend System Design</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">1 · Architecture Fundamentals</a>
+    <a href="#estimation">2 · Back-of-Envelope Estimation</a>
+    <a href="#client-server">3 · Client–Server</a>
+    <a class="section-title">Architecture Styles</a>
+    <a href="#monolith">4 · Monolith</a>
+    <a href="#layered">5 · Layered Architecture</a>
+    <a href="#clean">6 · Clean Architecture</a>
+    <a href="#hexagonal">7 · Hexagonal Architecture</a>
+    <a href="#microservices">8 · Microservices</a>
+    <a class="section-title">Communication</a>
+    <a href="#communication">9 · Communication Styles</a>
+    <a href="#rest">10 · REST</a>
+    <a href="#graphql">11 · GraphQL</a>
+    <a href="#grpc">12 · gRPC</a>
+    <a href="#queues">13 · Message Queues</a>
+    <a class="section-title">Data</a>
+    <a href="#caching">14 · Caching</a>
+    <a href="#redis">15 · Redis</a>
+    <a href="#databases">16 · Databases</a>
+    <a href="#sql-nosql">17 · SQL vs NoSQL</a>
+    <a href="#cap">18 · CAP &amp; PACELC</a>
+    <a href="#replication">19 · Replication</a>
+    <a href="#sharding">20 · Sharding</a>
+    <a href="#indexing">21 · Indexing</a>
+    <a class="section-title">Traffic &amp; Edge</a>
+    <a href="#load-balancing">22 · Load Balancing</a>
+    <a href="#reverse-proxy">23 · Reverse Proxy</a>
+    <a href="#api-gateway">24 · API Gateway</a>
+    <a href="#rate-limiting">25 · Rate Limiting</a>
+    <a class="section-title">Security</a>
+    <a href="#authentication">26 · Authentication</a>
+    <a href="#authorization">27 · Authorization</a>
+    <a class="section-title">Observability</a>
+    <a href="#logging">28 · Logging</a>
+    <a href="#monitoring">29 · Monitoring</a>
+    <a href="#tracing">30 · Tracing</a>
+    <a class="section-title">Delivery</a>
+    <a href="#docker">31 · Docker</a>
+    <a href="#kubernetes">32 · Kubernetes</a>
+    <a href="#cicd">33 · CI/CD</a>
+    <a class="section-title">Reliability</a>
+    <a href="#scalability">34 · Scalability</a>
+    <a href="#ha">35 · High Availability</a>
+    <a href="#dr">36 · Disaster Recovery</a>
+    <a href="#resilience">37 · Resilience Patterns</a>
+    <a class="section-title">Mastery</a>
+    <a href="#production">38 · Production Architecture</a>
+    <a href="#case-studies">39 · Case Studies</a>
+    <a href="#decision-matrix">40 · Decision Matrix</a>
+    <a href="#mistakes">41 · Common Mistakes</a>
+    <a href="#interview">42 · Interview Questions</a>
+    <a href="#checklist">43 · Mastery Checklist</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>Backend <span class="g">System Design</span></h1>
+    <p>Zero to staff level — how to design scalable, reliable backend systems. Architecture styles, communication (REST/GraphQL/gRPC/queues), caching &amp; Redis, databases (SQL/NoSQL), CAP, replication, sharding, indexing, load balancing, API gateways, auth, observability, Docker/Kubernetes/CI-CD, scalability, HA, disaster recovery, real-world case studies, and interview questions. Assumes you know Node/Express or FastAPI, REST, and a database.</p>
+    <div class="badges">
+      <span class="badge">Architecture</span>
+      <span class="badge">Databases</span>
+      <span class="badge">Scaling</span>
+      <span class="badge">Kubernetes</span>
+      <span class="badge">Case Studies</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- 1 -->
+    <section id="intro">
+      <h2><span class="num"></span> Architecture Fundamentals</h2>
+      <p class="lead">Backend system design is choosing how to arrange servers, data stores, queues, and networks so a system meets its <b>non-functional requirements</b> — scale, latency, availability, consistency, cost — not just "does it work".</p>
+      <h3>The vocabulary</h3>
+      <table>
+        <tr><th>Term</th><th>Meaning</th></tr>
+        <tr><td><b>Latency</b></td><td>Time for one request (p50/p95/p99 percentiles matter, not average)</td></tr>
+        <tr><td><b>Throughput</b></td><td>Requests processed per second (RPS/QPS)</td></tr>
+        <tr><td><b>Availability</b></td><td>% uptime (99.9% = 8.7h/yr down; 99.99% = 52min/yr) — the "nines"</td></tr>
+        <tr><td><b>Consistency</b></td><td>Do all readers see the same data? (strong vs eventual)</td></tr>
+        <tr><td><b>Scalability</b></td><td>Handle more load by adding resources (vertical vs horizontal)</td></tr>
+        <tr><td><b>Reliability / Fault tolerance</b></td><td>Keep working when components fail</td></tr>
+      </table>
+      <h3>Vertical vs horizontal scaling</h3>
+      <div class="vs-grid">
+        <div class="vs-card b"><h4>Vertical (scale up)</h4><ul>
+          <li>Bigger machine (more CPU/RAM)</li>
+          <li>Simple; no code change</li>
+          <li>Hard limit; single point of failure; expensive</li>
+        </ul></div>
+        <div class="vs-card a"><h4>Horizontal (scale out)</h4><ul>
+          <li>More machines behind a load balancer</li>
+          <li>Near-limitless; fault-tolerant</li>
+          <li>Needs statelessness, coordination, data partitioning</li>
+        </ul></div>
+      </div>
+      <div class="callout tip"><b>Golden rule for scaling:</b> make services <b>stateless</b> (session/state in a shared store like Redis/DB), then you can add identical instances behind a load balancer freely. State is the enemy of horizontal scale.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Design to non-functional requirements (scale, latency, availability, consistency, cost).</li>
+        <li>Prefer horizontal scaling + stateless services; measure latency at p95/p99, not average.</li>
+      </ul></div>
+    </section>
+
+    <!-- 2 -->
+    <section id="estimation">
+      <h2><span class="num"></span> Back-of-the-Envelope Estimation</h2>
+      <p class="lead">Interviews expect rough capacity math to justify your design. Learn the numbers and the method.</p>
+      <table>
+        <tr><th>Quantity</th><th>Rule of thumb</th></tr>
+        <tr><td>Seconds/day</td><td>~86,400 ≈ 10⁵</td></tr>
+        <tr><td>Read:write ratio</td><td>Often 100:1 or more (read-heavy)</td></tr>
+        <tr><td>1 char</td><td>1 byte; a tweet ≈ 300 bytes; a small image ≈ 200KB</td></tr>
+        <tr><td>QPS from DAU</td><td>DAU × actions/day ÷ 86,400 (× 2–3 for peak)</td></tr>
+        <tr><td>Storage/year</td><td>writes/day × size × 365</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Example: design Twitter — capacity</span><button class="copy">Copy</button></div><pre>300M DAU, each posts 2 tweets/day  → 600M writes/day
+   writes QPS ≈ 600M / 86,400 ≈ 7,000  (peak ~2–3× → ~20,000)
+reads 100× writes → ~700,000 read QPS  → need caching + read replicas + CDN
+storage: 600M × 300B/tweet × 365 ≈ 65 TB/year (text)  → sharding needed</pre></div>
+      <div class="callout tip"><b>Method:</b> DAU → QPS (peak) → storage/bandwidth → derive the components (cache, replicas, shards, CDN). State assumptions out loud; interviewers grade the reasoning, not the exact numbers.</div>
+    </section>
+
+    <!-- 3 -->
+    <section id="client-server">
+      <h2><span class="num"></span> Client–Server &amp; the Request Path</h2>
+      <p class="lead">Every backend design starts from the path a request takes. Know every hop.</p>
+      <div class="diagram">Client → DNS → CDN (static/cache) → Load Balancer → API Gateway
+      → Service(s) → Cache (Redis) → Database
+                   ↘ Message Queue → Workers (async jobs)
+      ← response ← (observability: logs, metrics, traces at each hop)</div>
+      <ul>
+        <li><b>DNS</b> resolves the domain to an IP (often a load balancer / CDN edge).</li>
+        <li><b>CDN</b> serves static assets &amp; cached responses near the user.</li>
+        <li><b>Load balancer</b> spreads traffic across service instances.</li>
+        <li><b>API gateway</b> handles auth, rate limiting, routing, aggregation.</li>
+        <li><b>Services</b> run business logic; <b>cache</b> shields the DB; <b>queue</b> defers slow work.</li>
+      </ul>
+      <div class="callout"><b>Design instinct:</b> for any feature, ask "which hop does this belong in?" Auth → gateway; hot reads → cache; heavy/slow work → queue + workers; durable data → DB.</div>
+    </section>
+
+    <!-- 4 -->
+    <section id="monolith">
+      <h2><span class="num"></span> Monolith</h2>
+      <p class="lead">One deployable app containing all features. The right default for most new products.</p>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>✅ Strengths</h4><ul>
+          <li>Simple to build, test, deploy, debug</li>
+          <li>No network between modules (fast, transactional)</li>
+          <li>One codebase, one CI/CD</li>
+        </ul></div>
+        <div class="vs-card b"><h4>⚠️ Weaknesses at scale</h4><ul>
+          <li>Whole app redeploys for any change</li>
+          <li>One bug can take down everything</li>
+          <li>Teams step on each other; scale the whole app, not hot parts</li>
+        </ul></div>
+      </div>
+      <div class="callout tip"><b>Modular monolith:</b> a monolith with strict internal module boundaries. You get monolith simplicity now and an easy path to extract microservices later. <b>Start here; don't build microservices you don't need yet.</b></div>
+    </section>
+
+    <!-- 5 -->
+    <section id="layered">
+      <h2><span class="num"></span> Layered (N-Tier) Architecture</h2>
+      <p class="lead">The default internal structure: separate concerns into horizontal layers so each is testable and swappable.</p>
+      <div class="diagram">Controller / Route   (HTTP: parse request, send response)
+   ↓
+Service / Domain     (business rules — framework-agnostic)
+   ↓
+Repository / DAO     (data access — hides the DB)
+   ↓
+Database</div>
+      <div class="callout tip"><b>Why layers:</b> controllers stay thin (HTTP only), services hold reusable business logic (unit-testable without a server), repositories isolate the database (swap Postgres→Mongo without touching business rules). Dependencies point <em>downward</em> only.</div>
+    </section>
+
+    <!-- 6 -->
+    <section id="clean">
+      <h2><span class="num"></span> Clean Architecture</h2>
+      <p class="lead">Concentric layers where <b>dependencies point inward</b> toward the domain. The core (entities, use cases) knows nothing about the web, the DB, or frameworks.</p>
+      <div class="diagram">┌─────────────────────────────────────┐
+│  Frameworks & Drivers (web, DB, UI) │  ← outer, replaceable
+│  ┌───────────────────────────────┐  │
+│  │  Interface Adapters           │  │  (controllers, gateways, presenters)
+│  │  ┌─────────────────────────┐  │  │
+│  │  │  Use Cases (app logic)  │  │  │
+│  │  │  ┌───────────────────┐  │  │  │
+│  │  │  │  Entities (core)  │  │  │  │  ← inner, pure business rules
+│  │  │  └───────────────────┘  │  │  │
+│  │  └─────────────────────────┘  │  │
+│  └───────────────────────────────┘  │
+└─────────────────────────────────────┘
+Dependency Rule: source code dependencies point INWARD only.</div>
+      <div class="callout"><b>Payoff:</b> business rules don't depend on Express/Postgres, so you can test them in isolation and replace infrastructure without rewriting logic. <b>Cost:</b> more indirection/boilerplate — worth it for long-lived, complex domains, overkill for a CRUD app.</div>
+    </section>
+
+    <!-- 7 -->
+    <section id="hexagonal">
+      <h2><span class="num"></span> Hexagonal (Ports &amp; Adapters)</h2>
+      <p class="lead">The same idea as Clean, framed differently: the app core exposes <b>ports</b> (interfaces); the outside world plugs in via <b>adapters</b>.</p>
+      <div class="diagram">        [ HTTP adapter ]        [ CLI adapter ]
+                 \               /
+                  ▼             ▼
+   (driving ports) →  APPLICATION CORE  ← (driven ports)
+                  ▲             ▲
+                 /               \
+        [ Postgres adapter ]   [ Kafka adapter ]</div>
+      <ul>
+        <li><b>Driving side</b> (left) — things that <em>call</em> the app (HTTP, CLI, tests).</li>
+        <li><b>Driven side</b> (right) — things the app <em>calls</em> (DB, message broker, email).</li>
+        <li>Swap any adapter (Postgres → Mongo, REST → gRPC) without touching the core.</li>
+      </ul>
+      <div class="callout tip"><b>Interview framing:</b> Clean &amp; Hexagonal both enforce "the domain depends on nothing; infrastructure depends on the domain via interfaces." Name-drop the <b>Dependency Inversion Principle</b> — that's the engine behind both.</div>
+    </section>
+
+    <!-- 8 -->
+    <section id="microservices">
+      <h2><span class="num"></span> Microservices</h2>
+      <p class="lead">Split a system into small, independently-deployable services owned by different teams, each with its <b>own database</b>. Solves org + scaling problems — at real cost.</p>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>✅ Benefits</h4><ul>
+          <li>Independent deploy &amp; scale per service</li>
+          <li>Team autonomy; tech per service</li>
+          <li>Fault isolation (one service down ≠ all down)</li>
+        </ul></div>
+        <div class="vs-card b"><h4>⚠️ Costs</h4><ul>
+          <li>Distributed systems complexity (network, partial failure)</li>
+          <li>Data consistency across services (no cross-DB transactions)</li>
+          <li>Ops burden: service discovery, tracing, deployment</li>
+        </ul></div>
+      </div>
+      <h3>Key patterns</h3>
+      <table>
+        <tr><th>Problem</th><th>Pattern</th></tr>
+        <tr><td>Each service owns its data</td><td>Database-per-service</td></tr>
+        <tr><td>Transaction across services</td><td>Saga (choreography/orchestration) + compensations</td></tr>
+        <tr><td>Read model spanning services</td><td>CQRS + materialized views</td></tr>
+        <tr><td>Avoid dual-write bugs</td><td>Transactional Outbox + CDC</td></tr>
+        <tr><td>One entry point for clients</td><td>API Gateway / BFF</td></tr>
+        <tr><td>Find services</td><td>Service discovery (DNS, Consul, K8s)</td></tr>
+      </table>
+      <div class="callout warn"><b>Don't start here.</b> Microservices trade code complexity for <em>operational</em> complexity. Begin with a modular monolith; extract a service only when a clear scaling or team-ownership need appears. Premature microservices are a top cause of failed projects.</div>
+      <details class="qa"><summary>How do you handle a transaction across microservices?</summary><div class="ans"><p>You can't use a distributed ACID transaction at scale. Use a <b>Saga</b>: a sequence of local transactions where each step publishes an event triggering the next; if a step fails, run <b>compensating</b> transactions to undo prior steps. Use the <b>Outbox pattern</b> to publish events atomically with the DB write.</p></div></details>
+    </section>
+
+    <!-- 9 -->
+    <section id="communication">
+      <h2><span class="num"></span> Communication: Sync vs Async</h2>
+      <p class="lead">Two services can talk synchronously (request/response) or asynchronously (events/messages). Choosing well is core to a resilient design.</p>
+      <div class="vs-grid">
+        <div class="vs-card b"><h4>Synchronous (REST/gRPC)</h4><ul>
+          <li>Caller waits for a response</li>
+          <li>Simple, immediate result</li>
+          <li>Tight coupling; failures cascade; slower is slower</li>
+        </ul></div>
+        <div class="vs-card a"><h4>Asynchronous (queue/events)</h4><ul>
+          <li>Fire message, don't wait</li>
+          <li>Decoupled, resilient, absorbs spikes</li>
+          <li>Eventual consistency; harder to trace/debug</li>
+        </ul></div>
+      </div>
+      <div class="callout tip"><b>Rule of thumb:</b> use <b>sync</b> when the caller needs the result now (fetch a profile). Use <b>async</b> for slow/optional/fan-out work (send email, generate thumbnail, update search index) — it keeps the request fast and the system resilient.</div>
+    </section>
+
+    <!-- 10 -->
+    <section id="rest">
+      <h2><span class="num"></span> REST</h2>
+      <p class="lead">Resources identified by URLs, manipulated with HTTP verbs. The default for public/web APIs — simple, cacheable, universally understood.</p>
+      <table>
+        <tr><th>Aspect</th><th>Best practice</th></tr>
+        <tr><td>Verbs</td><td>GET (read), POST (create), PUT/PATCH (update), DELETE</td></tr>
+        <tr><td>URLs</td><td>Nouns, plural: <code>/users/42/orders</code></td></tr>
+        <tr><td>Status codes</td><td>2xx ok, 4xx client, 5xx server; 201+Location on create</td></tr>
+        <tr><td>Versioning</td><td><code>/v1/...</code>; never break clients</td></tr>
+        <tr><td>Idempotency</td><td>GET/PUT/DELETE idempotent; use Idempotency-Key for POST</td></tr>
+        <tr><td>Pagination</td><td>Cursor for feeds, offset for admin</td></tr>
+      </table>
+      <div class="callout tip"><b>Strengths:</b> HTTP caching, statelessness, tooling, simplicity. <b>Weakness:</b> over/under-fetching (fixed response shapes) — which is what GraphQL addresses.</div>
+    </section>
+
+    <!-- 11 -->
+    <section id="graphql">
+      <h2><span class="num"></span> GraphQL</h2>
+      <p class="lead">A query language where the client asks for exactly the fields it needs from a single endpoint. Kills over/under-fetching and request waterfalls.</p>
+      <div class="code"><div class="code-head"><span>One request, exact shape</span><button class="copy">Copy</button></div><pre>query {
+  user(id: <span class="tok-num">42</span>) {
+    name
+    orders(last: <span class="tok-num">5</span>) { id total }   <span class="tok-com"># only what you need, nested in one round trip</span>
+  }
+}</pre></div>
+      <table>
+        <tr><th>✅ Good for</th><th>⚠️ Watch out</th></tr>
+        <tr><td>Many clients, varied data needs (mobile+web)</td><td>Caching is harder (POST, dynamic shapes)</td></tr>
+        <tr><td>Avoiding over/under-fetch &amp; waterfalls</td><td>N+1 queries (use DataLoader batching)</td></tr>
+        <tr><td>Strong typed schema + introspection</td><td>Complex/malicious queries (depth/cost limits)</td></tr>
+      </table>
+      <div class="callout warn"><b>The N+1 trap:</b> resolving <code class="inline">orders</code> for 100 users can fire 100 DB queries. Batch with <b>DataLoader</b> (collect keys in a tick, one query) — the canonical GraphQL performance fix.</div>
+    </section>
+
+    <!-- 12 -->
+    <section id="grpc">
+      <h2><span class="num"></span> gRPC</h2>
+      <p class="lead">A high-performance RPC framework using <b>Protocol Buffers</b> (binary) over HTTP/2. The default for internal service-to-service communication.</p>
+      <ul>
+        <li><b>Fast &amp; small:</b> binary Protobuf + HTTP/2 multiplexing beats JSON/REST for throughput/latency.</li>
+        <li><b>Contract-first:</b> a <code class="inline">.proto</code> schema generates typed client/server code in any language.</li>
+        <li><b>Streaming:</b> client/server/bidirectional streams built in.</li>
+        <li><b>Weakness:</b> not browser-native (needs gRPC-web + proxy); binary is less human-debuggable.</li>
+      </ul>
+      <div class="callout tip"><b>When to choose:</b> internal microservice mesh where perf matters → <b>gRPC</b>. Public/browser API → <b>REST</b> (or GraphQL for flexible clients). Many systems use REST/GraphQL at the edge and gRPC between services.</div>
+    </section>
+
+    <!-- 13 -->
+    <section id="queues">
+      <h2><span class="num"></span> Message Queues &amp; Event Streaming</h2>
+      <p class="lead">A broker between producers and consumers that decouples them, absorbs spikes, and enables async processing. The backbone of scalable, resilient backends.</p>
+      <div class="diagram">Producer → [ Queue / Topic ] → Consumer(s)
+   fast return          buffer          process at their own pace
+Benefits: decoupling · load leveling (spike absorption) · retries/DLQ · fan-out</div>
+      <table>
+        <tr><th>Tech</th><th>Model</th><th>Use</th></tr>
+        <tr><td><b>RabbitMQ</b>/SQS</td><td>Queue (message consumed once)</td><td>Task/job processing, work distribution</td></tr>
+        <tr><td><b>Kafka</b></td><td>Log/stream (replayable, many consumers)</td><td>Event streaming, analytics, event sourcing</td></tr>
+        <tr><td>Redis Streams</td><td>Lightweight stream</td><td>Simple pub/sub + persistence</td></tr>
+      </table>
+      <ul>
+        <li><b>Delivery guarantees:</b> at-most-once, at-least-once (dedupe with idempotency), exactly-once (hard, Kafka transactions).</li>
+        <li><b>Dead Letter Queue (DLQ):</b> messages that fail repeatedly go here for inspection instead of blocking the queue.</li>
+        <li><b>Backpressure:</b> if consumers lag, the queue buffers — size it and alert on lag.</li>
+      </ul>
+      <div class="callout tip"><b>Queue vs stream:</b> a <b>queue</b> (SQS/RabbitMQ) deletes a message once processed — great for jobs. A <b>log/stream</b> (Kafka) retains events so multiple consumers can read and replay — great for events/analytics. (Kafka gets its own guide next.)</div>
+    </section>
+
+    <!-- 14 -->
+    <section id="caching">
+      <h2><span class="num"></span> Caching</h2>
+      <p class="lead">Store hot data closer/faster to cut latency and DB load. The highest-leverage backend optimization — and the trickiest to keep correct.</p>
+      <div class="diagram">Browser → CDN → API cache (Redis) → Database
+each layer: hit = fast return; miss = go deeper, then populate the cache</div>
+      <h3>Caching strategies</h3>
+      <table>
+        <tr><th>Strategy</th><th>How</th><th>Trade-off</th></tr>
+        <tr><td><b>Cache-aside</b> (lazy)</td><td>App checks cache; on miss, load DB + populate</td><td>Most common; first read is slow; possible stale</td></tr>
+        <tr><td><b>Read-through</b></td><td>Cache loads from DB on miss itself</td><td>Simpler app code; needs cache support</td></tr>
+        <tr><td><b>Write-through</b></td><td>Write to cache + DB together</td><td>Consistent; slower writes</td></tr>
+        <tr><td><b>Write-back</b></td><td>Write to cache, async flush to DB</td><td>Fast writes; risk of loss on crash</td></tr>
+      </table>
+      <h3>Eviction &amp; invalidation</h3>
+      <ul>
+        <li><b>Eviction:</b> LRU (least recently used) is the default; also LFU, TTL expiry.</li>
+        <li><b>Invalidation:</b> TTL (simple), or explicit delete/update on write (fresh but more code).</li>
+      </ul>
+      <div class="callout warn"><b>Three classic failures:</b> <b>Cache stampede</b> (many misses hit the DB at once when a hot key expires → lock/singleflight or stagger TTLs), <b>hot key</b> (one key overwhelms a node → replicate/shard it), <b>thundering herd</b> on cold start (warm the cache).</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Cache-aside is the default; pick write policy by consistency vs write-latency needs.</li>
+        <li>Design invalidation up front; defend against stampede, hot keys, and cold starts.</li>
+      </ul></div>
+    </section>
+
+    <!-- 15 -->
+    <section id="redis">
+      <h2><span class="num"></span> Redis (the backend swiss-army knife)</h2>
+      <p class="lead">An in-memory data-structure store used for caching, sessions, rate limiting, queues, leaderboards, locks, and pub/sub. (Full Redis guide is next in the series.)</p>
+      <table>
+        <tr><th>Use case</th><th>Redis feature</th></tr>
+        <tr><td>Cache</td><td>Strings/hashes + TTL</td></tr>
+        <tr><td>Session store</td><td>Shared state for stateless services</td></tr>
+        <tr><td>Rate limiter</td><td><code>INCR</code> + <code>EXPIRE</code> / sorted sets (sliding window)</td></tr>
+        <tr><td>Leaderboard</td><td>Sorted set (ZADD/ZRANGE)</td></tr>
+        <tr><td>Distributed lock</td><td><code>SET key val NX PX</code> (Redlock)</td></tr>
+        <tr><td>Queue / stream</td><td>Lists / Redis Streams</td></tr>
+        <tr><td>Pub/Sub</td><td>Real-time fan-out</td></tr>
+      </table>
+      <div class="callout tip"><b>Why it's everywhere:</b> in-memory = microsecond latency; rich data structures = it replaces many bespoke systems. Persistence (RDB/AOF) + replication + Cluster give durability and scale.</div>
+    </section>
+
+    <!-- 16 -->
+    <section id="databases">
+      <h2><span class="num"></span> Databases</h2>
+      <p class="lead">The durable heart of the system. Choosing the right database — and modeling data for access patterns — is the highest-stakes design decision.</p>
+      <table>
+        <tr><th>Family</th><th>Examples</th><th>Best for</th></tr>
+        <tr><td>Relational (SQL)</td><td>Postgres, MySQL</td><td>Transactions, relationships, strong consistency</td></tr>
+        <tr><td>Document</td><td>MongoDB</td><td>Flexible schema, nested data, fast iteration</td></tr>
+        <tr><td>Key-value</td><td>Redis, DynamoDB</td><td>Simple lookups, caching, huge scale</td></tr>
+        <tr><td>Wide-column</td><td>Cassandra, Bigtable</td><td>Massive write throughput, time-series</td></tr>
+        <tr><td>Graph</td><td>Neo4j</td><td>Relationship-heavy (social, fraud)</td></tr>
+        <tr><td>Search</td><td>Elasticsearch</td><td>Full-text search, log analytics</td></tr>
+      </table>
+      <div class="callout tip"><b>Polyglot persistence:</b> real systems use several — Postgres for orders, Redis for cache/sessions, Elasticsearch for search, S3 for blobs, a queue for events. Choose per access pattern, not one DB for everything.</div>
+    </section>
+
+    <!-- 17 -->
+    <section id="sql-nosql">
+      <h2><span class="num"></span> SQL vs NoSQL</h2>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>SQL (relational)</h4><ul>
+          <li>Fixed schema, JOINs, ACID transactions</li>
+          <li>Strong consistency; great for money/orders</li>
+          <li>Vertical scale first; sharding is harder</li>
+        </ul></div>
+        <div class="vs-card b"><h4>NoSQL</h4><ul>
+          <li>Flexible schema; denormalized for access patterns</li>
+          <li>Horizontal scale built-in; often eventual consistency</li>
+          <li>Limited JOINs/transactions (varies by engine)</li>
+        </ul></div>
+      </div>
+      <h3>ACID vs BASE</h3>
+      <table>
+        <tr><th>ACID (SQL)</th><th>BASE (many NoSQL)</th></tr>
+        <tr><td><b>A</b>tomicity, <b>C</b>onsistency, <b>I</b>solation, <b>D</b>urability</td><td><b>B</b>asically <b>A</b>vailable, <b>S</b>oft state, <b>E</b>ventually consistent</td></tr>
+        <tr><td>Correctness first (banking)</td><td>Availability/scale first (feeds, carts)</td></tr>
+      </table>
+      <div class="callout warn"><b>Interview trap:</b> "NoSQL is faster/better" is wrong. Choose by <b>access pattern &amp; consistency needs</b>: relational + transactional (payments) → SQL; huge scale, simple lookups, flexible data (feed, catalog) → NoSQL. Many systems use both.</div>
+    </section>
+
+    <!-- 18 -->
+    <section id="cap">
+      <h2><span class="num"></span> CAP &amp; PACELC</h2>
+      <p class="lead">In a distributed data store, during a <b>network partition</b> you must choose between consistency and availability — you can't have both. That's the CAP theorem.</p>
+      <div class="diagram">        Consistency
+           /  \
+          /    \    (during a PARTITION, pick one edge)
+Availability —— Partition tolerance
+CP: refuse/stall to stay consistent   (banks; e.g. HBase, etcd)
+AP: answer with possibly-stale data   (feeds; e.g. Cassandra, Dynamo)
+CA: only without partitions (a single node) — not real for distributed systems</div>
+      <div class="callout tip"><b>PACELC extends it:</b> <em>if</em> Partition → choose A or C; <b>Else</b> (normal operation) → choose Latency or Consistency. Real systems tune this per operation (e.g. Dynamo lets you pick consistency per read).</div>
+      <div class="callout warn"><b>Common mistake:</b> saying a system "gives up P". You can't give up partition tolerance in a distributed system (networks fail) — you choose C or A <em>when</em> a partition happens.</div>
+    </section>
+
+    <!-- 19 -->
+    <section id="replication">
+      <h2><span class="num"></span> Replication</h2>
+      <p class="lead">Keep copies of data on multiple nodes for <b>availability</b> (survive failures) and <b>read scaling</b> (serve reads from replicas).</p>
+      <div class="diagram">Leader (primary) ──writes──▶ [ Leader ] ──replicate──▶ Follower(s)
+Reads: from leader (fresh) or followers (scale, but replication lag = stale)</div>
+      <table>
+        <tr><th>Type</th><th>Behavior</th></tr>
+        <tr><td>Single-leader</td><td>All writes to leader; followers replicate. Simple; leader is a bottleneck/SPOF (failover needed)</td></tr>
+        <tr><td>Multi-leader</td><td>Writes to several leaders (multi-region); conflict resolution needed</td></tr>
+        <tr><td>Leaderless (Dynamo)</td><td>Write/read quorums (W+R&gt;N); highly available</td></tr>
+        <tr><td>Sync vs async</td><td>Sync = no data loss, slower; async = fast, risk losing recent writes on failover</td></tr>
+      </table>
+      <div class="callout warn"><b>Replication lag</b> causes "read-your-writes" bugs: a user updates their profile, then a read from a lagging replica shows the old value. Fix: read from the leader after a write, or route a user's reads to a consistent replica.</div>
+    </section>
+
+    <!-- 20 -->
+    <section id="sharding">
+      <h2><span class="num"></span> Sharding (Partitioning)</h2>
+      <p class="lead">Split data across nodes so no single machine holds everything — the way to scale writes and storage horizontally.</p>
+      <table>
+        <tr><th>Strategy</th><th>How</th><th>Trade-off</th></tr>
+        <tr><td>Range</td><td>By key range (A–M, N–Z)</td><td>Easy ranges; hotspots if uneven</td></tr>
+        <tr><td>Hash</td><td>hash(key) → shard</td><td>Even spread; no range queries</td></tr>
+        <tr><td>Consistent hashing</td><td>Ring; adding a node moves few keys</td><td>Minimizes reshuffle (used by Cassandra/Dynamo)</td></tr>
+        <tr><td>Directory / lookup</td><td>A service maps key→shard</td><td>Flexible; the lookup is a dependency</td></tr>
+      </table>
+      <div class="callout warn"><b>Hard parts:</b> choosing a shard key (avoid hotspots — don't shard by <code class="inline">country</code> if one country dominates), cross-shard queries/joins (fan-out + merge), cross-shard transactions (avoid; use sagas), and <b>rebalancing</b> when you add nodes (consistent hashing helps).</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Sharding scales writes/storage; replication scales reads/availability — usually combine both.</li>
+        <li>The shard key choice makes or breaks it — pick one with high cardinality and even distribution.</li>
+      </ul></div>
+    </section>
+
+    <!-- 21 -->
+    <section id="indexing">
+      <h2><span class="num"></span> Indexing</h2>
+      <p class="lead">An index is a sorted data structure (usually a B-Tree) that lets the DB find rows without scanning the whole table — the first fix for a slow query.</p>
+      <ul>
+        <li><b>B-Tree</b> — default; great for equality &amp; range (<code class="inline">WHERE age &gt; 30</code>, sorting).</li>
+        <li><b>Hash</b> — O(1) equality only, no ranges.</li>
+        <li><b>Composite</b> — multi-column; order matters (leftmost-prefix rule).</li>
+        <li><b>Covering index</b> — includes all queried columns → answer from the index alone (fastest).</li>
+        <li><b>Inverted index</b> — full-text search (Elasticsearch).</li>
+      </ul>
+      <div class="callout warn"><b>Trade-off:</b> indexes speed reads but slow writes (every insert/update maintains them) and use space. Index the columns you filter/sort/join on; don't index everything. Use <code class="inline">EXPLAIN</code> to verify the query uses your index.</div>
+    </section>
+
+    <!-- 22 -->
+    <section id="load-balancing">
+      <h2><span class="num"></span> Load Balancing</h2>
+      <p class="lead">Distribute traffic across many instances for scale + availability. The load balancer is also where health checks and failover live.</p>
+      <table>
+        <tr><th>Algorithm</th><th>Behavior</th></tr>
+        <tr><td>Round robin</td><td>Rotate evenly</td></tr>
+        <tr><td>Least connections</td><td>Send to the least-busy instance</td></tr>
+        <tr><td>Weighted</td><td>Bigger instances get more traffic</td></tr>
+        <tr><td>IP hash / sticky</td><td>Same client → same server (session affinity)</td></tr>
+      </table>
+      <ul>
+        <li><b>L4 (transport)</b> — routes by IP/port, fast, protocol-agnostic.</li>
+        <li><b>L7 (application)</b> — routes by URL/header/cookie; enables path-based routing, TLS termination.</li>
+        <li><b>Health checks</b> remove unhealthy instances automatically; <b>drain</b> connections on deploy.</li>
+      </ul>
+      <div class="callout tip"><b>Statelessness enables it:</b> if any instance can serve any request (session in Redis/DB, not in-memory), the LB can route freely and you can autoscale. Prefer stateless + a shared session store over sticky sessions.</div>
+    </section>
+
+    <!-- 23 -->
+    <section id="reverse-proxy">
+      <h2><span class="num"></span> Reverse Proxy</h2>
+      <p class="lead">A server (Nginx, Envoy, HAProxy) that sits in front of your app servers and forwards client requests to them — often the same box that load-balances.</p>
+      <ul>
+        <li><b>TLS termination</b> — decrypt HTTPS once at the edge.</li>
+        <li><b>Caching &amp; compression</b> — serve cached/gzipped responses.</li>
+        <li><b>Routing &amp; rewrites</b> — path/host-based routing to services.</li>
+        <li><b>Security</b> — hide backend topology, WAF, rate limiting, request buffering.</li>
+      </ul>
+      <div class="callout tip"><b>Forward vs reverse proxy:</b> a <b>forward</b> proxy sits in front of <em>clients</em> (VPN, corporate egress). A <b>reverse</b> proxy sits in front of <em>servers</em> (Nginx before your API). Load balancers are a kind of reverse proxy.</div>
+    </section>
+
+    <!-- 24 -->
+    <section id="api-gateway">
+      <h2><span class="num"></span> API Gateway</h2>
+      <p class="lead">A single entry point in front of many microservices that centralizes cross-cutting concerns so each service doesn't re-implement them.</p>
+      <div class="diagram">Clients → [ API Gateway ] → user-svc
+                     │        → order-svc
+                     │        → payment-svc
+         handles: auth · rate limiting · routing · request aggregation
+                  TLS · caching · logging/metrics · versioning</div>
+      <div class="callout tip"><b>Gateway vs BFF:</b> an <b>API Gateway</b> is a general edge for all clients. A <b>Backend-for-Frontend</b> is a gateway tailored to one client type (web vs mobile), aggregating/reshaping data for that UI. Big orgs often have both.</div>
+      <div class="callout warn"><b>Don't put business logic in the gateway</b> — keep it thin (routing + cross-cutting concerns). A fat gateway becomes a bottleneck and a deployment coupling point.</div>
+    </section>
+
+    <!-- 25 -->
+    <section id="rate-limiting">
+      <h2><span class="num"></span> Rate Limiting</h2>
+      <p class="lead">Protect services from abuse/overload by capping requests per client. A classic design question.</p>
+      <table>
+        <tr><th>Algorithm</th><th>Idea</th></tr>
+        <tr><td><b>Token bucket</b></td><td>Tokens refill at a rate; each request spends one; allows bursts</td></tr>
+        <tr><td><b>Leaky bucket</b></td><td>Requests drain at a fixed rate; smooths bursts</td></tr>
+        <tr><td><b>Fixed window</b></td><td>N per minute window; simple; boundary bursts</td></tr>
+        <tr><td><b>Sliding window log/counter</b></td><td>Accurate rolling window; more memory</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Distributed rate limit with Redis (fixed window)</span><button class="copy">Copy</button></div><pre><span class="tok-com"># per user per minute</span>
+count = INCR rate:user:42:minute
+<span class="tok-key">if</span> count == 1: EXPIRE rate:user:42:minute 60
+<span class="tok-key">if</span> count &gt; LIMIT: reject (429 Too Many Requests)</pre></div>
+      <div class="callout tip"><b>Distributed:</b> counters must be shared across instances → keep them in <b>Redis</b> (atomic INCR). Return <code class="inline">429</code> + <code class="inline">Retry-After</code>; rate-limit at the gateway so services stay protected.</div>
+    </section>
+
+    <!-- 26 -->
+    <section id="authentication">
+      <h2><span class="num"></span> Authentication</h2>
+      <p class="lead">Proving <em>who</em> a request is from. Two dominant models: server <b>sessions</b> and stateless <b>JWT</b>.</p>
+      <div class="vs-grid">
+        <div class="vs-card b"><h4>Sessions</h4><ul>
+          <li>Opaque session id in a cookie → server store (Redis)</li>
+          <li>Easy to revoke; server holds state</li>
+          <li>Store lookup per request; sticky/shared store at scale</li>
+        </ul></div>
+        <div class="vs-card a"><h4>JWT (stateless)</h4><ul>
+          <li>Signed token holds claims; server verifies signature</li>
+          <li>No lookup; scales horizontally</li>
+          <li>Hard to revoke early; keep short-lived + refresh token</li>
+        </ul></div>
+      </div>
+      <div class="diagram">Login → verify creds → issue access(15m JWT) + refresh(7d, rotated)
+Request → verify access token signature → allow
+Access expired → exchange refresh → new access; refresh reuse → revoke (theft detection)</div>
+      <div class="callout tip"><b>OAuth2 / OIDC</b> delegate auth to a provider (Google, Okta) — OAuth2 = authorization framework, OIDC adds identity (login). Use them for social/enterprise SSO instead of rolling your own.</div>
+    </section>
+
+    <!-- 27 -->
+    <section id="authorization">
+      <h2><span class="num"></span> Authorization</h2>
+      <p class="lead">Deciding <em>what</em> an authenticated user may do. Distinct from authentication — always enforce it server-side at the data.</p>
+      <table>
+        <tr><th>Model</th><th>Idea</th><th>Use</th></tr>
+        <tr><td><b>RBAC</b></td><td>Roles → permissions; users get roles</td><td>Most apps (admin/editor/viewer)</td></tr>
+        <tr><td><b>ABAC</b></td><td>Rules over attributes (user, resource, context)</td><td>Fine-grained (region, time, ownership)</td></tr>
+        <tr><td><b>ReBAC</b></td><td>Relationship graph (Google Zanzibar)</td><td>Sharing/"who can access this doc"</td></tr>
+      </table>
+      <div class="callout warn"><b>Golden rule:</b> authorization must be enforced <b>on the server at the point the data is accessed</b> — never trust the client, and don't rely only on hiding UI. Check ownership (does this order belong to this user?) on every request.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>AuthN = who you are (sessions/JWT/OAuth); AuthZ = what you can do (RBAC/ABAC/ReBAC).</li>
+        <li>Enforce AuthZ server-side at the data; short-lived JWT + rotating refresh for scale.</li>
+      </ul></div>
+    </section>
+
+    <!-- 28 -->
+    <section id="logging">
+      <h2><span class="num"></span> Logging</h2>
+      <p class="lead">Structured, centralized logs are how you debug production. First of the three observability pillars (logs, metrics, traces).</p>
+      <ul>
+        <li><b>Structured JSON</b> logs with levels (error/warn/info/debug) — machine-searchable.</li>
+        <li><b>Correlation / request ID</b> on every log line → follow one request across services.</li>
+        <li><b>Centralize</b> — ship to ELK/Loki/CloudWatch; never grep files on boxes.</li>
+        <li><b>Never log secrets/PII</b> — redact tokens, passwords, card numbers.</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>Structured log line</span><button class="copy">Copy</button></div><pre>{ <span class="tok-str">"level"</span>:<span class="tok-str">"error"</span>, <span class="tok-str">"ts"</span>:<span class="tok-str">"..."</span>, <span class="tok-str">"reqId"</span>:<span class="tok-str">"abc-123"</span>, <span class="tok-str">"svc"</span>:<span class="tok-str">"orders"</span>,
+  <span class="tok-str">"msg"</span>:<span class="tok-str">"payment failed"</span>, <span class="tok-str">"userId"</span>:<span class="tok-num">42</span>, <span class="tok-str">"orderId"</span>:<span class="tok-num">7</span> }</pre></div>
+    </section>
+
+    <!-- 29 -->
+    <section id="monitoring">
+      <h2><span class="num"></span> Monitoring &amp; Metrics</h2>
+      <p class="lead">Metrics are numeric time-series that tell you the system's health and drive alerts. Second observability pillar.</p>
+      <table>
+        <tr><th>Framework</th><th>Track</th></tr>
+        <tr><td><b>RED</b> (services)</td><td><b>R</b>ate, <b>E</b>rrors, <b>D</b>uration</td></tr>
+        <tr><td><b>USE</b> (resources)</td><td><b>U</b>tilization, <b>S</b>aturation, <b>E</b>rrors</td></tr>
+        <tr><td>Golden signals</td><td>Latency, traffic, errors, saturation</td></tr>
+      </table>
+      <ul>
+        <li><b>Prometheus</b> scrapes metrics; <b>Grafana</b> dashboards; <b>Alertmanager</b> pages on SLO breaches.</li>
+        <li><b>SLI/SLO/SLA:</b> Indicator (measured), Objective (target, e.g. 99.9%), Agreement (contract). Alert on <b>error budget</b> burn, not every blip.</li>
+        <li>Alert on <b>symptoms</b> (high latency/error rate) users feel, not every CPU spike.</li>
+      </ul>
+      <div class="callout tip"><b>p99 &gt; average:</b> always chart latency percentiles. An average of 50ms can hide a p99 of 3s that's driving users away.</div>
+    </section>
+
+    <!-- 30 -->
+    <section id="tracing">
+      <h2><span class="num"></span> Distributed Tracing</h2>
+      <p class="lead">Follow one request as it hops across many services — the only way to debug latency in a microservice system. Third observability pillar.</p>
+      <div class="diagram">Trace (one request) = many Spans
+gateway ──▶ user-svc ──▶ auth-svc
+        └─▶ order-svc ──▶ payment-svc ──▶ DB
+Each span: service, operation, start/duration, trace-id (propagated via headers)</div>
+      <div class="callout tip"><b>OpenTelemetry</b> is the standard: instrument once, export to Jaeger/Tempo/Datadog. A shared <b>trace ID</b> propagated in headers ties spans (and logs, via correlation IDs) together — you can see exactly which hop is slow.</div>
+    </section>
+
+    <!-- 31 -->
+    <section id="docker">
+      <h2><span class="num"></span> Docker (Containers)</h2>
+      <p class="lead">Package an app + its dependencies into a portable image that runs identically anywhere — the unit of modern deployment. (Full Docker guide is in the library.)</p>
+      <ul>
+        <li><b>Image</b> = immutable snapshot; <b>container</b> = a running instance.</li>
+        <li>Solves "works on my machine"; consistent dev → prod.</li>
+        <li>Lightweight (shares host kernel) vs VMs (full OS) → dense, fast.</li>
+        <li>Multi-stage builds → tiny production images; non-root user; scan for CVEs.</li>
+      </ul>
+      <div class="callout tip"><b>Why it matters for SD:</b> containers make services identical and horizontally scalable — the substrate Kubernetes orchestrates.</div>
+    </section>
+
+    <!-- 32 -->
+    <section id="kubernetes">
+      <h2><span class="num"></span> Kubernetes (Orchestration)</h2>
+      <p class="lead">Runs containers across a cluster with self-healing, scaling, rolling updates, and service discovery — the industry standard for operating services at scale.</p>
+      <table>
+        <tr><th>Object</th><th>Role</th></tr>
+        <tr><td>Pod</td><td>Smallest unit (1+ containers)</td></tr>
+        <tr><td>Deployment</td><td>Declarative replicas + rolling updates/rollback</td></tr>
+        <tr><td>Service</td><td>Stable virtual IP + load balancing to pods</td></tr>
+        <tr><td>Ingress</td><td>HTTP routing into the cluster</td></tr>
+        <tr><td>ConfigMap / Secret</td><td>Config &amp; secrets injection</td></tr>
+        <tr><td>HPA</td><td>Horizontal Pod Autoscaler (scale on CPU/metrics)</td></tr>
+      </table>
+      <div class="diagram">Desired state (YAML) → Control plane → reconcile → actual state
+pod dies → recreated · traffic up → HPA adds pods · deploy → rolling update</div>
+      <div class="callout tip"><b>Declarative &amp; self-healing:</b> you declare "I want 5 replicas"; K8s continuously reconciles reality to match. That control loop is the whole idea.</div>
+    </section>
+
+    <!-- 33 -->
+    <section id="cicd">
+      <h2><span class="num"></span> CI/CD</h2>
+      <p class="lead">Automate build → test → deploy so changes ship safely and often.</p>
+      <div class="diagram">commit → CI: lint · test · build image · scan · push
+       → CD: deploy to staging → smoke tests → production
+deploy strategies: rolling · blue-green (instant switch) · canary (1%→100%)</div>
+      <ul>
+        <li><b>CI</b> — on every push: run tests, build a versioned artifact/image.</li>
+        <li><b>CD</b> — promote artifacts through environments automatically with gates.</li>
+        <li><b>Blue-green</b> — two prod environments, switch traffic instantly (easy rollback).</li>
+        <li><b>Canary</b> — release to a small % first, watch metrics, then widen.</li>
+      </ul>
+      <div class="callout tip"><b>Decouple deploy from release</b> with feature flags: ship code dark, turn it on gradually, kill it instantly if metrics dip — no redeploy.</div>
+    </section>
+
+    <!-- 34 -->
+    <section id="scalability">
+      <h2><span class="num"></span> Scalability</h2>
+      <p class="lead">The full toolkit for handling growth — applied in roughly this order as load increases.</p>
+      <div class="diagram">1 server
+   ↓ add cache (Redis) + CDN               (offload reads)
+   ↓ add load balancer + more app servers  (stateless, horizontal)
+   ↓ add read replicas                      (scale reads)
+   ↓ add queue + workers                    (async slow work)
+   ↓ shard the database                     (scale writes/storage)
+   ↓ split into services + regions          (org + global scale)</div>
+      <div class="callout tip"><b>Order matters:</b> cache and CDN first (cheap, huge wins), then horizontal app scaling, then read replicas, then async, and only shard when a single DB truly can't keep up. Don't jump to sharding/microservices prematurely.</div>
+    </section>
+
+    <!-- 35 -->
+    <section id="ha">
+      <h2><span class="num"></span> High Availability</h2>
+      <p class="lead">Keep serving despite failures. HA = redundancy + automatic failover + no single point of failure.</p>
+      <ul>
+        <li><b>Eliminate SPOFs</b> — redundant instances, multi-AZ, replicated DB with failover.</li>
+        <li><b>Health checks + auto-restart/replace</b> (K8s, load balancer draining).</li>
+        <li><b>Multi-AZ</b> (survive a data-center failure); <b>multi-region</b> (survive a region failure).</li>
+        <li><b>Graceful degradation</b> — shed non-critical features under stress rather than fail wholesale.</li>
+      </ul>
+      <table>
+        <tr><th>Availability</th><th>Downtime/year</th></tr>
+        <tr><td>99% ("two nines")</td><td>~3.65 days</td></tr>
+        <tr><td>99.9%</td><td>~8.8 hours</td></tr>
+        <tr><td>99.99%</td><td>~52 minutes</td></tr>
+        <tr><td>99.999% ("five nines")</td><td>~5 minutes</td></tr>
+      </table>
+      <div class="callout tip"><b>Availability is multiplicative:</b> a request through 5 services each at 99.9% ≈ 99.5% overall. Redundancy at each hop and graceful degradation protect the end-to-end number.</div>
+    </section>
+
+    <!-- 36 -->
+    <section id="dr">
+      <h2><span class="num"></span> Disaster Recovery</h2>
+      <p class="lead">Plan for catastrophic loss (region outage, data corruption, ransomware). Defined by two targets:</p>
+      <table>
+        <tr><th>Target</th><th>Meaning</th></tr>
+        <tr><td><b>RPO</b> (Recovery Point Objective)</td><td>How much <em>data</em> you can afford to lose (→ backup frequency)</td></tr>
+        <tr><td><b>RTO</b> (Recovery Time Objective)</td><td>How long recovery may <em>take</em> (→ standby strategy)</td></tr>
+      </table>
+      <table>
+        <tr><th>Strategy</th><th>RTO/RPO</th><th>Cost</th></tr>
+        <tr><td>Backup &amp; restore</td><td>Hours (high)</td><td>Low</td></tr>
+        <tr><td>Pilot light</td><td>Core running minimal, scale up on DR</td><td>Medium</td></tr>
+        <tr><td>Warm standby</td><td>Scaled-down copy running</td><td>Higher</td></tr>
+        <tr><td>Multi-region active-active</td><td>Near-zero</td><td>Highest</td></tr>
+      </table>
+      <div class="callout warn"><b>Untested backups don't exist.</b> Regularly restore from backups and run DR drills — the worst time to discover a broken backup is during a real disaster.</div>
+    </section>
+
+    <!-- 37 -->
+    <section id="resilience">
+      <h2><span class="num"></span> Resilience Patterns</h2>
+      <p class="lead">Distributed systems fail partially. These patterns stop one failure from cascading into an outage.</p>
+      <table>
+        <tr><th>Pattern</th><th>What it does</th></tr>
+        <tr><td><b>Timeout</b></td><td>Never wait forever on a dependency</td></tr>
+        <tr><td><b>Retry + exponential backoff + jitter</b></td><td>Recover from transient failures without stampeding</td></tr>
+        <tr><td><b>Circuit breaker</b></td><td>Stop calling a failing service; fail fast; probe to recover</td></tr>
+        <tr><td><b>Bulkhead</b></td><td>Isolate resource pools so one overloaded dependency can't sink everything</td></tr>
+        <tr><td><b>Idempotency</b></td><td>Safe retries (idempotency keys) — no double charges</td></tr>
+        <tr><td><b>Fallback / graceful degradation</b></td><td>Serve cached/partial results when a dependency is down</td></tr>
+        <tr><td><b>Load shedding &amp; backpressure</b></td><td>Reject/queue excess load to protect the core</td></tr>
+      </table>
+      <div class="callout warn"><b>Retry storms:</b> naive retries during an outage multiply load and prevent recovery. Always add exponential backoff + jitter + a circuit breaker + a retry budget.</div>
+    </section>
+
+    <!-- 38 -->
+    <section id="production">
+      <h2><span class="num"></span> Production Architecture (the big picture)</h2>
+      <p class="lead">How the pieces assemble into a real, scalable, observable system.</p>
+      <div class="diagram">                         ┌─ CDN (static, cache)
+Users → DNS → LB/WAF ────┤
+                         └─ API Gateway (auth, rate limit, routing)
+                                 │
+        ┌────────────────────────┼───────────────────────┐
+     user-svc                order-svc              payment-svc
+        │                        │                       │
+   [Redis cache]         [Redis] [Postgres]        [Postgres]
+        │                        │
+        └──────── events ──▶ [ Kafka ] ──▶ workers (email, search index, analytics)
+Observability everywhere: logs (ELK) · metrics (Prometheus/Grafana) · traces (OTel/Jaeger)
+Delivery: Docker images → Kubernetes (HPA, rolling) ← CI/CD
+Reliability: multi-AZ · read replicas · backups/DR · circuit breakers</div>
+      <div class="callout tip"><b>The recipe:</b> stateless services behind a gateway + LB, each owning its data, a cache in front of hot reads, a queue/stream for async fan-out, full observability, orchestrated by Kubernetes with CI/CD, made reliable with replication + DR + resilience patterns.</div>
+    </section>
+
+    <!-- 39 -->
+    <section id="case-studies">
+      <h2><span class="num"></span> Case Studies</h2>
+      <p class="lead">Apply the toolkit. For each: requirements → estimation → data model → architecture → bottlenecks.</p>
+
+      <h3>🔗 Design a URL Shortener (TinyURL / bit.ly)</h3>
+      <div class="diagram">Requirements: shorten URL, redirect fast, analytics; read-heavy (100:1)
+Key gen:  base62(counter) or hash(long URL) → 7 chars = 62^7 ≈ 3.5T
+Data:     KV store {short → long}; write-once, read-many
+Arch:     API → cache(Redis) → DB(KV, e.g. Dynamo); redirect = cache hit (301/302)
+Scale:    heavy caching + CDN; sharded KV; async analytics via queue
+Bottleneck: redirect latency → cache everything; ID collisions → counter/uniqueness</div>
+
+      <h3>🚦 Design a Distributed Rate Limiter</h3>
+      <div class="diagram">Requirements: N req/user/window across many gateway instances
+Algo:      token bucket / sliding window
+State:     shared counters in Redis (atomic INCR + EXPIRE, or Lua for sliding)
+Arch:      gateway → Redis check → allow / 429 + Retry-After
+Scale:     Redis Cluster; local pre-check + async sync to reduce Redis load</div>
+
+      <h3>💬 Design a Chat System (WhatsApp)</h3>
+      <div class="diagram">Requirements: 1:1 + group, delivery/read receipts, presence, offline delivery
+Transport: WebSocket (persistent) via connection gateway; ack for delivery
+Data:      messages in wide-column (Cassandra) partitioned by conversation
+Offline:   queue undelivered → push on reconnect; fan-out for groups
+Scale:     stateless WS gateways + a session registry (which server holds a user)</div>
+
+      <h3>🔔 Design a Notification System</h3>
+      <div class="diagram">Producer → Kafka(topic) → workers → channels (push/email/SMS) via providers
+Features: templating, user prefs, dedupe, retries+DLQ, rate limit per user
+Scale:    fan-out via queue; idempotency keys; provider failover</div>
+
+      <h3>📰 Design a News Feed (Twitter/Instagram)</h3>
+      <div class="diagram">Write (post): store post → fan-out
+   fan-out-on-write (push): precompute followers' feeds (fast reads, heavy for celebs)
+   fan-out-on-read (pull):  build feed at read time (cheap writes, slower reads)
+   hybrid: push for most, pull for celebrities (the real-world answer)
+Data: posts (KV/Cassandra), feed cache (Redis), media (S3+CDN); rank + paginate (cursor)</div>
+      <div class="callout tip"><b>How to shine:</b> clarify scale (estimation) → propose components → name the key trade-off (e.g. fan-out on write vs read) → go deep where probed → mention bottlenecks &amp; how you'd monitor them.</div>
+    </section>
+
+    <!-- 40 -->
+    <section id="decision-matrix">
+      <h2><span class="num"></span> Decision Matrix</h2>
+      <table>
+        <tr><th>Problem</th><th>Reach for</th></tr>
+        <tr><td>New product, small team</td><td>Modular monolith + one SQL DB</td></tr>
+        <tr><td>Scale reads</td><td>Cache (Redis) + CDN + read replicas</td></tr>
+        <tr><td>Scale writes/storage</td><td>Sharding (+ the right shard key)</td></tr>
+        <tr><td>Slow/optional/fan-out work</td><td>Message queue + workers</td></tr>
+        <tr><td>Event streaming / replay / analytics</td><td>Kafka</td></tr>
+        <tr><td>Transactions, money</td><td>SQL (ACID)</td></tr>
+        <tr><td>Huge scale, simple lookups, flexible data</td><td>NoSQL</td></tr>
+        <tr><td>Internal service-to-service, perf</td><td>gRPC</td></tr>
+        <tr><td>Flexible client data needs</td><td>GraphQL</td></tr>
+        <tr><td>Public/web API</td><td>REST</td></tr>
+        <tr><td>Cross-service transaction</td><td>Saga + outbox (not 2PC)</td></tr>
+        <tr><td>Protect from abuse</td><td>Rate limiting at the gateway (Redis)</td></tr>
+        <tr><td>Debug latency across services</td><td>Distributed tracing (OpenTelemetry)</td></tr>
+        <tr><td>Survive a region outage</td><td>Multi-region + DR (RPO/RTO)</td></tr>
+        <tr><td>Stop cascading failures</td><td>Timeouts + circuit breaker + bulkhead</td></tr>
+      </table>
+    </section>
+
+    <!-- 41 -->
+    <section id="mistakes">
+      <h2><span class="num"></span> Common Mistakes &amp; Anti-Patterns</h2>
+      <table>
+        <tr><th>Mistake</th><th>Fix</th></tr>
+        <tr><td>Premature microservices</td><td>Start with a modular monolith</td></tr>
+        <tr><td>Stateful services (in-memory sessions)</td><td>Externalize state (Redis) → scale horizontally</td></tr>
+        <tr><td>No caching / caching without invalidation</td><td>Cache-aside + a clear invalidation strategy</td></tr>
+        <tr><td>Sharing a DB across microservices</td><td>Database-per-service</td></tr>
+        <tr><td>Distributed transactions (2PC) at scale</td><td>Sagas + outbox + idempotency</td></tr>
+        <tr><td>Retries without backoff/circuit breaker</td><td>Backoff + jitter + circuit breaker + budget</td></tr>
+        <tr><td>Optimizing average latency</td><td>Track/alert on p95/p99</td></tr>
+        <tr><td>Bad shard key → hotspots</td><td>High-cardinality, evenly-distributed key</td></tr>
+        <tr><td>Synchronous chains for everything</td><td>Async queues for slow/fan-out work</td></tr>
+        <tr><td>No observability</td><td>Logs + metrics + traces with correlation IDs</td></tr>
+        <tr><td>Untested backups</td><td>Regular restore drills (DR test)</td></tr>
+        <tr><td>Single point of failure</td><td>Redundancy + failover at every hop</td></tr>
+      </table>
+    </section>
+
+    <!-- 42 -->
+    <section id="interview">
+      <h2><span class="num"></span> Interview Questions</h2>
+      <h3>🟢 Fundamentals</h3>
+      <details class="qa"><summary>Vertical vs horizontal scaling?</summary><div class="ans"><p>Vertical = a bigger machine (simple, but has a ceiling and is a SPOF). Horizontal = more machines behind a load balancer (near-limitless, fault-tolerant) — requires stateless services and data partitioning.</p></div></details>
+      <details class="qa"><summary>What makes a service horizontally scalable?</summary><div class="ans"><p>Statelessness — no in-memory session/state. Put shared state in Redis/DB so any instance can serve any request, letting a load balancer route freely and autoscalers add instances.</p></div></details>
+      <details class="qa"><summary>Explain the CAP theorem.</summary><div class="ans"><p>During a network partition a distributed store must choose Consistency (reject/stall to stay correct — CP) or Availability (answer with possibly-stale data — AP). You can't sacrifice partition tolerance; PACELC adds the latency-vs-consistency choice during normal operation.</p></div></details>
+      <h3>🟡 Data</h3>
+      <details class="qa"><summary>SQL vs NoSQL — how do you choose?</summary><div class="ans"><p>By access pattern and consistency needs. Relational + transactional (payments, orders) → SQL/ACID. Huge scale, simple lookups, flexible/denormalized data (feeds, catalogs) → NoSQL/BASE. Many systems use both (polyglot persistence).</p></div></details>
+      <details class="qa"><summary>Replication vs sharding?</summary><div class="ans"><p>Replication = copies of the same data (availability + read scaling; watch replication lag). Sharding = split different data across nodes (write/storage scaling; needs a good shard key). Usually combine: shard, and replicate each shard.</p></div></details>
+      <details class="qa"><summary>How do you pick a shard key?</summary><div class="ans"><p>High cardinality and even distribution to avoid hotspots; aligned with common query access so you don't fan out across shards. Consistent hashing minimizes rebalancing when adding nodes. Avoid low-cardinality keys (e.g. country) that concentrate load.</p></div></details>
+      <details class="qa"><summary>How does caching go wrong?</summary><div class="ans"><p>Stale data (design invalidation), cache stampede when a hot key expires (locks/singleflight, staggered TTLs), hot keys overwhelming a node (replicate/shard the key), and thundering herd on cold start (warm the cache).</p></div></details>
+      <h3>🔵 Architecture</h3>
+      <details class="qa"><summary>How do you handle a transaction across microservices?</summary><div class="ans"><p>Use a Saga: a chain of local transactions coordinated by events (choreography) or an orchestrator, with compensating transactions to undo on failure. Publish events atomically with the DB write via the Outbox pattern; make handlers idempotent.</p></div></details>
+      <details class="qa"><summary>Sync vs async communication — when each?</summary><div class="ans"><p>Sync (REST/gRPC) when the caller needs the result immediately. Async (queue/events) for slow, optional, or fan-out work (email, thumbnails, search indexing) — it keeps requests fast, decouples services, and absorbs spikes at the cost of eventual consistency.</p></div></details>
+      <details class="qa"><summary>Monolith or microservices for a new product?</summary><div class="ans"><p>Start with a modular monolith — simpler to build/deploy/debug. Extract microservices only when a concrete scaling or team-ownership need appears. Premature microservices add distributed-systems complexity you don't need yet.</p></div></details>
+      <h3>🟣 Reliability &amp; Production</h3>
+      <details class="qa"><summary>How do you prevent cascading failures?</summary><div class="ans"><p>Timeouts on every dependency, retries with exponential backoff + jitter, a circuit breaker to fail fast when a service is down, bulkheads to isolate resource pools, load shedding under overload, and graceful degradation (serve cached/partial data).</p></div></details>
+      <details class="qa"><summary>How do you make a system observable?</summary><div class="ans"><p>The three pillars: structured logs with correlation IDs, metrics (RED/USE, alert on SLOs and p99), and distributed tracing (OpenTelemetry) to follow a request across services. Alert on user-facing symptoms, not every resource blip.</p></div></details>
+      <details class="qa"><summary>What are RPO and RTO?</summary><div class="ans"><p>RPO = how much data you can lose (drives backup frequency); RTO = how long recovery may take (drives standby strategy: backup/restore → pilot light → warm standby → active-active). Test restores regularly — untested backups don't count.</p></div></details>
+      <details class="qa"><summary>Design a rate limiter for a distributed API.</summary><div class="ans"><p>Token bucket or sliding window with counters in Redis (atomic INCR + EXPIRE, or a Lua script for accuracy) so all gateway instances share state. Return 429 + Retry-After; enforce at the gateway; shard/replicate Redis and consider a local pre-check to cut Redis load.</p></div></details>
+    </section>
+
+    <!-- 43 -->
+    <section id="checklist">
+      <h2><span class="num"></span> Mastery Checklist</h2>
+      <table>
+        <tr><th>Area</th><th>Covered</th></tr>
+        <tr><td>Fundamentals, estimation, request path</td><td>✅ §1–§3</td></tr>
+        <tr><td>Architecture styles (monolith → clean/hex → microservices)</td><td>✅ §4–§8</td></tr>
+        <tr><td>Communication (REST/GraphQL/gRPC/queues)</td><td>✅ §9–§13</td></tr>
+        <tr><td>Data (cache/Redis/DBs/SQL-NoSQL/CAP/replication/sharding/indexing)</td><td>✅ §14–§21</td></tr>
+        <tr><td>Traffic (LB/reverse proxy/gateway/rate limiting)</td><td>✅ §22–§25</td></tr>
+        <tr><td>Security (authN/authZ)</td><td>✅ §26–§27</td></tr>
+        <tr><td>Observability (logs/metrics/traces)</td><td>✅ §28–§30</td></tr>
+        <tr><td>Delivery (Docker/K8s/CI-CD)</td><td>✅ §31–§33</td></tr>
+        <tr><td>Reliability (scalability/HA/DR/resilience)</td><td>✅ §34–§37</td></tr>
+        <tr><td>Production architecture, case studies, decision matrix, mistakes, interview</td><td>✅ §38–§42</td></tr>
+      </table>
+      <div class="callout tip"><b>Next in this series:</b> Redis → Apache Kafka.</div>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🏗️ <b>Backend System Design — The Complete Zero-to-Staff Guide</b> · Part of the Tech Learning Library. Architecture styles, communication, data &amp; scaling, traffic &amp; edge, security, observability, delivery, reliability, case studies, and interview prep.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
