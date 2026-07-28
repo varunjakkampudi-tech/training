@@ -48,6 +48,9 @@
   .status.wip { background: #3d3414; color: #fbbf24; border: 1px solid #6b571f; }
   .status.soon2 { background: #2a2f3d; color: #94a3b8; border: 1px solid #3d4759; }
   footer { text-align: center; padding: 30px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+  .empty { text-align: center; color: var(--muted); padding: 70px 20px; font-size: 1.02rem; }
+  .admin-link { display: inline-block; margin-top: 6px; font-size: 0.8rem; color: #64b5f6; opacity: 0.65; }
+  .admin-link:hover { opacity: 1; text-decoration: underline; }
   @media (max-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 600px) { header.hero h1 { font-size: 2.1rem; } .grid { grid-template-columns: repeat(2, 1fr); gap: 14px; } .card { padding: 18px; } .card .ico { font-size: 1.9rem; } .card h3 { font-size: 1.1rem; } }
@@ -58,151 +61,89 @@
     <h1>Tech <span class="g">Learning Library</span></h1>
     <p>Complete, hands-on interview &amp; reference handbooks — every guide packed with real code, real-world scenarios, production problems, machine coding, and 100+ interview questions.</p>
     <div class="stats">
-      <div><b id="doneCount">14</b><span>Guides Ready</span></div>
-      <div><b>14</b><span>Total Planned</span></div>
+      <div><b id="doneCount">–</b><span>Guides Live</span></div>
+      <div><b id="totalCount">–</b><span>Total Guides</span></div>
       <div><b>100+</b><span>Qs / Guide</span></div>
       <div><b>Free</b><span>Open Source</span></div>
     </div>
   </header>
 
   <div class="wrap">
-    <h2 class="section">Frontend</h2>
-    <div class="grid">
-      <a class="card" href="./nextjs.html">
-        <span class="status done">Ready</span>
-        <div class="ico">▲</div><h3>Next.js</h3>
-        <p>App Router, Server &amp; Client Components, SSR/SSG/ISR/PPR, caching, Server Actions, streaming, middleware, auth, deployment.</p>
-        <div class="tags"><span>App Router</span><span>RSC</span><span>Caching</span><span>SSR</span></div>
-      </a>
-      <a class="card" href="./javascript.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🟨</div><h3>JavaScript</h3>
-        <p>Engine internals, closures, prototypes, async, event loop, patterns, machine coding.</p>
-        <div class="tags"><span>Closures</span><span>Event Loop</span><span>Async</span><span>Interview</span></div>
-      </a>
-      <a class="card" href="./react.html">
-        <span class="status done">Ready</span>
-        <div class="ico">⚛️</div><h3>React</h3>
-        <p>JSX, hooks, custom hooks, Router, Redux Toolkit, RTK Query, performance, patterns.</p>
-        <div class="tags"><span>Hooks</span><span>Redux</span><span>Routing</span></div>
-      </a>
-      <a class="card" href="./materialui.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🎨</div><h3>Material UI</h3>
-        <p>Components, theming, sx/styled, responsive layouts, dark mode, accessibility.</p>
-        <div class="tags"><span>MUI</span><span>Theming</span></div>
-      </a>
-    </div>
-
-    <h2 class="section">Backend</h2>
-    <div class="grid">
-      <a class="card" href="./mongodb.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🍃</div><h3>MongoDB</h3>
-        <p>CRUD, aggregation, indexing, data modeling, transactions, sharding, system design.</p>
-        <div class="tags"><span>Aggregation</span><span>Modeling</span><span>Atlas</span></div>
-      </a>
-      <a class="card" href="./nodejs.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🟩</div><h3>Node.js</h3>
-        <p>Event loop, streams, cluster, worker threads, security, scaling, Docker.</p>
-        <div class="tags"><span>Streams</span><span>Scaling</span></div>
-      </a>
-      <a class="card" href="./expressjs.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🚂</div><h3>Express.js</h3>
-        <p>Routing, middleware, MVC, validation, auth, error handling, security.</p>
-        <div class="tags"><span>Middleware</span><span>JWT</span></div>
-      </a>
-      <a class="card" href="./fastapi.html">
-        <span class="status done">Ready</span>
-        <div class="ico">⚡</div><h3>FastAPI</h3>
-        <p>Pydantic, dependency injection, async, SQLAlchemy, JWT, background tasks.</p>
-        <div class="tags"><span>Pydantic</span><span>Async</span></div>
-      </a>
-    </div>
-
-    <h2 class="section">Web &amp; APIs</h2>
-    <div class="grid">
-      <a class="card" href="./restapi.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🔌</div><h3>REST API</h3>
-        <p>Principles, HTTP, status codes, versioning, auth, caching, pagination, OpenAPI.</p>
-        <div class="tags"><span>HTTP</span><span>OAuth</span></div>
-      </a>
-      <a class="card" href="./seo.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🔍</div><h3>SEO</h3>
-        <p>Technical SEO, meta tags, sitemaps, structured data, Core Web Vitals, React/Next SEO.</p>
-        <div class="tags"><span>Core Web Vitals</span></div>
-      </a>
-      <a class="card" href="./accessibility.html">
-        <span class="status done">Ready</span>
-        <div class="ico">♿</div><h3>Accessibility</h3>
-        <p>ARIA, screen readers, keyboard nav, semantic HTML, WCAG, focus management.</p>
-        <div class="tags"><span>ARIA</span><span>WCAG</span></div>
-      </a>
-      <a class="card" href="./crossbrowser.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🌐</div><h3>Cross-Browser</h3>
-        <p>Rendering engines, polyfills, vendor prefixes, feature detection, responsive design.</p>
-        <div class="tags"><span>Polyfills</span><span>Testing</span></div>
-      </a>
-    </div>
-
-    <h2 class="section">Cloud &amp; DevOps</h2>
-    <div class="grid">
-      <a class="card" href="./aws.html">
-        <span class="status done">Ready</span>
-        <div class="ico">☁️</div><h3>AWS</h3>
-        <p>Foundations, compute, messaging, serverless, containers, IaC, region strategy, interview recap.</p>
-        <div class="tags"><span>EC2</span><span>Serverless</span><span>IaC</span></div>
-      </a>
-      <a class="card" href="./linux.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🐧</div><h3>Linux Administration</h3>
-        <p>Permissions, processes, systemd, networking, storage, scripting, cron, SSH, hardening.</p>
-        <div class="tags"><span>systemd</span><span>Shell</span><span>Security</span></div>
-      </a>
-      <a class="card" href="./docker.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🐳</div><h3>Docker</h3>
-        <p>Images, Dockerfile, multi-stage, volumes, networks, Compose, real-world React/FastAPI/Express.</p>
-        <div class="tags"><span>Multi-Stage</span><span>Compose</span><span>Real-World</span></div>
-      </a>
-    </div>
-
-    <h2 class="section">System Design &amp; Data Infrastructure</h2>
-    <div class="grid">
-      <a class="card" href="./frontend-system-design.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🧩</div><h3>Frontend System Design</h3>
-        <p>RADIO framework, rendering pipeline, state/data architecture, pagination, infinite scroll, virtualization, code splitting, CDN, micro-frontends, case studies.</p>
-        <div class="tags"><span>Rendering</span><span>State</span><span>Virtualization</span><span>Case Studies</span></div>
-      </a>
-      <a class="card" href="./backend-system-design.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🏗️</div><h3>Backend System Design</h3>
-        <p>Architecture styles, REST/GraphQL/gRPC/queues, caching, SQL/NoSQL, CAP, replication, sharding, load balancing, API gateway, K8s, HA/DR, case studies.</p>
-        <div class="tags"><span>Scaling</span><span>Databases</span><span>Microservices</span><span>Case Studies</span></div>
-      </a>
-      <a class="card" href="./redis.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🔴</div><h3>Redis</h3>
-        <p>In-memory model, all data types, persistence (RDB/AOF), replication, Sentinel, Cluster, caching patterns, locks, rate limiting, leaderboards, queues, case studies.</p>
-        <div class="tags"><span>Cache</span><span>Data Types</span><span>Cluster</span><span>Patterns</span></div>
-      </a>
-      <a class="card" href="./kafka.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🌊</div><h3>Apache Kafka</h3>
-        <p>The commit log, partitions &amp; replication, producers &amp; consumer groups, delivery guarantees, exactly-once, Schema Registry, Connect, Streams, patterns, case studies.</p>
-        <div class="tags"><span>Streaming</span><span>Partitions</span><span>Exactly-Once</span><span>Patterns</span></div>
-      </a>
-    </div>
+    <div id="sections" aria-live="polite"></div>
+    <div id="loading" class="empty">Loading guides…</div>
+    <div id="empty" class="empty" hidden>No guides are live right now — check back soon.</div>
   </div>
 
   <footer>
     📚 <b>Tech Learning Library</b> — built as a complete study &amp; interview resource. Hosted on GitHub Pages.
+    <br /><a class="admin-link" href="./admin.html">Admin</a>
   </footer>
+
+  <script>
+  (function () {
+    var sectionsEl = document.getElementById('sections');
+    var loadingEl = document.getElementById('loading');
+    var emptyEl = document.getElementById('empty');
+    var doneEl = document.getElementById('doneCount');
+    var totalEl = document.getElementById('totalCount');
+
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+
+    function statusMeta(s) {
+      if (s === 'wip') return { cls: 'wip', label: 'In Progress' };
+      if (s === 'soon') return { cls: 'soon2', label: 'Soon' };
+      return { cls: 'done', label: 'Ready' };
+    }
+
+    function buildCard(c) {
+      var a = el('a', 'card');
+      a.href = c.href || '#';
+      var meta = statusMeta(c.status);
+      if (c.status === 'soon') a.classList.add('soon');
+      var badge = el('span', 'status ' + meta.cls, meta.label);
+      a.appendChild(badge);
+      a.appendChild(el('div', 'ico', c.icon || '📘'));
+      a.appendChild(el('h3', null, c.title || ''));
+      a.appendChild(el('p', null, c.desc || ''));
+      var tags = el('div', 'tags');
+      (c.tags || []).forEach(function (t) { tags.appendChild(el('span', null, t)); });
+      a.appendChild(tags);
+      return a;
+    }
+
+    function render(data) {
+      sectionsEl.innerHTML = '';
+      var liveCount = 0, total = 0;
+      (data.sections || []).forEach(function (sec) {
+        var courses = sec.courses || [];
+        total += courses.length;
+        var live = courses.filter(function (c) { return c.live !== false; });
+        if (live.length === 0) return; // hide the whole section when every course is off
+        sectionsEl.appendChild(el('h2', 'section', sec.title));
+        var grid = el('div', 'grid');
+        live.forEach(function (c) { grid.appendChild(buildCard(c)); liveCount++; });
+        sectionsEl.appendChild(grid);
+      });
+      if (doneEl) doneEl.textContent = liveCount;
+      if (totalEl) totalEl.textContent = total;
+      if (loadingEl) loadingEl.hidden = true;
+      emptyEl.hidden = liveCount > 0;
+    }
+
+    fetch('./courses.json?ts=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(render)
+      .catch(function () {
+        if (loadingEl) loadingEl.hidden = true;
+        emptyEl.hidden = false;
+        emptyEl.textContent = 'Could not load the guide library. Please refresh the page.';
+      });
+  })();
+  </script>
 </body>
 </html>

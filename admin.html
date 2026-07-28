@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Admin · Tech Learning Library</title>
+<style>
+  :root {
+    --blue: #1976d2; --blue-dark: #0d47a1; --blue-mid: #2196f3; --sky: #64b5f6;
+    --bg: #0b1a2b; --card: #12263b; --card2: #0f2135;
+    --text: #e8f1fb; --muted: #9fb6cc; --border: #1f3f5c;
+    --green: #4ade80; --green-bg: #143d2a; --green-bd: #1f6b45;
+    --red: #f87171; --red-bg: #3d1a1a; --red-bd: #6b2a2a;
+    --amber: #fbbf24; --amber-bg: #3d3414; --amber-bd: #6b571f;
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  a { color: var(--sky); text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+  input { font-family: inherit; }
+  .btn { border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 9px; padding: 9px 16px; font-size: 0.86rem; font-weight: 600; transition: all 0.15s; }
+  .btn:hover { border-color: var(--blue-mid); background: #16304a; }
+  .btn.primary { background: linear-gradient(135deg, var(--blue), var(--blue-mid)); border-color: transparent; }
+  .btn.primary:hover { filter: brightness(1.1); }
+  .btn.danger { border-color: var(--red-bd); color: #fecaca; }
+  .btn.danger:hover { background: var(--red-bg); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.small { padding: 5px 11px; font-size: 0.76rem; border-radius: 7px; }
+
+  /* Login */
+  #login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .login-card { width: 100%; max-width: 380px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 34px 30px; box-shadow: var(--shadow); }
+  .login-card h1 { font-size: 1.4rem; margin-bottom: 6px; }
+  .login-card p { color: var(--muted); font-size: 0.86rem; margin-bottom: 22px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .field input { width: 100%; padding: 11px 13px; border-radius: 9px; border: 1px solid var(--border); background: var(--card2); color: var(--text); font-size: 0.92rem; outline: none; }
+  .field input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(33,150,243,0.18); }
+  .err { color: var(--red); font-size: 0.82rem; margin-top: 4px; min-height: 18px; }
+  .hint { color: var(--muted); font-size: 0.74rem; margin-top: 14px; line-height: 1.5; }
+
+  /* App */
+  #app { display: none; }
+  .topbar { position: sticky; top: 0; z-index: 20; background: rgba(11,26,43,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 14px 22px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .topbar h1 { font-size: 1.1rem; margin-right: auto; display: flex; align-items: center; gap: 9px; }
+  .topbar .dirty-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber); display: none; }
+  .topbar.dirty .dirty-dot { display: inline-block; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 22px 90px; }
+
+  .summary { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
+  .stat { flex: 1; min-width: 130px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+  .stat b { display: block; font-size: 1.7rem; color: var(--sky); }
+  .stat span { color: var(--muted); font-size: 0.8rem; }
+
+  .section-block { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 18px; overflow: hidden; }
+  .section-head { display: flex; align-items: center; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--border); background: var(--card2); flex-wrap: wrap; }
+  .section-head h2 { font-size: 1.06rem; }
+  .section-head .count { color: var(--muted); font-size: 0.82rem; }
+  .chip { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .chip.hidden-chip { background: var(--red-bg); color: #fecaca; border: 1px solid var(--red-bd); }
+  .chip.visible-chip { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+  .section-head .spacer { margin-left: auto; }
+
+  .course-row { display: flex; align-items: center; gap: 14px; padding: 13px 18px; border-bottom: 1px solid var(--border); }
+  .course-row:last-child { border-bottom: none; }
+  .course-row .ico { font-size: 1.4rem; width: 30px; text-align: center; flex-shrink: 0; }
+  .course-row .meta { min-width: 0; flex: 1; }
+  .course-row .meta b { display: block; font-size: 0.96rem; }
+  .course-row .meta small { color: var(--muted); font-size: 0.78rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .course-row.off { opacity: 0.55; }
+  .state-label { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; min-width: 42px; text-align: right; }
+  .state-label.on { color: var(--green); }
+  .state-label.off { color: var(--muted); }
+
+  /* toggle switch */
+  .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: #2a3d52; border-radius: 999px; transition: 0.2s; border: 1px solid var(--border); }
+  .slider::before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: #cbd5e1; border-radius: 50%; transition: 0.2s; }
+  .switch input:checked + .slider { background: linear-gradient(135deg, var(--green-bd), var(--green)); border-color: transparent; }
+  .switch input:checked + .slider::before { transform: translateX(20px); background: #fff; }
+  .switch input:focus-visible + .slider { box-shadow: 0 0 0 3px rgba(74,222,128,0.3); }
+
+  /* toast */
+  #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 12px 20px; font-size: 0.88rem; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 60; max-width: 90vw; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.ok { border-color: var(--green-bd); }
+  #toast.bad { border-color: var(--red-bd); }
+
+  /* modal */
+  .modal-back { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+  .modal-back.open { display: flex; }
+  .modal { width: 100%; max-width: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-size: 1.15rem; margin-bottom: 4px; }
+  .modal p.sub { color: var(--muted); font-size: 0.82rem; margin-bottom: 18px; }
+  .modal .field input { background: var(--card2); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+  .warn-box { background: var(--amber-bg); border: 1px solid var(--amber-bd); color: #fde68a; border-radius: 10px; padding: 11px 14px; font-size: 0.8rem; margin-bottom: 16px; line-height: 1.5; }
+  .row-inline { display: flex; gap: 10px; }
+  .row-inline .field { flex: 1; }
+  label.check { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--muted); cursor: pointer; }
+
+  @media (max-width: 560px) {
+    .course-row .meta small { display: none; }
+    .topbar h1 { width: 100%; margin-bottom: 4px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== LOGIN ===== -->
+  <div id="login">
+    <form class="login-card" id="loginForm" autocomplete="off">
+      <h1>🔐 Admin Panel</h1>
+      <p id="loginSub">Sign in to manage which guides are live.</p>
+      <div class="field">
+        <label for="pw" id="pwLabel">Password</label>
+        <input type="password" id="pw" autocomplete="current-password" />
+      </div>
+      <div class="field" id="pw2Field" style="display:none;">
+        <label for="pw2">Confirm new password</label>
+        <input type="password" id="pw2" autocomplete="new-password" />
+      </div>
+      <div class="err" id="loginErr"></div>
+      <button class="btn primary" type="submit" style="width:100%;" id="loginBtn">Sign in</button>
+      <div class="hint" id="loginHint"></div>
+    </form>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="app">
+    <div class="topbar" id="topbar">
+      <h1>🛠️ Guide Manager <span class="dirty-dot" title="Unsaved changes"></span></h1>
+      <button class="btn small" id="reloadBtn" title="Discard changes and reload the published list">Reload</button>
+      <button class="btn small" id="exportBtn" title="Download courses.json">Export</button>
+      <button class="btn small" id="pwBtn" title="Change admin password">Password</button>
+      <button class="btn small" id="saveBtn" title="Save a local draft in this browser">Save draft</button>
+      <button class="btn small primary" id="publishBtn" title="Publish live to the site">Publish live</button>
+      <button class="btn small danger" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="wrap">
+      <div class="summary">
+        <div class="stat"><b id="sLive">0</b><span>Courses live</span></div>
+        <div class="stat"><b id="sOff">0</b><span>Courses hidden</span></div>
+        <div class="stat"><b id="sSecVisible">0</b><span>Sections visible</span></div>
+        <div class="stat"><b id="sSecHidden">0</b><span>Sections hidden</span></div>
+      </div>
+      <div id="sections"></div>
+    </div>
+  </div>
+
+  <!-- ===== PUBLISH MODAL ===== -->
+  <div class="modal-back" id="publishModal">
+    <div class="modal">
+      <h3>🚀 Publish live</h3>
+      <p class="sub">Commits <code>courses.json</code> to your GitHub repo. GitHub Pages redeploys it in ~1 minute and everyone sees the update.</p>
+      <div class="warn-box">🔑 Use a <b>fine-grained Personal Access Token</b> with <b>Contents: Read &amp; write</b> on this repo only. It is used from your browser and can be remembered locally — never commit it.</div>
+      <div class="row-inline">
+        <div class="field"><label for="ghOwner">Owner</label><input id="ghOwner" /></div>
+        <div class="field"><label for="ghRepo">Repository</label><input id="ghRepo" /></div>
+      </div>
+      <div class="row-inline">
+        <div class="field"><label for="ghBranch">Branch</label><input id="ghBranch" /></div>
+        <div class="field"><label for="ghPath">File path</label><input id="ghPath" /></div>
+      </div>
+      <div class="field"><label for="ghToken">GitHub token</label><input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off" /></div>
+      <div class="field"><label for="ghMsg">Commit message</label><input id="ghMsg" /></div>
+      <label class="check"><input type="checkbox" id="ghRemember" /> Remember token in this browser</label>
+      <div class="modal-actions">
+        <button class="btn" id="publishCancel">Cancel</button>
+        <button class="btn primary" id="publishConfirm">Publish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHANGE PASSWORD MODAL ===== -->
+  <div class="modal-back" id="pwModal">
+    <div class="modal">
+      <h3>🔑 Change password</h3>
+      <p class="sub">Stored only as a hash in this browser. Set it again on other devices.</p>
+      <div class="field"><label for="curPw">Current password</label><input id="curPw" type="password" autocomplete="off" /></div>
+      <div class="field"><label for="newPw">New password</label><input id="newPw" type="password" autocomplete="new-password" /></div>
+      <div class="field"><label for="newPw2">Confirm new password</label><input id="newPw2" type="password" autocomplete="new-password" /></div>
+      <div class="err" id="pwErr"></div>
+      <div class="modal-actions">
+        <button class="btn" id="pwCancel">Cancel</button>
+        <button class="btn primary" id="pwSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- config ----------
+  var DEFAULT_HASH = "5ad6614e602c919323a9816b795e1801e265aab3f750200d26d8616e1c2f879e"; // "TrainingAdmin@2026"
+  var LS = {
+    hash: "tll_admin_hash",
+    draft: "tll_courses_draft",
+    gh: "tll_gh_cfg",
+    token: "tll_gh_token"
+  };
+  var GH_DEFAULTS = { owner: "varunjakkampudi-tech", repo: "training", branch: "main", path: "courses.json" };
+
+  // ---------- helpers ----------
+  var $ = function (id) { return document.getElementById(id); };
+  function toast(msg, kind) {
+    var t = $("toast"); t.textContent = msg; t.className = "show " + (kind || "");
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.className = ""; }, 3200);
+  }
+  async function sha256(str) {
+    var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+    return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+      return b.toString(16).padStart(2, "0");
+    }).join("");
+  }
+  function currentHash() { return localStorage.getItem(LS.hash) || DEFAULT_HASH; }
+  function b64utf8(str) {
+    return btoa(String.fromCharCode.apply(null, new TextEncoder().encode(str)));
+  }
+  function esc(s){ return String(s); }
+
+  // ---------- state ----------
+  var model = null;   // { sections: [...] }
+  var dirty = false;
+
+  // ================= LOGIN =================
+  var loginForm = $("loginForm"), pwEl = $("pw"), loginErr = $("loginErr");
+
+  function refreshLoginHint() {
+    var usingDefault = !localStorage.getItem(LS.hash);
+    $("loginHint").innerHTML = usingDefault
+      ? "First time? Default password is <b>TrainingAdmin@2026</b> — change it after signing in."
+      : "Password set on this browser. Forgot it? Clear site data to reset to the default.";
+  }
+  refreshLoginHint();
+
+  loginForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    loginErr.textContent = "";
+    var h = await sha256(pwEl.value);
+    if (h === currentHash()) {
+      sessionStorage.setItem("tll_admin_ok", "1");
+      showApp();
+    } else {
+      loginErr.textContent = "Incorrect password.";
+      pwEl.select();
+    }
+  });
+
+  function showApp() {
+    $("login").style.display = "none";
+    $("app").style.display = "block";
+    loadInitial();
+  }
+
+  if (sessionStorage.getItem("tll_admin_ok") === "1") showApp();
+
+  // ================= DATA LOAD =================
+  function fetchPublished() {
+    return fetch("./courses.json?ts=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+  }
+
+  function loadInitial() {
+    var draft = localStorage.getItem(LS.draft);
+    fetchPublished().then(function (published) {
+      if (draft) {
+        try {
+          var d = JSON.parse(draft);
+          if (JSON.stringify(d) !== JSON.stringify(published)) {
+            if (confirm("A local unsaved draft was found. Load the draft?\n\nOK = load draft   ·   Cancel = load published")) {
+              model = d; dirty = true; afterLoad(); return;
+            }
+          }
+        } catch (e) { /* ignore bad draft */ }
+      }
+      model = published; dirty = false; afterLoad();
+    }).catch(function () {
+      if (draft) { try { model = JSON.parse(draft); dirty = true; afterLoad(); toast("Loaded local draft (published file unavailable)", "bad"); return; } catch (e) {} }
+      toast("Could not load courses.json", "bad");
+    });
+  }
+
+  function afterLoad() { render(); setDirty(dirty); }
+
+  // ================= RENDER =================
+  function setDirty(v) {
+    dirty = v;
+    $("topbar").classList.toggle("dirty", v);
+    $("publishBtn").disabled = false;
+  }
+
+  function render() {
+    var host = $("sections"); host.innerHTML = "";
+    var live = 0, off = 0, secVisible = 0, secHidden = 0;
+
+    (model.sections || []).forEach(function (sec, si) {
+      var courses = sec.courses || [];
+      var onCount = courses.filter(function (c) { return c.live !== false; }).length;
+      if (onCount === 0) secHidden++; else secVisible++;
+      live += onCount; off += (courses.length - onCount);
+
+      var block = document.createElement("div"); block.className = "section-block";
+
+      var head = document.createElement("div"); head.className = "section-head";
+      var h2 = document.createElement("h2"); h2.textContent = sec.title; head.appendChild(h2);
+      var count = document.createElement("span"); count.className = "count";
+      count.textContent = onCount + " / " + courses.length + " live"; head.appendChild(count);
+      var chip = document.createElement("span");
+      chip.className = "chip " + (onCount === 0 ? "hidden-chip" : "visible-chip");
+      chip.textContent = onCount === 0 ? "Section hidden" : "Section visible";
+      head.appendChild(chip);
+      var spacer = document.createElement("span"); spacer.className = "spacer"; head.appendChild(spacer);
+      var allOn = document.createElement("button"); allOn.className = "btn small"; allOn.textContent = "All on";
+      allOn.onclick = function () { setSection(si, true); };
+      var allOff = document.createElement("button"); allOff.className = "btn small"; allOff.textContent = "All off";
+      allOff.onclick = function () { setSection(si, false); };
+      head.appendChild(allOn); head.appendChild(allOff);
+      block.appendChild(head);
+
+      courses.forEach(function (c, ci) {
+        var on = c.live !== false;
+        var row = document.createElement("div"); row.className = "course-row" + (on ? "" : " off");
+
+        var ico = document.createElement("div"); ico.className = "ico"; ico.textContent = c.icon || "📘"; row.appendChild(ico);
+        var meta = document.createElement("div"); meta.className = "meta";
+        var b = document.createElement("b"); b.textContent = c.title; meta.appendChild(b);
+        var sm = document.createElement("small"); sm.textContent = c.href; meta.appendChild(sm);
+        row.appendChild(meta);
+
+        var lbl = document.createElement("span");
+        lbl.className = "state-label " + (on ? "on" : "off");
+        lbl.textContent = on ? "Live" : "Off";
+        row.appendChild(lbl);
+
+        var sw = document.createElement("label"); sw.className = "switch";
+        var input = document.createElement("input"); input.type = "checkbox"; input.checked = on;
+        input.setAttribute("aria-label", "Toggle " + c.title);
+        input.onchange = function () { toggle(si, ci, input.checked); };
+        var slider = document.createElement("span"); slider.className = "slider";
+        sw.appendChild(input); sw.appendChild(slider); row.appendChild(sw);
+
+        block.appendChild(row);
+      });
+
+      host.appendChild(block);
+    });
+
+    $("sLive").textContent = live;
+    $("sOff").textContent = off;
+    $("sSecVisible").textContent = secVisible;
+    $("sSecHidden").textContent = secHidden;
+  }
+
+  function toggle(si, ci, val) { model.sections[si].courses[ci].live = val; setDirty(true); render(); }
+  function setSection(si, val) { model.sections[si].courses.forEach(function (c) { c.live = val; }); setDirty(true); render(); }
+
+  // ================= TOOLBAR ACTIONS =================
+  $("reloadBtn").onclick = function () {
+    if (dirty && !confirm("Discard local changes and reload the published list?")) return;
+    localStorage.removeItem(LS.draft);
+    loadInitial(); toast("Reloaded from published");
+  };
+
+  $("saveBtn").onclick = function () {
+    localStorage.setItem(LS.draft, serialize());
+    toast("Draft saved in this browser", "ok");
+  };
+
+  $("exportBtn").onclick = function () {
+    var blob = new Blob([serialize()], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "courses.json"; a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Downloaded courses.json");
+  };
+
+  $("logoutBtn").onclick = function () {
+    sessionStorage.removeItem("tll_admin_ok");
+    location.reload();
+  };
+
+  function serialize() { return JSON.stringify(model, null, 2) + "\n"; }
+
+  // ================= CHANGE PASSWORD =================
+  $("pwBtn").onclick = function () { $("pwErr").textContent = ""; $("curPw").value = $("newPw").value = $("newPw2").value = ""; $("pwModal").classList.add("open"); };
+  $("pwCancel").onclick = function () { $("pwModal").classList.remove("open"); };
+  $("pwSave").onclick = async function () {
+    var err = $("pwErr"); err.textContent = "";
+    if (await sha256($("curPw").value) !== currentHash()) { err.textContent = "Current password is wrong."; return; }
+    var np = $("newPw").value;
+    if (np.length < 6) { err.textContent = "New password must be at least 6 characters."; return; }
+    if (np !== $("newPw2").value) { err.textContent = "New passwords do not match."; return; }
+    localStorage.setItem(LS.hash, await sha256(np));
+    $("pwModal").classList.remove("open");
+    refreshLoginHint();
+    toast("Password updated", "ok");
+  };
+
+  // ================= PUBLISH =================
+  $("publishBtn").onclick = function () {
+    var cfg = {};
+    try { cfg = JSON.parse(localStorage.getItem(LS.gh) || "{}"); } catch (e) {}
+    $("ghOwner").value = cfg.owner || GH_DEFAULTS.owner;
+    $("ghRepo").value = cfg.repo || GH_DEFAULTS.repo;
+    $("ghBranch").value = cfg.branch || GH_DEFAULTS.branch;
+    $("ghPath").value = cfg.path || GH_DEFAULTS.path;
+    $("ghToken").value = localStorage.getItem(LS.token) || "";
+    $("ghRemember").checked = !!localStorage.getItem(LS.token);
+    $("ghMsg").value = "admin: update live guides";
+    $("publishModal").classList.add("open");
+  };
+  $("publishCancel").onclick = function () { $("publishModal").classList.remove("open"); };
+
+  $("publishConfirm").onclick = async function () {
+    var owner = $("ghOwner").value.trim(), repo = $("ghRepo").value.trim(),
+        branch = $("ghBranch").value.trim(), path = $("ghPath").value.trim(),
+        token = $("ghToken").value.trim(), msg = $("ghMsg").value.trim() || "update courses.json";
+    if (!owner || !repo || !branch || !path) { toast("Fill owner, repo, branch and path", "bad"); return; }
+    if (!token) { toast("A GitHub token is required to publish", "bad"); return; }
+
+    localStorage.setItem(LS.gh, JSON.stringify({ owner: owner, repo: repo, branch: branch, path: path }));
+    if ($("ghRemember").checked) localStorage.setItem(LS.token, token); else localStorage.removeItem(LS.token);
+
+    var btn = this; btn.disabled = true; var oldText = btn.textContent; btn.textContent = "Publishing…";
+    var api = "https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + encodeURIComponent(path).replace(/%2F/g, "/");
+    var headers = { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+
+    try {
+      // get current sha (may 404 if file is new)
+      var sha = null;
+      var getRes = await fetch(api + "?ref=" + encodeURIComponent(branch), { headers: headers, cache: "no-store" });
+      if (getRes.status === 200) { sha = (await getRes.json()).sha; }
+      else if (getRes.status === 401) { throw new Error("Unauthorized — check the token."); }
+      else if (getRes.status === 404) { sha = null; /* new file */ }
+      else if (getRes.status !== 404) { /* fall through to PUT, but surface other errors */ }
+
+      var body = { message: msg, content: b64utf8(serialize()), branch: branch };
+      if (sha) body.sha = sha;
+
+      var putRes = await fetch(api, { method: "PUT", headers: headers, body: JSON.stringify(body) });
+      if (putRes.ok) {
+        localStorage.removeItem(LS.draft);
+        setDirty(false);
+        $("publishModal").classList.remove("open");
+        toast("Published! Live on the site in about a minute.", "ok");
+      } else {
+        var e = await putRes.json().catch(function () { return {}; });
+        var m = e.message || ("HTTP " + putRes.status);
+        if (putRes.status === 401) m = "Unauthorized — the token is invalid or lacks Contents: write.";
+        else if (putRes.status === 404) m = "Not found — check owner/repo/branch/path (token needs repo access).";
+        else if (putRes.status === 409) m = "Conflict — the file changed on GitHub. Reload and try again.";
+        else if (putRes.status === 422) m = "Unprocessable — branch or content invalid.";
+        throw new Error(m);
+      }
+    } catch (err) {
+      toast("Publish failed: " + err.message, "bad");
+    } finally {
+      btn.disabled = false; btn.textContent = oldText;
+    }
+  };
+
+  // close modals on backdrop click / Esc
+  ["publishModal", "pwModal"].forEach(function (id) {
+    $(id).addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { $("publishModal").classList.remove("open"); $("pwModal").classList.remove("open"); }
+  });
+
+  // warn before leaving with unsaved changes
+  window.addEventListener("beforeunload", function (e) {
+    if (dirty) { e.preventDefault(); e.returnValue = ""; }
+  });
+})();
+</script>
+</body>
+</html>

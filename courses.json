@@ -1,0 +1,53 @@
+{
+  "sections": [
+    {
+      "id": "frontend",
+      "title": "Frontend",
+      "courses": [
+        { "id": "nextjs", "icon": "▲", "title": "Next.js", "href": "./nextjs.html", "status": "done", "live": true, "desc": "App Router, Server & Client Components, SSR/SSG/ISR/PPR, caching, Server Actions, streaming, middleware, auth, deployment.", "tags": ["App Router", "RSC", "Caching", "SSR"] },
+        { "id": "javascript", "icon": "🟨", "title": "JavaScript", "href": "./javascript.html", "status": "done", "live": true, "desc": "Engine internals, closures, prototypes, async, event loop, patterns, machine coding.", "tags": ["Closures", "Event Loop", "Async", "Interview"] },
+        { "id": "react", "icon": "⚛️", "title": "React", "href": "./react.html", "status": "done", "live": true, "desc": "JSX, hooks, custom hooks, Router, Redux Toolkit, RTK Query, performance, patterns.", "tags": ["Hooks", "Redux", "Routing"] },
+        { "id": "materialui", "icon": "🎨", "title": "Material UI", "href": "./materialui.html", "status": "done", "live": true, "desc": "Components, theming, sx/styled, responsive layouts, dark mode, accessibility.", "tags": ["MUI", "Theming"] }
+      ]
+    },
+    {
+      "id": "backend",
+      "title": "Backend",
+      "courses": [
+        { "id": "mongodb", "icon": "🍃", "title": "MongoDB", "href": "./mongodb.html", "status": "done", "live": true, "desc": "CRUD, aggregation, indexing, data modeling, transactions, sharding, system design.", "tags": ["Aggregation", "Modeling", "Atlas"] },
+        { "id": "nodejs", "icon": "🟩", "title": "Node.js", "href": "./nodejs.html", "status": "done", "live": true, "desc": "Event loop, streams, cluster, worker threads, security, scaling, Docker.", "tags": ["Streams", "Scaling"] },
+        { "id": "expressjs", "icon": "🚂", "title": "Express.js", "href": "./expressjs.html", "status": "done", "live": true, "desc": "Routing, middleware, MVC, validation, auth, error handling, security.", "tags": ["Middleware", "JWT"] },
+        { "id": "fastapi", "icon": "⚡", "title": "FastAPI", "href": "./fastapi.html", "status": "done", "live": true, "desc": "Pydantic, dependency injection, async, SQLAlchemy, JWT, background tasks.", "tags": ["Pydantic", "Async"] }
+      ]
+    },
+    {
+      "id": "web-apis",
+      "title": "Web & APIs",
+      "courses": [
+        { "id": "restapi", "icon": "🔌", "title": "REST API", "href": "./restapi.html", "status": "done", "live": true, "desc": "Principles, HTTP, status codes, versioning, auth, caching, pagination, OpenAPI.", "tags": ["HTTP", "OAuth"] },
+        { "id": "seo", "icon": "🔍", "title": "SEO", "href": "./seo.html", "status": "done", "live": true, "desc": "Technical SEO, meta tags, sitemaps, structured data, Core Web Vitals, React/Next SEO.", "tags": ["Core Web Vitals"] },
+        { "id": "accessibility", "icon": "♿", "title": "Accessibility", "href": "./accessibility.html", "status": "done", "live": true, "desc": "ARIA, screen readers, keyboard nav, semantic HTML, WCAG, focus management.", "tags": ["ARIA", "WCAG"] },
+        { "id": "crossbrowser", "icon": "🌐", "title": "Cross-Browser", "href": "./crossbrowser.html", "status": "done", "live": true, "desc": "Rendering engines, polyfills, vendor prefixes, feature detection, responsive design.", "tags": ["Polyfills", "Testing"] }
+      ]
+    },
+    {
+      "id": "cloud-devops",
+      "title": "Cloud & DevOps",
+      "courses": [
+        { "id": "aws", "icon": "☁️", "title": "AWS", "href": "./aws.html", "status": "done", "live": true, "desc": "Foundations, compute, messaging, serverless, containers, IaC, region strategy, interview recap.", "tags": ["EC2", "Serverless", "IaC"] },
+        { "id": "linux", "icon": "🐧", "title": "Linux Administration", "href": "./linux.html", "status": "done", "live": true, "desc": "Permissions, processes, systemd, networking, storage, scripting, cron, SSH, hardening.", "tags": ["systemd", "Shell", "Security"] },
+        { "id": "docker", "icon": "🐳", "title": "Docker", "href": "./docker.html", "status": "done", "live": true, "desc": "Images, Dockerfile, multi-stage, volumes, networks, Compose, real-world React/FastAPI/Express.", "tags": ["Multi-Stage", "Compose", "Real-World"] }
+      ]
+    },
+    {
+      "id": "system-design",
+      "title": "System Design & Data Infrastructure",
+      "courses": [
+        { "id": "frontend-system-design", "icon": "🧩", "title": "Frontend System Design", "href": "./frontend-system-design.html", "status": "done", "live": true, "desc": "RADIO framework, rendering pipeline, state/data architecture, pagination, infinite scroll, virtualization, code splitting, CDN, micro-frontends, case studies.", "tags": ["Rendering", "State", "Virtualization", "Case Studies"] },
+        { "id": "backend-system-design", "icon": "🏗️", "title": "Backend System Design", "href": "./backend-system-design.html", "status": "done", "live": true, "desc": "Architecture styles, REST/GraphQL/gRPC/queues, caching, SQL/NoSQL, CAP, replication, sharding, load balancing, API gateway, K8s, HA/DR, case studies.", "tags": ["Scaling", "Databases", "Microservices", "Case Studies"] },
+        { "id": "redis", "icon": "🔴", "title": "Redis", "href": "./redis.html", "status": "done", "live": true, "desc": "In-memory model, all data types, persistence (RDB/AOF), replication, Sentinel, Cluster, caching patterns, locks, rate limiting, leaderboards, queues, case studies.", "tags": ["Cache", "Data Types", "Cluster", "Patterns"] },
+        { "id": "kafka", "icon": "🌊", "title": "Apache Kafka", "href": "./kafka.html", "status": "done", "live": true, "desc": "The commit log, partitions & replication, producers & consumer groups, delivery guarantees, exactly-once, Schema Registry, Connect, Streams, patterns, case studies.", "tags": ["Streaming", "Partitions", "Exactly-Once", "Patterns"] }
+      ]
+    }
+  ]
+}
