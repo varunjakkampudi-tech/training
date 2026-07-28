@@ -96,6 +96,11 @@
   .vs-card ul { margin-left: 18px; }
   .vs-card li { color: var(--muted); font-size: 0.9rem; }
   .diagram { background: #1a1010; color: #f0d8d8; border-radius: 10px; padding: 18px 20px; margin: 16px 0; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.82rem; line-height: 1.65; overflow-x: auto; white-space: pre; box-shadow: var(--shadow); }
+  figure.fig { margin: 20px 0; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px 14px; box-shadow: var(--shadow); overflow-x: auto; }
+  figure.fig svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  figure.fig figcaption { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 12px; font-style: italic; }
+  .fig .s-lbl { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 700; }
+  .fig .s-sub { font-family: "Cascadia Code", Consolas, monospace; }
   footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
   footer b { color: var(--blue-dark); }
   .menu-btn { display: none; }
@@ -570,6 +575,38 @@ With pipeline:     cmd1,cmd2,cmd3 → ... ← reply1,reply2,reply3   (1 × RTT)<
     <section id="sentinel">
       <h2><span class="num"></span> Sentinel — automatic failover (HA)</h2>
       <p class="lead">Replication alone doesn't promote a replica when the primary dies — a human would have to. <b>Redis Sentinel</b> is a separate process that monitors the primary, detects failure by quorum, and automatically promotes a replica.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 720 300" role="img" aria-label="Three Sentinels monitoring a primary and promoting a replica on failure">
+          <defs>
+            <marker id="rs" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/></marker>
+          </defs>
+          <!-- sentinels -->
+          <g class="s-lbl" font-size="11.5" fill="#0f172a">
+            <rect x="60" y="24" width="140" height="46" rx="10" fill="#fff7ed" stroke="#ea580c"/><text x="130" y="52" text-anchor="middle">👁 Sentinel 1</text>
+            <rect x="290" y="24" width="140" height="46" rx="10" fill="#fff7ed" stroke="#ea580c"/><text x="360" y="52" text-anchor="middle">👁 Sentinel 2</text>
+            <rect x="520" y="24" width="140" height="46" rx="10" fill="#fff7ed" stroke="#ea580c"/><text x="590" y="52" text-anchor="middle">👁 Sentinel 3</text>
+          </g>
+          <text x="360" y="90" text-anchor="middle" class="s-sub" font-size="10.5" fill="#b45309">quorum agrees the primary is down → elect &amp; promote</text>
+          <!-- primary (failed) -->
+          <rect x="60" y="180" width="180" height="80" rx="12" fill="#fdecec" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <text x="150" y="212" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Primary ✘</text>
+          <text x="150" y="232" text-anchor="middle" class="s-sub" font-size="10.5" fill="#b91c1c">crashed</text>
+          <!-- promoted replica -->
+          <rect x="300" y="180" width="180" height="80" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+          <text x="390" y="208" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Replica → NEW Primary</text>
+          <text x="390" y="228" text-anchor="middle" class="s-sub" font-size="10.5" fill="#166534">promoted (REPLICAOF NO ONE)</text>
+          <text x="390" y="245" text-anchor="middle" class="s-sub" font-size="10.5" fill="#166534">most up-to-date replica wins</text>
+          <!-- other replica -->
+          <rect x="540" y="180" width="150" height="80" rx="12" fill="#fff" stroke="#dc2626"/>
+          <text x="615" y="212" text-anchor="middle" class="s-lbl" font-size="12.5" fill="#0f172a">Replica</text>
+          <text x="615" y="232" text-anchor="middle" class="s-sub" font-size="10.5" fill="#475569">re-points to new primary</text>
+          <!-- monitoring arrows -->
+          <path d="M130,70 L146,176" fill="none" stroke="#dc2626" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#rs)"/>
+          <path d="M360,70 L360,176" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#rs)"/>
+          <path d="M480,220 L536,220" fill="none" stroke="#16a34a" stroke-width="1.4" marker-end="url(#rs)"/>
+        </svg>
+        <figcaption>Sentinels (run an odd number, ≥3, on separate hosts) monitor by quorum. When enough agree the primary is down, they elect the most up-to-date replica, promote it, and repoint clients &amp; other replicas — no human needed.</figcaption>
+      </figure>
       <div class="diagram">   ┌─Sentinel─┐ ┌─Sentinel─┐ ┌─Sentinel─┐   (≥3, on separate hosts)
    └────┬─────┘ └────┬─────┘ └────┬─────┘
         └── monitor & vote (quorum) ──┘
@@ -589,6 +626,48 @@ With pipeline:     cmd1,cmd2,cmd3 → ... ← reply1,reply2,reply3   (1 × RTT)<
       <p class="lead">A single Redis instance is limited by one machine's RAM and one core's throughput. <b>Redis Cluster</b> shards data across many primaries (each with replicas) so you scale memory and ops linearly.</p>
       <h3>Hash slots — how keys map to nodes</h3>
       <p>Cluster splits the keyspace into <b>16384 hash slots</b>. Each key's slot is <code class="inline">CRC16(key) mod 16384</code>; slots are distributed across primaries. Resharding just moves whole slots — minimal, predictable data movement.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 720 340" role="img" aria-label="Redis Cluster hash slots sharded across three primaries with replicas">
+          <defs>
+            <marker id="rc" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/></marker>
+          </defs>
+          <!-- key routing -->
+          <rect x="20" y="130" width="150" height="70" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+          <text x="95" y="156" text-anchor="middle" class="s-sub" font-size="11.5" fill="#0f172a">key "user:42"</text>
+          <text x="95" y="176" text-anchor="middle" class="s-sub" font-size="10.5" fill="#b91c1c">CRC16 % 16384</text>
+          <text x="95" y="192" text-anchor="middle" class="s-sub" font-size="10.5" fill="#b91c1c">= slot 9012</text>
+          <!-- primaries -->
+          <g>
+            <rect x="250" y="30" width="200" height="76" rx="12" fill="#fff" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="350" y="54" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Primary A</text>
+            <text x="350" y="74" text-anchor="middle" class="s-sub" font-size="10.5" fill="#475569">slots 0 – 5460</text>
+            <text x="350" y="92" text-anchor="middle" class="s-sub" font-size="10.5" fill="#16a34a">+ replica A′</text>
+
+            <rect x="250" y="128" width="200" height="76" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+            <text x="350" y="152" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Primary B  ◀ owns slot 9012</text>
+            <text x="350" y="172" text-anchor="middle" class="s-sub" font-size="10.5" fill="#475569">slots 5461 – 10922</text>
+            <text x="350" y="190" text-anchor="middle" class="s-sub" font-size="10.5" fill="#16a34a">+ replica B′</text>
+
+            <rect x="250" y="226" width="200" height="76" rx="12" fill="#fff" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="350" y="250" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Primary C</text>
+            <text x="350" y="270" text-anchor="middle" class="s-sub" font-size="10.5" fill="#475569">slots 10923 – 16383</text>
+            <text x="350" y="288" text-anchor="middle" class="s-sub" font-size="10.5" fill="#16a34a">+ replica C′</text>
+          </g>
+          <!-- replicas column -->
+          <g class="s-sub" font-size="10.5" fill="#166534">
+            <rect x="500" y="42" width="120" height="52" rx="10" fill="#f0fdf4" stroke="#16a34a"/><text x="560" y="72" text-anchor="middle">Replica A′</text>
+            <rect x="500" y="140" width="120" height="52" rx="10" fill="#f0fdf4" stroke="#16a34a"/><text x="560" y="170" text-anchor="middle">Replica B′</text>
+            <rect x="500" y="238" width="120" height="52" rx="10" fill="#f0fdf4" stroke="#16a34a"/><text x="560" y="268" text-anchor="middle">Replica C′</text>
+          </g>
+          <!-- arrows -->
+          <path d="M170,165 L244,166" fill="none" stroke="#dc2626" stroke-width="2.2" marker-end="url(#rc)"/>
+          <path d="M450,68 L498,68" fill="none" stroke="#16a34a" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#rc)"/>
+          <path d="M450,166 L498,166" fill="none" stroke="#16a34a" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#rc)"/>
+          <path d="M450,264 L498,264" fill="none" stroke="#16a34a" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#rc)"/>
+          <text x="640" y="20" text-anchor="end" class="s-sub" font-size="10" fill="#64748b">replicas mirror their primary → failover</text>
+        </svg>
+        <figcaption>16384 fixed slots are divided across primaries; a key hashes to exactly one slot, so the client routes straight to the owning node (or follows a MOVED redirect). Resharding moves whole slots — predictable, minimal data movement.</figcaption>
+      </figure>
       <div class="diagram">16384 slots divided across primaries:
   Node A: slots     0–5460    (+ replica A')
   Node B: slots  5461–10922   (+ replica B')
@@ -606,6 +685,35 @@ Client is redirected (MOVED/ASK) to the owning node.</div>
     <section id="caching">
       <h2><span class="num"></span> Caching Patterns</h2>
       <p class="lead">Caching is Redis's #1 use case. The pattern you choose determines consistency, latency, and complexity.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 720 260" role="img" aria-label="Cache-aside read flow between application, Redis, and the database">
+          <defs>
+            <marker id="rk" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/></marker>
+            <marker id="rkg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/></marker>
+          </defs>
+          <rect x="30" y="100" width="140" height="64" rx="11" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+          <text x="100" y="137" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Application</text>
+          <rect x="290" y="100" width="140" height="64" rx="11" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="360" y="130" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Redis cache</text>
+          <text x="360" y="148" text-anchor="middle" class="s-sub" font-size="10" fill="#b91c1c">sub-ms · TTL</text>
+          <rect x="550" y="100" width="140" height="64" rx="11" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+          <text x="620" y="130" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Database</text>
+          <text x="620" y="148" text-anchor="middle" class="s-sub" font-size="10" fill="#475569">source of truth</text>
+          <!-- 1 GET -->
+          <path d="M170,120 L286,120" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#rk)"/>
+          <text x="228" y="112" text-anchor="middle" class="s-sub" font-size="10" fill="#b91c1c">① GET key</text>
+          <!-- hit -->
+          <path d="M286,144 L174,144" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#rkg)"/>
+          <text x="230" y="160" text-anchor="middle" class="s-sub" font-size="10" fill="#15803d">HIT → return ✓</text>
+          <!-- 2 miss to DB -->
+          <path d="M430,116 L546,116" fill="none" stroke="#64748b" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#rk)"/>
+          <text x="488" y="108" text-anchor="middle" class="s-sub" font-size="10" fill="#475569">② MISS → query</text>
+          <!-- 3 return + populate -->
+          <path d="M546,150 C480,180 420,180 366,168" fill="none" stroke="#64748b" stroke-width="1.4" marker-end="url(#rk)"/>
+          <text x="452" y="200" text-anchor="middle" class="s-sub" font-size="10" fill="#475569">③ SET key (TTL) → populate cache</text>
+        </svg>
+        <figcaption>Cache-aside: the app asks Redis first (①). On a hit it returns instantly; on a miss (②) it reads the DB, writes the value back to Redis with a TTL (③), so the next read is a hit.</figcaption>
+      </figure>
       <table>
         <tr><th>Pattern</th><th>How it works</th><th>Trade-off</th></tr>
         <tr><td><b>Cache-aside (lazy)</b></td><td>App checks cache; on miss, reads DB and populates cache</td><td>Most common; first request is slow; needs TTL/invalidation</td></tr>

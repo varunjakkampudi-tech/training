@@ -96,6 +96,11 @@
   .vs-card ul { margin-left: 18px; }
   .vs-card li { color: var(--muted); font-size: 0.9rem; }
   .diagram { background: #08131a; color: #cbeee6; border-radius: 10px; padding: 18px 20px; margin: 16px 0; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.82rem; line-height: 1.65; overflow-x: auto; white-space: pre; box-shadow: var(--shadow); }
+  figure.fig { margin: 20px 0; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px 14px; box-shadow: var(--shadow); overflow-x: auto; }
+  figure.fig svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  figure.fig figcaption { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 12px; font-style: italic; }
+  .fig .s-lbl { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 700; }
+  .fig .s-sub { font-family: "Cascadia Code", Consolas, monospace; }
   footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
   footer b { color: var(--blue-dark); }
   .menu-btn { display: none; }
@@ -308,6 +313,40 @@ Fix: split work (yield), Web Workers (off-thread), rAF for visual updates</div>
     <section id="rendering">
       <h2><span class="num"></span> The Rendering Pipeline</h2>
       <p class="lead">How the browser turns HTML/CSS/JS into pixels — the "pixel pipeline". Knowing which steps a change triggers is how you avoid jank.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 740 250" role="img" aria-label="The browser rendering pipeline from HTML and CSS to pixels on screen">
+          <defs>
+            <marker id="fp" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#0d9488"/></marker>
+          </defs>
+          <!-- sources -->
+          <rect x="16" y="46" width="74" height="40" rx="9" fill="#f0fdfa" stroke="#0d9488"/><text x="53" y="71" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">HTML</text>
+          <rect x="16" y="164" width="74" height="40" rx="9" fill="#f0fdfa" stroke="#0d9488"/><text x="53" y="189" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">CSS</text>
+          <rect x="118" y="46" width="86" height="40" rx="9" fill="#ccfbf1" stroke="#0d9488"/><text x="161" y="71" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">DOM</text>
+          <rect x="118" y="164" width="86" height="40" rx="9" fill="#ccfbf1" stroke="#0d9488"/><text x="161" y="189" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">CSSOM</text>
+          <!-- render tree -->
+          <rect x="238" y="105" width="104" height="46" rx="10" fill="#0d9488" stroke="#0f766e"/><text x="290" y="126" text-anchor="middle" class="s-lbl" font-size="12" fill="#fff">Render</text><text x="290" y="142" text-anchor="middle" class="s-lbl" font-size="12" fill="#fff">Tree</text>
+          <!-- layout -->
+          <rect x="378" y="105" width="104" height="46" rx="10" fill="#fdecec" stroke="#dc2626"/><text x="430" y="126" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">Layout</text><text x="430" y="142" text-anchor="middle" class="s-sub" font-size="9.5" fill="#b91c1c">reflow · costly</text>
+          <!-- paint -->
+          <rect x="518" y="105" width="104" height="46" rx="10" fill="#fff7ed" stroke="#ea580c"/><text x="570" y="126" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">Paint</text><text x="570" y="142" text-anchor="middle" class="s-sub" font-size="9.5" fill="#c2410c">fill pixels</text>
+          <!-- composite -->
+          <rect x="658" y="105" width="70" height="46" rx="10" fill="#f0fdf4" stroke="#16a34a"/><text x="693" y="126" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">Comp.</text><text x="693" y="142" text-anchor="middle" class="s-sub" font-size="9" fill="#166534">GPU · cheap</text>
+          <!-- arrows -->
+          <path d="M90,66 L114,66" fill="none" stroke="#0d9488" stroke-width="1.6" marker-end="url(#fp)"/>
+          <path d="M90,184 L114,184" fill="none" stroke="#0d9488" stroke-width="1.6" marker-end="url(#fp)"/>
+          <path d="M204,66 C224,66 224,120 234,128" fill="none" stroke="#0d9488" stroke-width="1.6" marker-end="url(#fp)"/>
+          <path d="M204,184 C224,184 224,130 234,128" fill="none" stroke="#0d9488" stroke-width="1.6" marker-end="url(#fp)"/>
+          <path d="M342,128 L374,128" fill="none" stroke="#0d9488" stroke-width="2" marker-end="url(#fp)"/>
+          <path d="M482,128 L514,128" fill="none" stroke="#0d9488" stroke-width="2" marker-end="url(#fp)"/>
+          <path d="M622,128 L654,128" fill="none" stroke="#0d9488" stroke-width="2" marker-end="url(#fp)"/>
+          <!-- annotations -->
+          <text x="430" y="185" text-anchor="middle" class="s-sub" font-size="9.5" fill="#b91c1c">width, top, offsetHeight</text>
+          <text x="570" y="185" text-anchor="middle" class="s-sub" font-size="9.5" fill="#c2410c">color, box-shadow</text>
+          <text x="693" y="185" text-anchor="middle" class="s-sub" font-size="9" fill="#166534">transform, opacity</text>
+          <text x="290" y="30" text-anchor="middle" class="s-lbl" font-size="11" fill="#0f766e">structure + styles combine</text>
+        </svg>
+        <figcaption>Cost rises left-to-right into Layout: animate only <code>transform</code>/<code>opacity</code> so the browser skips layout &amp; paint and stays on the cheap GPU-composite step.</figcaption>
+      </figure>
       <div class="diagram">DOM + CSSOM  →  Render Tree  →  Layout (reflow)  →  Paint  →  Composite
    │              │               │                  │           │
  structure      styles       geometry (x/y/w/h)   fill pixels   GPU layers</div>
@@ -650,6 +689,41 @@ initial load ships only the current route's JS; rest loads on navigation</div>
     <section id="cdn">
       <h2><span class="num"></span> CDN &amp; Edge Delivery</h2>
       <p class="lead">A <b>Content Delivery Network</b> caches your assets on servers around the world so users download from a nearby edge, not a distant origin.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 720 280" role="img" aria-label="Users served from nearby CDN edges backed by a single origin">
+          <defs>
+            <marker id="fc" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#0d9488"/></marker>
+            <marker id="fcm" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#94a3b8"/></marker>
+          </defs>
+          <!-- origin -->
+          <rect x="290" y="16" width="140" height="52" rx="11" fill="#0d9488" stroke="#0f766e"/>
+          <text x="360" y="40" text-anchor="middle" class="s-lbl" font-size="13" fill="#fff">Origin</text>
+          <text x="360" y="57" text-anchor="middle" class="s-sub" font-size="10" fill="#ccfbf1">US · single source</text>
+          <!-- edges -->
+          <g>
+            <rect x="40" y="128" width="150" height="46" rx="10" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.5"/><text x="115" y="149" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">Edge · Tokyo</text><text x="115" y="165" text-anchor="middle" class="s-sub" font-size="9.5" fill="#0f766e">cached assets</text>
+            <rect x="285" y="128" width="150" height="46" rx="10" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.5"/><text x="360" y="149" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">Edge · Frankfurt</text><text x="360" y="165" text-anchor="middle" class="s-sub" font-size="9.5" fill="#0f766e">cached assets</text>
+            <rect x="530" y="128" width="150" height="46" rx="10" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.5"/><text x="605" y="149" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">Edge · São Paulo</text><text x="605" y="165" text-anchor="middle" class="s-sub" font-size="9.5" fill="#0f766e">cached assets</text>
+          </g>
+          <!-- users -->
+          <g class="s-sub" font-size="10.5" fill="#0f172a">
+            <rect x="55" y="228" width="120" height="34" rx="8" fill="#fff" stroke="#0d9488"/><text x="115" y="250" text-anchor="middle">👤 Users (JP)</text>
+            <rect x="300" y="228" width="120" height="34" rx="8" fill="#fff" stroke="#0d9488"/><text x="360" y="250" text-anchor="middle">👤 Users (EU)</text>
+            <rect x="545" y="228" width="120" height="34" rx="8" fill="#fff" stroke="#0d9488"/><text x="605" y="250" text-anchor="middle">👤 Users (BR)</text>
+          </g>
+          <!-- arrows origin->edges (fill on miss) -->
+          <path d="M320,68 C220,90 150,100 118,124" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#fcm)"/>
+          <path d="M360,68 L360,124" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#fcm)"/>
+          <path d="M400,68 C500,90 570,100 602,124" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#fcm)"/>
+          <text x="245" y="104" class="s-sub" font-size="9" fill="#64748b">fill on miss</text>
+          <!-- arrows edges->users (hits) -->
+          <path d="M115,174 L115,224" fill="none" stroke="#0d9488" stroke-width="1.8" marker-end="url(#fc)"/>
+          <path d="M360,174 L360,224" fill="none" stroke="#0d9488" stroke-width="1.8" marker-end="url(#fc)"/>
+          <path d="M605,174 L605,224" fill="none" stroke="#0d9488" stroke-width="1.8" marker-end="url(#fc)"/>
+          <text x="130" y="200" class="s-sub" font-size="9" fill="#0f766e">cache hit → instant</text>
+        </svg>
+        <figcaption>Users hit the nearest edge (low latency, offloads origin). A cache miss quietly pulls from the single origin once, then every nearby user is served from the warm edge.</figcaption>
+      </figure>
       <div class="diagram">User (Tokyo)  →  nearest CDN edge (Tokyo)  ──cache hit──▶  instant
                                    │ miss
                                    ▼

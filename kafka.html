@@ -96,6 +96,11 @@
   .vs-card ul { margin-left: 18px; }
   .vs-card li { color: var(--muted); font-size: 0.9rem; }
   .diagram { background: #0e1526; color: #d6e0f5; border-radius: 10px; padding: 18px 20px; margin: 16px 0; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.82rem; line-height: 1.65; overflow-x: auto; white-space: pre; box-shadow: var(--shadow); }
+  figure.fig { margin: 20px 0; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px 14px; box-shadow: var(--shadow); overflow-x: auto; }
+  figure.fig svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  figure.fig figcaption { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 12px; font-style: italic; }
+  .fig .s-lbl { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 700; }
+  .fig .s-sub { font-family: "Cascadia Code", Consolas, monospace; }
   footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
   footer b { color: var(--blue-dark); }
   .menu-btn { display: none; }
@@ -347,6 +352,42 @@ Lose a broker → a follower is promoted → no data loss (if RF ≥ 2 &amp; in-
       <p class="lead">Replication is how Kafka survives broker failures without losing data. Each partition is copied to multiple brokers; one is the leader, the rest are followers that continuously pull from the leader.</p>
       <h3>ISR — the in-sync replica set</h3>
       <p>The <b>ISR</b> is the set of replicas (including the leader) that are fully caught up with the leader. Only ISR members are eligible to become leader. A message is considered <b>committed</b> once all ISR members have it — and only committed messages are readable.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 720 300" role="img" aria-label="Leader and follower replicas of a partition with the in-sync replica set">
+          <defs>
+            <marker id="kr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"/></marker>
+          </defs>
+          <!-- producer -->
+          <rect x="20" y="118" width="120" height="60" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+          <text x="80" y="145" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Producer</text>
+          <text x="80" y="163" text-anchor="middle" class="s-sub" font-size="10.5" fill="#475569">acks=all</text>
+          <!-- leader -->
+          <rect x="250" y="104" width="180" height="88" rx="12" fill="#2563eb" stroke="#1d4ed8"/>
+          <text x="340" y="134" text-anchor="middle" class="s-lbl" font-size="14" fill="#fff">Leader · Broker 1</text>
+          <text x="340" y="156" text-anchor="middle" class="s-sub" font-size="11" fill="#dbeafe">handles all reads &amp; writes</text>
+          <text x="340" y="174" text-anchor="middle" class="s-sub" font-size="11" fill="#dbeafe">Partition 0</text>
+          <!-- followers -->
+          <rect x="540" y="40" width="160" height="72" rx="12" fill="#fff" stroke="#2563eb"/>
+          <text x="620" y="68" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Follower · Broker 2</text>
+          <text x="620" y="88" text-anchor="middle" class="s-sub" font-size="10.5" fill="#16a34a">✔ in sync</text>
+          <rect x="540" y="128" width="160" height="72" rx="12" fill="#fff" stroke="#2563eb"/>
+          <text x="620" y="156" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Follower · Broker 3</text>
+          <text x="620" y="176" text-anchor="middle" class="s-sub" font-size="10.5" fill="#16a34a">✔ in sync</text>
+          <rect x="540" y="216" width="160" height="66" rx="12" fill="#fdecec" stroke="#dc2626" stroke-dasharray="5 4"/>
+          <text x="620" y="242" text-anchor="middle" class="s-lbl" font-size="13" fill="#0f172a">Follower · Broker 4</text>
+          <text x="620" y="262" text-anchor="middle" class="s-sub" font-size="10.5" fill="#dc2626">✘ lagging → out of ISR</text>
+          <!-- arrows -->
+          <path d="M140,148 L244,148" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#kr)"/>
+          <path d="M430,132 L534,80" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#kr)"/>
+          <path d="M430,152 L534,160" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#kr)"/>
+          <path d="M430,172 L534,244" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#kr)"/>
+          <text x="486" y="120" text-anchor="middle" class="s-sub" font-size="10" fill="#475569">replicate</text>
+          <!-- ISR bracket -->
+          <path d="M715,40 L715,200" fill="none" stroke="#16a34a" stroke-width="2"/>
+          <text x="708" y="126" text-anchor="end" class="s-lbl" font-size="11" fill="#15803d" transform="rotate(90 708 126)"></text>
+        </svg>
+        <figcaption>A write is <b>committed</b> once every in-sync replica (ISR = leader + caught-up followers) has it. A lagging follower drops out of the ISR; if the ISR falls below <code>min.insync.replicas</code>, <code>acks=all</code> writes are refused to protect durability.</figcaption>
+      </figure>
       <div class="diagram">Partition P0, RF=3:
   Leader (B1)  ───replicate──▶ Follower (B2) ✅ caught up  ┐
                ───replicate──▶ Follower (B3) ✅ caught up  ├─ ISR = {B1,B2,B3}
@@ -471,6 +512,42 @@ consumer.<span class="tok-fn">subscribe</span>(<span class="tok-fn">List</span>.
     <section id="consumer-groups">
       <h2><span class="num"></span> Consumer Groups &amp; Rebalancing</h2>
       <p class="lead">A <b>consumer group</b> is a set of consumers that cooperatively read a topic — Kafka splits the partitions among them so each partition is read by exactly one member. This is how Kafka scales consumption and load-balances.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 720 430" role="img" aria-label="A topic's partitions distributed across two consumer groups">
+          <defs>
+            <marker id="ka" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#60a5fa"/></marker>
+            <marker id="kg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#16a34a"/></marker>
+          </defs>
+          <!-- Topic -->
+          <rect x="24" y="54" width="170" height="322" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+          <rect x="24" y="54" width="170" height="30" rx="12" fill="#2563eb"/>
+          <text x="109" y="74" text-anchor="middle" fill="#fff" class="s-lbl" font-size="13">Topic: orders</text>
+          <g class="s-sub" font-size="12" fill="#1e3a5f">
+            <rect x="40" y="100" width="138" height="42" rx="7" fill="#dbeafe" stroke="#60a5fa"/><text x="109" y="126" text-anchor="middle">Partition 0</text>
+            <rect x="40" y="154" width="138" height="42" rx="7" fill="#dbeafe" stroke="#60a5fa"/><text x="109" y="180" text-anchor="middle">Partition 1</text>
+            <rect x="40" y="208" width="138" height="42" rx="7" fill="#dbeafe" stroke="#60a5fa"/><text x="109" y="234" text-anchor="middle">Partition 2</text>
+            <rect x="40" y="262" width="138" height="42" rx="7" fill="#dbeafe" stroke="#60a5fa"/><text x="109" y="288" text-anchor="middle">Partition 3</text>
+          </g>
+          <!-- Group A -->
+          <text x="430" y="62" class="s-lbl" font-size="13" fill="#1d4ed8">Group: order-processors</text>
+          <rect x="426" y="70" width="270" height="130" rx="12" fill="none" stroke="#2563eb" stroke-width="1.3" stroke-dasharray="5 4"/>
+          <rect x="446" y="84" width="230" height="46" rx="9" fill="#fff" stroke="#2563eb"/><text x="561" y="104" text-anchor="middle" class="s-lbl" font-size="12.5" fill="#0f172a">Consumer 1</text><text x="561" y="121" text-anchor="middle" class="s-sub" font-size="11" fill="#475569">reads P0, P1</text>
+          <rect x="446" y="140" width="230" height="46" rx="9" fill="#fff" stroke="#2563eb"/><text x="561" y="160" text-anchor="middle" class="s-lbl" font-size="12.5" fill="#0f172a">Consumer 2</text><text x="561" y="177" text-anchor="middle" class="s-sub" font-size="11" fill="#475569">reads P2, P3</text>
+          <!-- Group B -->
+          <text x="430" y="250" class="s-lbl" font-size="13" fill="#15803d">Group: analytics</text>
+          <rect x="426" y="258" width="270" height="104" rx="12" fill="none" stroke="#16a34a" stroke-width="1.3" stroke-dasharray="5 4"/>
+          <rect x="446" y="278" width="230" height="64" rx="9" fill="#f0fdf4" stroke="#16a34a"/><text x="561" y="304" text-anchor="middle" class="s-lbl" font-size="12.5" fill="#0f172a">Consumer</text><text x="561" y="322" text-anchor="middle" class="s-sub" font-size="11" fill="#166534">reads ALL partitions</text>
+          <!-- arrows to group A -->
+          <path d="M178,121 L442,105" fill="none" stroke="#60a5fa" stroke-width="1.6" marker-end="url(#ka)"/>
+          <path d="M178,175 L442,116" fill="none" stroke="#60a5fa" stroke-width="1.6" marker-end="url(#ka)"/>
+          <path d="M178,229 L442,160" fill="none" stroke="#60a5fa" stroke-width="1.6" marker-end="url(#ka)"/>
+          <path d="M178,283 L442,171" fill="none" stroke="#60a5fa" stroke-width="1.6" marker-end="url(#ka)"/>
+          <!-- fan-out arrow to group B -->
+          <path d="M178,320 C300,340 340,310 442,310" fill="none" stroke="#16a34a" stroke-width="2.2" marker-end="url(#kg)"/>
+          <text x="305" y="352" text-anchor="middle" class="s-sub" font-size="10.5" fill="#15803d">full independent copy (fan-out)</text>
+        </svg>
+        <figcaption>Each partition is read by exactly one consumer <em>within a group</em>; every separate group receives the whole stream independently.</figcaption>
+      </figure>
       <div class="diagram">Topic with 4 partitions, group "workers" with 2 consumers:
   Consumer-1 ── P0, P1        Consumer-2 ── P2, P3     (each partition → one consumer)
 Add a 3rd consumer → REBALANCE → P0,P1 | P2 | P3
@@ -764,6 +841,52 @@ on restart it reprocesses cleanly. No duplicates, no loss (Kafka→Kafka).</div>
     <section id="production-arch">
       <h2><span class="num"></span> Production Architecture (the big picture)</h2>
       <p class="lead">How Kafka sits at the center of a real-time data platform.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 740 400" role="img" aria-label="Kafka at the center of a streaming data platform">
+          <defs>
+            <marker id="kp" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"/></marker>
+          </defs>
+          <!-- producers -->
+          <g class="s-sub" font-size="11" fill="#0f172a">
+            <rect x="16" y="60" width="150" height="34" rx="8" fill="#eff6ff" stroke="#2563eb"/><text x="91" y="82" text-anchor="middle">Apps / Services</text>
+            <rect x="16" y="104" width="150" height="34" rx="8" fill="#eff6ff" stroke="#2563eb"/><text x="91" y="126" text-anchor="middle">Clickstream / IoT</text>
+            <rect x="16" y="148" width="150" height="34" rx="8" fill="#eff6ff" stroke="#2563eb"/><text x="91" y="170" text-anchor="middle">DB (Debezium CDC)</text>
+          </g>
+          <text x="91" y="50" text-anchor="middle" class="s-lbl" font-size="11" fill="#1d4ed8">PRODUCERS</text>
+          <!-- Kafka cluster -->
+          <rect x="250" y="70" width="230" height="150" rx="14" fill="#2563eb" stroke="#1d4ed8"/>
+          <text x="365" y="100" text-anchor="middle" class="s-lbl" font-size="15" fill="#fff">KAFKA CLUSTER</text>
+          <g class="s-sub" font-size="11" fill="#dbeafe">
+            <text x="365" y="124" text-anchor="middle">topics · partitions</text>
+            <text x="365" y="142" text-anchor="middle">RF=3 · KRaft quorum</text>
+          </g>
+          <rect x="270" y="156" width="190" height="46" rx="9" fill="#1e40af" stroke="#93c5fd"/>
+          <text x="365" y="176" text-anchor="middle" class="s-sub" font-size="10.5" fill="#dbeafe">Schema Registry</text>
+          <text x="365" y="192" text-anchor="middle" class="s-sub" font-size="10.5" fill="#dbeafe">(data contracts)</text>
+          <!-- stream processing -->
+          <rect x="250" y="250" width="230" height="52" rx="11" fill="#f0fdf4" stroke="#16a34a"/>
+          <text x="365" y="272" text-anchor="middle" class="s-lbl" font-size="12" fill="#166534">Stream Processing</text>
+          <text x="365" y="290" text-anchor="middle" class="s-sub" font-size="10.5" fill="#166534">Kafka Streams · ksqlDB · Flink</text>
+          <!-- consumers/sinks -->
+          <g class="s-sub" font-size="11" fill="#0f172a">
+            <rect x="560" y="70" width="164" height="40" rx="8" fill="#fff" stroke="#2563eb"/><text x="642" y="94" text-anchor="middle">Materialized views</text>
+            <rect x="560" y="120" width="164" height="40" rx="8" fill="#fff" stroke="#2563eb"/><text x="642" y="144" text-anchor="middle">Elasticsearch (search)</text>
+            <rect x="560" y="170" width="164" height="40" rx="8" fill="#fff" stroke="#2563eb"/><text x="642" y="194" text-anchor="middle">Warehouse (Snowflake)</text>
+          </g>
+          <text x="642" y="60" text-anchor="middle" class="s-lbl" font-size="11" fill="#1d4ed8">CONSUMERS · CONNECT SINKS</text>
+          <!-- arrows -->
+          <path d="M166,120 C210,120 214,140 244,140" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#kp)"/>
+          <path d="M480,110 C520,110 520,90 554,90" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#kp)"/>
+          <path d="M480,140 L554,140" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#kp)"/>
+          <path d="M480,170 C520,170 520,190 554,190" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#kp)"/>
+          <path d="M365,220 L365,246" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#kp)"/>
+          <path d="M420,250 C440,236 450,232 470,224" fill="none" stroke="#16a34a" stroke-width="1.4" marker-end="url(#kp)"/>
+          <!-- ops footer -->
+          <rect x="16" y="330" width="708" height="40" rx="9" fill="#f8fafc" stroke="#dbe4f4"/>
+          <text x="370" y="355" text-anchor="middle" class="s-sub" font-size="11" fill="#475569">Cross-cutting ops:  TLS + SASL + ACLs   ·   Prometheus / Grafana (consumer lag, under-replicated partitions)   ·   MirrorMaker 2 (DR)</text>
+        </svg>
+        <figcaption>Everything that happens becomes an event on a durable, partitioned, replicated topic — producers write once, processors enrich, and Connect sinks land data downstream, all governed by contracts and observability.</figcaption>
+      </figure>
       <div class="diagram">  Apps/Services ─┐        ┌── stream processing (Streams/ksqlDB/Flink) ──┐
   Clickstream ───┤        │                                              │
   IoT/metrics ───┼─produce▶  ┌──────────── KAFKA CLUSTER ───────────┐   │

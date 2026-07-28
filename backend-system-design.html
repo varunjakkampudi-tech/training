@@ -96,6 +96,11 @@
   .vs-card ul { margin-left: 18px; }
   .vs-card li { color: var(--muted); font-size: 0.9rem; }
   .diagram { background: #1a1410; color: #f0e2d0; border-radius: 10px; padding: 18px 20px; margin: 16px 0; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.82rem; line-height: 1.65; overflow-x: auto; white-space: pre; box-shadow: var(--shadow); }
+  figure.fig { margin: 20px 0; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px 14px; box-shadow: var(--shadow); overflow-x: auto; }
+  figure.fig svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  figure.fig figcaption { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 12px; font-style: italic; }
+  .fig .s-lbl { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 700; }
+  .fig .s-sub { font-family: "Cascadia Code", Consolas, monospace; }
   footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
   footer b { color: var(--blue-dark); }
   .menu-btn { display: none; }
@@ -923,6 +928,43 @@ Leader failure:
       <h2><span class="num"></span> Consistent Hashing</h2>
       <p class="lead"><b>What:</b> a hashing scheme that maps both <em>keys</em> and <em>servers</em> onto the same ring, so adding or removing a server moves only a small fraction of keys instead of remapping everything.</p>
       <p><b>The problem it solves:</b> naive sharding uses <code class="inline">server = hash(key) % N</code>. The moment <code class="inline">N</code> changes (a node joins or dies), almost every key maps to a different server → a cache-wide miss storm and a massive data reshuffle. Consistent hashing makes that cost proportional to <code class="inline">1/N</code>.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 720 340" role="img" aria-label="Consistent hashing ring with servers and keys placed around it">
+          <!-- ring -->
+          <circle cx="200" cy="170" r="120" fill="none" stroke="#d6c3ad" stroke-width="2"/>
+          <!-- servers on ring -->
+          <circle cx="200" cy="50" r="15" fill="#ea580c"/><text x="200" y="55" text-anchor="middle" class="s-lbl" font-size="12" fill="#fff">A</text>
+          <circle cx="320" cy="170" r="15" fill="#ea580c"/><text x="320" y="175" text-anchor="middle" class="s-lbl" font-size="12" fill="#fff">B</text>
+          <circle cx="200" cy="290" r="15" fill="#ea580c"/><text x="200" y="295" text-anchor="middle" class="s-lbl" font-size="12" fill="#fff">C</text>
+          <circle cx="80" cy="170" r="15" fill="#ea580c"/><text x="80" y="175" text-anchor="middle" class="s-lbl" font-size="12" fill="#fff">D</text>
+          <!-- new server E -->
+          <circle cx="286" cy="84" r="14" fill="#16a34a"/><text x="286" y="89" text-anchor="middle" class="s-lbl" font-size="11" fill="#fff">E</text>
+          <!-- keys (small dots) -->
+          <g fill="#2563eb">
+            <circle cx="250" cy="60" r="5"/><circle cx="300" cy="120" r="5"/><circle cx="315" cy="215" r="5"/>
+            <circle cx="250" cy="278" r="5"/><circle cx="120" cy="250" r="5"/><circle cx="92" cy="120" r="5"/><circle cx="150" cy="60" r="5"/>
+          </g>
+          <!-- clockwise arrow -->
+          <path d="M235,40 A150 150 0 0 1 340 150" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4 4"/>
+          <text x="330" y="40" class="s-sub" font-size="10.5" fill="#64748b">keys walk clockwise →</text>
+          <text x="200" y="175" text-anchor="middle" class="s-sub" font-size="10.5" fill="#7c2d12">hash ring</text>
+          <text x="200" y="190" text-anchor="middle" class="s-sub" font-size="9.5" fill="#7c2d12">0 … 2³²-1</text>
+          <!-- legend -->
+          <g font-size="11.5" class="s-sub">
+            <circle cx="440" cy="70" r="9" fill="#ea580c"/><text x="458" y="74" fill="#0f172a">Server (placed at hash(id))</text>
+            <circle cx="440" cy="102" r="6" fill="#2563eb"/><text x="458" y="106" fill="#0f172a">Key → owned by next server clockwise</text>
+            <circle cx="440" cy="134" r="8" fill="#16a34a"/><text x="458" y="138" fill="#0f172a">Add server E between A and B</text>
+          </g>
+          <rect x="428" y="164" width="270" height="70" rx="10" fill="#f0fdf4" stroke="#16a34a"/>
+          <text x="440" y="186" class="s-sub" font-size="10.5" fill="#166534">Add E → only keys in (A, E] move from</text>
+          <text x="440" y="203" class="s-sub" font-size="10.5" fill="#166534">B to E. Everything else stays put.</text>
+          <text x="440" y="222" class="s-sub" font-size="10.5" fill="#166534">≈ only 1/N of keys ever move.</text>
+          <rect x="428" y="246" width="270" height="56" rx="10" fill="#fdecec" stroke="#dc2626"/>
+          <text x="440" y="268" class="s-sub" font-size="10.5" fill="#b91c1c">Naive hash % N: changing N remaps</text>
+          <text x="440" y="285" class="s-sub" font-size="10.5" fill="#b91c1c">nearly ALL keys → cache-miss storm.</text>
+        </svg>
+        <figcaption>Keys and servers hash onto the same ring; a key belongs to the first server clockwise. Adding or removing a node only shifts the keys in one arc — about 1/N — instead of remapping the whole keyspace.</figcaption>
+      </figure>
       <div class="diagram">Hash ring (0 … 2^32-1), servers placed at hash(serverID):
 
             ┌───────── A ─────────┐
@@ -1083,6 +1125,49 @@ Gives: mTLS everywhere, uniform retries/timeouts, canary/blue-green routing,
     <section id="production">
       <h2><span class="num"></span> Production Architecture (the big picture)</h2>
       <p class="lead">How the pieces assemble into a real, scalable, observable system.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 740 470" role="img" aria-label="End-to-end backend production architecture">
+          <defs>
+            <marker id="ba" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#ea580c"/></marker>
+            <marker id="bg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#0d9488"/></marker>
+          </defs>
+          <!-- client + edge -->
+          <rect x="20" y="30" width="110" height="48" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/><text x="75" y="59" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">Clients</text>
+          <rect x="170" y="24" width="110" height="30" rx="8" fill="#ffedd5" stroke="#ea580c"/><text x="225" y="44" text-anchor="middle" class="s-sub" font-size="10.5" fill="#7c2d12">CDN (static)</text>
+          <rect x="170" y="60" width="110" height="30" rx="8" fill="#ffedd5" stroke="#ea580c"/><text x="225" y="80" text-anchor="middle" class="s-sub" font-size="10.5" fill="#7c2d12">LB / WAF</text>
+          <rect x="320" y="42" width="150" height="48" rx="10" fill="#ea580c" stroke="#c2410c"/><text x="395" y="63" text-anchor="middle" class="s-lbl" font-size="12" fill="#fff">API Gateway</text><text x="395" y="79" text-anchor="middle" class="s-sub" font-size="9.5" fill="#ffedd5">auth · rate limit · routing</text>
+          <!-- services -->
+          <g>
+            <rect x="60" y="150" width="150" height="54" rx="11" fill="#fff" stroke="#ea580c" stroke-width="1.5"/><text x="135" y="173" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">user-svc</text><text x="135" y="191" text-anchor="middle" class="s-sub" font-size="9.5" fill="#475569">stateless</text>
+            <rect x="295" y="150" width="150" height="54" rx="11" fill="#fff" stroke="#ea580c" stroke-width="1.5"/><text x="370" y="173" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">order-svc</text><text x="370" y="191" text-anchor="middle" class="s-sub" font-size="9.5" fill="#475569">stateless</text>
+            <rect x="530" y="150" width="150" height="54" rx="11" fill="#fff" stroke="#ea580c" stroke-width="1.5"/><text x="605" y="173" text-anchor="middle" class="s-lbl" font-size="12" fill="#0f172a">payment-svc</text><text x="605" y="191" text-anchor="middle" class="s-sub" font-size="9.5" fill="#475569">stateless</text>
+          </g>
+          <text x="30" y="140" class="s-lbl" font-size="10.5" fill="#c2410c">SERVICES (each owns its data)</text>
+          <!-- data stores -->
+          <rect x="60" y="250" width="150" height="46" rx="10" fill="#fef2f2" stroke="#dc2626"/><text x="135" y="278" text-anchor="middle" class="s-sub" font-size="11" fill="#0f172a">Redis + Postgres</text>
+          <rect x="295" y="250" width="150" height="46" rx="10" fill="#fef2f2" stroke="#dc2626"/><text x="370" y="278" text-anchor="middle" class="s-sub" font-size="11" fill="#0f172a">Redis + Postgres</text>
+          <rect x="530" y="250" width="150" height="46" rx="10" fill="#fef2f2" stroke="#dc2626"/><text x="605" y="278" text-anchor="middle" class="s-sub" font-size="11" fill="#0f172a">Postgres (repl.)</text>
+          <!-- event bus + workers -->
+          <rect x="150" y="340" width="280" height="44" rx="10" fill="#eff6ff" stroke="#2563eb"/><text x="290" y="367" text-anchor="middle" class="s-lbl" font-size="12" fill="#1d4ed8">Kafka (event bus)</text>
+          <rect x="470" y="340" width="210" height="44" rx="10" fill="#f0fdf4" stroke="#0d9488"/><text x="575" y="360" text-anchor="middle" class="s-sub" font-size="10.5" fill="#0f766e">workers: email · search</text><text x="575" y="376" text-anchor="middle" class="s-sub" font-size="10.5" fill="#0f766e">index · analytics</text>
+          <!-- arrows -->
+          <path d="M130,54 L166,50" fill="none" stroke="#ea580c" stroke-width="1.6" marker-end="url(#ba)"/>
+          <path d="M280,66 L316,66" fill="none" stroke="#ea580c" stroke-width="1.6" marker-end="url(#ba)"/>
+          <path d="M370,90 C300,110 200,120 135,146" fill="none" stroke="#ea580c" stroke-width="1.4" marker-end="url(#ba)"/>
+          <path d="M395,90 L370,146" fill="none" stroke="#ea580c" stroke-width="1.4" marker-end="url(#ba)"/>
+          <path d="M420,90 C500,110 560,120 605,146" fill="none" stroke="#ea580c" stroke-width="1.4" marker-end="url(#ba)"/>
+          <path d="M135,204 L135,246" fill="none" stroke="#dc2626" stroke-width="1.4" marker-end="url(#ba)"/>
+          <path d="M370,204 L370,246" fill="none" stroke="#dc2626" stroke-width="1.4" marker-end="url(#ba)"/>
+          <path d="M605,204 L605,246" fill="none" stroke="#dc2626" stroke-width="1.4" marker-end="url(#ba)"/>
+          <path d="M370,296 C330,318 320,322 300,338" fill="none" stroke="#2563eb" stroke-width="1.4" marker-end="url(#bg)"/>
+          <path d="M430,362 L466,362" fill="none" stroke="#0d9488" stroke-width="1.6" marker-end="url(#bg)"/>
+          <!-- observability footer -->
+          <rect x="20" y="414" width="700" height="46" rx="9" fill="#f8fafc" stroke="#f0e2d4"/>
+          <text x="370" y="433" text-anchor="middle" class="s-sub" font-size="9.5" fill="#57534e">Observability: logs (ELK) · metrics (Prometheus/Grafana) · traces (OTel/Jaeger)</text>
+          <text x="370" y="450" text-anchor="middle" class="s-sub" font-size="9.5" fill="#57534e">Delivery: Docker → K8s (HPA) ← CI/CD    ·    Reliability: multi-AZ · read replicas · DR · circuit breakers</text>
+        </svg>
+        <figcaption>Stateless services behind a gateway + LB, each owning its data, a cache in front of hot reads, an event bus for async fan-out, plus full observability, containerized delivery, and multi-AZ reliability.</figcaption>
+      </figure>
       <div class="diagram">                         ┌─ CDN (static, cache)
 Users → DNS → LB/WAF ────┤
                          └─ API Gateway (auth, rate limit, routing)
