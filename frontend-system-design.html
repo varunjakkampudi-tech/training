@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Frontend System Design — zero to staff level: scalability, the browser rendering pipeline & critical rendering path, component/state/data architecture, caching, API & data-loading patterns (pagination, infinite scroll, search, debounce/throttle), virtualization, code splitting, asset/image optimization, CDN, security, accessibility, offline/PWA, observability, feature flags, micro-frontends, design systems, real-world case studies, and interview questions." />
+<title>Frontend System Design — The Complete Zero-to-Staff Guide</title>
+<style>
+  :root {
+    --blue: #0f172a; --blue-dark: #020617; --blue-mid: #0d9488; --sky: #2dd4bf;
+    --light-blue: #d7f5f0; --light-blue-2: #edfbf9;
+    --bg: #ffffff; --bg-soft: #f6fbfa; --panel: #ffffff;
+    --text: #0f172a; --muted: #51616a; --border: #d6e6e3;
+    --code-bg: #08131a; --accent: #f59e0b; --danger: #e11d48; --green: #16a34a;
+    --shadow: 0 8px 24px rgba(13, 148, 136, 0.10); --shadow-lg: 0 14px 40px rgba(2, 6, 23, 0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue-mid); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 320px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.12rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-mid); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); color: #04231f; }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 6px 22px; color: var(--muted); font-size: 0.87rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue-mid); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(13, 148, 136, 0.16), transparent), linear-gradient(160deg, #d9f6f1, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { background: linear-gradient(90deg, var(--blue-mid), var(--sky)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  header.hero p { max-width: 800px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-mid); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--sky)); color: #fff; width: 34px; height: 34px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.22rem; color: var(--blue-mid); margin: 26px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; font-size: 1.02rem; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  b, strong { color: var(--blue-dark); }
+  code.inline { background: var(--light-blue); color: var(--blue-mid); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #16333a; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #050d12; border-bottom: 1px solid #16333a; font-size: 0.75rem; color: #5eead4; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #e3f2ef; white-space: pre; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #2a5b5f; color: #5eead4; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(45,212,191,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #6f8b93; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-cmd { color: #5eead4; }
+  .tok-tag { color: #7fdfff; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #24413d; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdecef; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #be123c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue-mid); display: flex; align-items: center; gap: 8px; }
+  .keytk { background: linear-gradient(160deg, #ffffff, #f0fdf4); border: 1px solid #bbf7d0; border-left: 4px solid var(--green); border-radius: 12px; padding: 14px 20px; margin: 18px 0; }
+  .keytk h4 { margin-top: 0; color: #15803d; }
+  .keytk ul { margin-bottom: 4px; }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #2c3f3b; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-mid); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  .diagram { background: #08131a; color: #cbeee6; border-radius: 10px; padding: 18px 20px; margin: 16px 0; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.82rem; line-height: 1.65; overflow-x: auto; white-space: pre; box-shadow: var(--shadow); }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">🧩 Frontend System Design</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">1 · What is System Design</a>
+    <a href="#requirements">2 · RADIO Framework</a>
+    <a href="#scalability">3 · Scalability</a>
+    <a href="#performance">4 · Performance &amp; Web Vitals</a>
+    <a class="section-title">Browser Internals</a>
+    <a href="#browser">5 · Browser Internals</a>
+    <a href="#rendering">6 · Rendering Pipeline</a>
+    <a href="#crp">7 · Critical Rendering Path</a>
+    <a class="section-title">Architecture</a>
+    <a href="#components">8 · Component Architecture</a>
+    <a href="#folder">9 · Folder Architecture</a>
+    <a href="#state">10 · State Architecture</a>
+    <a href="#dataflow">11 · Data Flow</a>
+    <a href="#caching">12 · Caching</a>
+    <a href="#api">13 · API &amp; Data Fetching</a>
+    <a class="section-title">Data-Loading Patterns</a>
+    <a href="#pagination">14 · Pagination</a>
+    <a href="#infinite">15 · Infinite Scroll</a>
+    <a href="#search">16 · Search &amp; Autocomplete</a>
+    <a href="#debounce-throttle">17 · Debounce &amp; Throttle</a>
+    <a href="#virtualization">18 · Virtualization</a>
+    <a class="section-title">Delivery &amp; Performance</a>
+    <a href="#lazy">19 · Lazy Loading</a>
+    <a href="#code-splitting">20 · Code Splitting</a>
+    <a href="#assets">21 · Asset Optimization</a>
+    <a href="#images">22 · Image Optimization</a>
+    <a href="#cdn">23 · CDN</a>
+    <a class="section-title">Cross-Cutting</a>
+    <a href="#security">24 · Security</a>
+    <a href="#accessibility">25 · Accessibility</a>
+    <a href="#offline">26 · Offline &amp; PWA</a>
+    <a href="#monitoring">27 · Monitoring &amp; Error Tracking</a>
+    <a href="#feature-flags">28 · Feature Flags</a>
+    <a class="section-title">Scale &amp; Systems</a>
+    <a href="#micro-frontends">29 · Micro-Frontends</a>
+    <a href="#design-systems">30 · Design Systems</a>
+    <a href="#i18n">31 · i18n &amp; Real-Time</a>
+    <a class="section-title">Mastery</a>
+    <a href="#case-studies">32 · Case Studies</a>
+    <a href="#decision-matrix">33 · Decision Matrix</a>
+    <a href="#mistakes">34 · Common Mistakes</a>
+    <a href="#interview">35 · Interview Questions</a>
+    <a href="#checklist">36 · Mastery Checklist</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>Frontend <span class="g">System Design</span></h1>
+    <p>Zero to staff level — how to design large, fast, reliable web frontends. The browser rendering pipeline &amp; critical rendering path, component/state/data architecture, caching, data-loading patterns (pagination, infinite scroll, search, debounce/throttle, virtualization), delivery (code splitting, assets, images, CDN), security, accessibility, offline/PWA, observability, feature flags, micro-frontends, design systems, real-world case studies, and interview questions. Assumes HTML, CSS, JS/TS, React, and REST.</p>
+    <div class="badges">
+      <span class="badge">RADIO Framework</span>
+      <span class="badge">Rendering Pipeline</span>
+      <span class="badge">State &amp; Data</span>
+      <span class="badge">Performance</span>
+      <span class="badge">Case Studies</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- 1 -->
+    <section id="intro">
+      <h2><span class="num"></span> What is Frontend System Design</h2>
+      <p class="lead">Frontend system design is the practice of making <b>architecture-level decisions</b> for a web UI so it stays fast, scalable, reliable, accessible, and maintainable as features, data, and team size grow. It's coding zoomed out: not "how do I write this component" but "how do all the pieces fit, and where are the trade-offs?"</p>
+      <h3>What / Why / the problem it solves</h3>
+      <ul>
+        <li><b>What:</b> designing the component model, state &amp; data flow, rendering strategy, network/caching layer, and delivery pipeline of a frontend — plus the cross-cutting concerns (perf, a11y, security, observability).</li>
+        <li><b>Why:</b> small apps work however you build them; large apps fail on the things you <em>didn't</em> design — re-render storms, giant bundles, cache bugs, inaccessible UIs, unobservable errors.</li>
+        <li><b>Problem it solves:</b> turns vague requirements ("build a news feed") into concrete, defensible technical decisions with known trade-offs.</li>
+      </ul>
+      <h3>Backend vs Frontend system design</h3>
+      <table>
+        <tr><th>Backend SD asks</th><th>Frontend SD asks</th></tr>
+        <tr><td>How to scale to N requests/sec?</td><td>How to render N items at 60fps without jank?</td></tr>
+        <tr><td>Sharding, replication, queues</td><td>Rendering strategy, bundling, caching, virtualization</td></tr>
+        <tr><td>Data consistency &amp; durability</td><td>UI consistency, optimistic updates, offline</td></tr>
+        <tr><td>Latency &amp; throughput</td><td>Core Web Vitals (LCP, INP, CLS), TTI, bundle size</td></tr>
+        <tr><td>Server observability</td><td>Real-user monitoring (RUM), error tracking</td></tr>
+      </table>
+      <div class="callout tip"><b>Interview reality:</b> a frontend system design round gives you a broad prompt ("design Twitter's feed", "design a photo gallery", "design Google Docs") and grades your <em>process</em>: clarify requirements → propose an architecture → justify trade-offs → go deep where asked.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Frontend SD = architecture-level decisions for a UI, judged on trade-offs, not syntax.</li>
+        <li>Its metrics are Core Web Vitals + bundle size + maintainability, not requests/sec.</li>
+      </ul></div>
+    </section>
+
+    <!-- 2 -->
+    <section id="requirements">
+      <h2><span class="num"></span> The RADIO Framework (how to drive the interview)</h2>
+      <p class="lead">A repeatable structure so you never freeze on an open-ended prompt. <b>RADIO</b> = Requirements → Architecture → Data model → Interface (API) → Optimizations.</p>
+      <table>
+        <tr><th>Step</th><th>What you do</th></tr>
+        <tr><td><b>R — Requirements</b></td><td>Clarify functional (what it does) &amp; non-functional (perf, a11y, devices, offline, scale). Ask questions; state assumptions.</td></tr>
+        <tr><td><b>A — Architecture</b></td><td>Break UI into components; define boundaries, data ownership, and rendering strategy. Draw a diagram.</td></tr>
+        <tr><td><b>D — Data model</b></td><td>Client-side entities/stores; normalized vs nested; what's server state vs UI state.</td></tr>
+        <tr><td><b>I — Interface / API</b></td><td>The contract with the backend: endpoints, pagination shape, real-time channel, error format.</td></tr>
+        <tr><td><b>O — Optimizations</b></td><td>Perf (virtualization, code-split, caching), a11y, security, i18n, error handling — go deep where asked.</td></tr>
+      </table>
+      <div class="diagram">Prompt: "Design a news feed"
+   ↓ Requirements   (infinite scroll? real-time? images? offline? #users?)
+   ↓ Architecture   (Feed → FeedList → FeedItem; virtualized; data layer)
+   ↓ Data model     (posts normalized by id; cursor for pagination)
+   ↓ Interface      (GET /feed?cursor=..&limit=20; WS for new posts)
+   ↓ Optimizations  (virtualization, image lazy-load, optimistic likes, prefetch)</div>
+      <div class="callout tip"><b>First 2 minutes matter most:</b> spend them clarifying requirements. Jumping to components without pinning scope (real-time? scale? devices?) is the #1 reason candidates fail.</div>
+    </section>
+
+    <!-- 3 -->
+    <section id="scalability">
+      <h2><span class="num"></span> Scalability (frontend edition)</h2>
+      <p class="lead">A frontend "scales" along axes the backend doesn't: more <b>DOM nodes</b>, more <b>state</b>, more <b>code</b>, more <b>engineers</b>. Each needs a strategy.</p>
+      <table>
+        <tr><th>Axis</th><th>Symptom at scale</th><th>Technique</th></tr>
+        <tr><td>Data volume (rows)</td><td>Slow render, memory bloat</td><td>Virtualization, pagination, windowing</td></tr>
+        <tr><td>Code size</td><td>Large bundle, slow TTI</td><td>Code splitting, tree shaking, lazy load</td></tr>
+        <tr><td>State complexity</td><td>Re-render storms, bugs</td><td>State colocation, normalization, selectors</td></tr>
+        <tr><td>Team size</td><td>Merge conflicts, coupling</td><td>Feature modules, design system, micro-frontends</td></tr>
+        <tr><td>Traffic</td><td>Origin load, latency</td><td>CDN, caching, SSR/SSG, edge</td></tr>
+      </table>
+      <div class="callout"><b>Mental model:</b> frontend scalability is about keeping three budgets under control as the app grows — the <b>render budget</b> (stay at 60fps), the <b>network budget</b> (bytes over the wire), and the <b>cognitive budget</b> (can a new engineer understand a feature in isolation?).</div>
+    </section>
+
+    <!-- 4 -->
+    <section id="performance">
+      <h2><span class="num"></span> Performance &amp; Core Web Vitals</h2>
+      <p class="lead">Performance is measurable. Google's <b>Core Web Vitals</b> are the shared language; optimize to them.</p>
+      <table>
+        <tr><th>Metric</th><th>Measures</th><th>Good</th><th>Levers</th></tr>
+        <tr><td><b>LCP</b> (Largest Contentful Paint)</td><td>Loading — biggest element painted</td><td>&lt; 2.5s</td><td>Fast server/CDN, optimize hero image/font, preload, SSR</td></tr>
+        <tr><td><b>INP</b> (Interaction to Next Paint)</td><td>Responsiveness</td><td>&lt; 200ms</td><td>Less JS, break up long tasks, web workers, debounce</td></tr>
+        <tr><td><b>CLS</b> (Cumulative Layout Shift)</td><td>Visual stability</td><td>&lt; 0.1</td><td>Set image/embed dimensions, reserve space, font-display</td></tr>
+        <tr><td>TTFB / FCP / TTI</td><td>Server, first paint, interactivity</td><td>—</td><td>Caching, streaming, hydration strategy</td></tr>
+      </table>
+      <h3>The RAIL model</h3>
+      <div class="diagram">Response  — react to input in  &lt; 100ms
+Animation — produce a frame in  &lt; 16ms  (60fps)
+Idle      — use idle time for deferred work (requestIdleCallback)
+Load      — deliver interactive content fast (&lt; 5s on mid-tier mobile)</div>
+      <div class="callout tip"><b>Measure, then optimize:</b> lab tools (Lighthouse, WebPageTest) for repeatable diagnosis; field data (Real-User Monitoring / <code class="inline">web-vitals</code> library, CrUX) for what actual users experience. Never optimize blind.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>LCP = loading, INP = responsiveness, CLS = stability. Learn the lever for each.</li>
+        <li>RAIL: 100ms response, 16ms frames, use idle time, fast load.</li>
+      </ul></div>
+    </section>
+
+    <!-- 5 -->
+    <section id="browser">
+      <h2><span class="num"></span> Browser Internals</h2>
+      <p class="lead">You can't design a fast frontend without knowing what the browser actually does. A browser is several coordinated engines.</p>
+      <table>
+        <tr><th>Component</th><th>Job</th></tr>
+        <tr><td>Networking</td><td>DNS, TCP/TLS, HTTP/2-3; fetch resources</td></tr>
+        <tr><td>HTML parser</td><td>Tokens → DOM tree</td></tr>
+        <tr><td>CSS engine</td><td>Parse CSS → CSSOM; compute styles</td></tr>
+        <tr><td>JS engine (V8, etc.)</td><td>Parse/compile/run JS (the main thread)</td></tr>
+        <tr><td>Rendering / compositor</td><td>Layout, paint, composite layers onto the GPU</td></tr>
+        <tr><td>Event loop</td><td>Coordinates tasks, microtasks, rendering, and input</td></tr>
+      </table>
+      <h3>The single main thread</h3>
+      <div class="diagram">Main thread (one!) does:  JS  +  style/layout/paint  +  event handling
+   ↓
+Long JS task  →  can't paint / respond  →  jank, high INP
+Fix: split work (yield), Web Workers (off-thread), rAF for visual updates</div>
+      <div class="callout warn"><b>The core constraint:</b> JS and rendering share one main thread. A long-running function blocks painting and input — the root cause of jank and poor INP. Everything in performance flows from this.</div>
+    </section>
+
+    <!-- 6 -->
+    <section id="rendering">
+      <h2><span class="num"></span> The Rendering Pipeline</h2>
+      <p class="lead">How the browser turns HTML/CSS/JS into pixels — the "pixel pipeline". Knowing which steps a change triggers is how you avoid jank.</p>
+      <div class="diagram">DOM + CSSOM  →  Render Tree  →  Layout (reflow)  →  Paint  →  Composite
+   │              │               │                  │           │
+ structure      styles       geometry (x/y/w/h)   fill pixels   GPU layers</div>
+      <table>
+        <tr><th>Stage</th><th>What a change costs</th></tr>
+        <tr><td><b>Layout / reflow</b></td><td>Most expensive — recompute geometry (changing <code>width</code>, <code>top</code>, reading <code>offsetHeight</code>)</td></tr>
+        <tr><td><b>Paint</b></td><td>Fill pixels (changing <code>color</code>, <code>background</code>, <code>box-shadow</code>)</td></tr>
+        <tr><td><b>Composite</b></td><td>Cheapest — GPU moves layers (<code>transform</code>, <code>opacity</code>)</td></tr>
+      </table>
+      <div class="callout tip"><b>Golden perf rule:</b> animate with <code class="inline">transform</code> and <code class="inline">opacity</code> only — they skip layout and paint (composite-only). Animating <code class="inline">width</code>/<code class="inline">top</code>/<code class="inline">left</code> triggers layout every frame and drops frames.</div>
+      <div class="callout warn"><b>Layout thrashing:</b> interleaving DOM reads (<code class="inline">offsetHeight</code>) and writes (<code class="inline">style.height</code>) in a loop forces synchronous reflows repeatedly. <b>Batch reads, then writes</b> (or use <code class="inline">requestAnimationFrame</code>).</div>
+    </section>
+
+    <!-- 7 -->
+    <section id="crp">
+      <h2><span class="num"></span> Critical Rendering Path</h2>
+      <p class="lead">The <b>CRP</b> is the minimum sequence of steps the browser must complete to show the first meaningful pixels. Shortening it = faster FCP/LCP.</p>
+      <div class="diagram">HTML  →  parse  →  DOM
+CSS   →  parse  →  CSSOM   (render-blocking!)
+JS    →  parse/run        (parser-blocking unless async/defer)
+DOM + CSSOM  →  Render Tree  →  Layout  →  Paint  →  first pixels</div>
+      <table>
+        <tr><th>Blocker</th><th>Fix</th></tr>
+        <tr><td>CSS is render-blocking</td><td>Inline critical CSS; load the rest async; minimize/split CSS</td></tr>
+        <tr><td>Synchronous JS blocks the parser</td><td><code>&lt;script defer&gt;</code> (run after parse) or <code>async</code> (run when ready); avoid render-blocking JS</td></tr>
+        <tr><td>Fonts cause FOIT/CLS</td><td><code>font-display: swap</code>, preload, self-host</td></tr>
+        <tr><td>Big JS delays TTI</td><td>Code split, defer non-critical, SSR the shell</td></tr>
+      </table>
+      <div class="callout tip"><b>Interview one-liner:</b> "To optimize the CRP I minimize and inline critical CSS, defer non-critical JS, preload the LCP image/font, and server-render the initial HTML so the browser paints before JS arrives."</div>
+    </section>
+
+    <!-- 8 -->
+    <section id="components">
+      <h2><span class="num"></span> Component Architecture</h2>
+      <p class="lead">How you split the UI into components determines reusability, testability, and re-render cost. Two complementary models: <b>presentational vs container</b>, and <b>atomic design</b>.</p>
+      <table>
+        <tr><th>Pattern</th><th>Idea</th></tr>
+        <tr><td>Presentational vs Container</td><td>Dumb UI (props in, events out) vs smart (data/logic). Keeps UI reusable &amp; testable.</td></tr>
+        <tr><td>Atomic design</td><td>atoms → molecules → organisms → templates → pages. Scales a component library.</td></tr>
+        <tr><td>Compound components</td><td><code>&lt;Tabs&gt;&lt;Tab/&gt;&lt;/Tabs&gt;</code> share state via context — flexible APIs.</td></tr>
+        <tr><td>Headless components</td><td>Logic + a11y with no styles (Radix, React Aria) — you own the look.</td></tr>
+      </table>
+      <div class="diagram">FeedPage (container: fetches data)
+ └─ FeedList (organism, virtualized)
+     └─ FeedItem (molecule)
+         ├─ Avatar (atom)  ├─ Text (atom)  └─ LikeButton (client leaf, interactive)</div>
+      <div class="callout tip"><b>Design decision:</b> lift interactivity to the smallest leaf. A feed of 1000 items should have 1000 tiny interactive <code class="inline">LikeButton</code>s, not 1000 fully-interactive item components — smaller re-render surface, smaller bundle.</div>
+      <div class="callout warn"><b>Common mistake:</b> prop drilling data through many layers. Colocate state with where it's used, or use context/a store for truly global state — but don't put everything in one global store (see State Architecture).</div>
+    </section>
+
+    <!-- 9 -->
+    <section id="folder">
+      <h2><span class="num"></span> Folder Architecture</h2>
+      <p class="lead">Structure by <b>feature</b>, not by file type, so a feature is understandable and movable in isolation — critical for large teams.</p>
+      <div class="vs-grid">
+        <div class="vs-card b"><h4>❌ Type-based (breaks at scale)</h4>
+          <div class="code"><div class="code-head"><span>by type</span><button class="copy">Copy</button></div><pre>src/
+  components/  (500 files)
+  hooks/       (200 files)
+  utils/
+  reducers/</pre></div>
+          <p>Editing one feature touches many folders; hard to find/own.</p>
+        </div>
+        <div class="vs-card a"><h4>✅ Feature-based (scales)</h4>
+          <div class="code"><div class="code-head"><span>by feature</span><button class="copy">Copy</button></div><pre>src/
+  features/
+    feed/    { components, hooks, api, store, types, index.ts }
+    auth/
+  components/ui/   (shared design system)
+  lib/  hooks/  types/</pre></div>
+          <p>A feature is self-contained; teams own folders; easy to delete/move.</p>
+        </div>
+      </div>
+      <div class="callout tip"><b>Rule:</b> shared code goes up (<code class="inline">components/ui</code>, <code class="inline">lib</code>); feature code stays in its folder and exposes a small <code class="inline">index.ts</code> public API. Enforce boundaries with lint rules (no deep imports across features).</div>
+    </section>
+
+    <!-- 10 -->
+    <section id="state">
+      <h2><span class="num"></span> State Architecture</h2>
+      <p class="lead">The most important frontend design decision. First, <b>classify</b> your state — different kinds need different tools.</p>
+      <table>
+        <tr><th>State kind</th><th>Example</th><th>Where it lives</th></tr>
+        <tr><td><b>Server state</b></td><td>Users, posts (from an API)</td><td>React Query / SWR / RTK Query (cache + sync)</td></tr>
+        <tr><td><b>Global UI state</b></td><td>Theme, auth, cart</td><td>Context / Redux / Zustand</td></tr>
+        <tr><td><b>Local UI state</b></td><td>Input value, modal open</td><td><code>useState</code> in the component</td></tr>
+        <tr><td><b>URL state</b></td><td>Filters, tab, page</td><td>The URL (searchParams) — shareable, back-button friendly</td></tr>
+        <tr><td><b>Form state</b></td><td>Fields, validation</td><td>React Hook Form / Formik</td></tr>
+      </table>
+      <div class="callout warn"><b>#1 anti-pattern:</b> putting <em>server</em> state in Redux and hand-writing loading/error/refetch. Use a server-cache library (React Query) — it handles caching, dedupe, background refetch, and stale-while-revalidate for you.</div>
+      <h3>Normalization &amp; selectors</h3>
+      <p>For relational data, <b>normalize</b> (store entities by id, reference by id) to avoid duplication and keep updates O(1). Use <b>memoized selectors</b> (reselect) so components only re-render when their slice changes.</p>
+      <div class="code"><div class="code-head"><span>Normalized store</span><button class="copy">Copy</button></div><pre>{
+  posts: { byId: { 1: {id:1, author: 10}, 2: {...} }, allIds: [1,2] },
+  users: { byId: { 10: {id:10, name: <span class="tok-str">"Aria"</span>} } }
+}   <span class="tok-com">// update user 10 once → every post referencing it is correct</span></pre></div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Classify state (server / global UI / local / URL / form) and pick the right tool per kind.</li>
+        <li>Don't manage server state manually — use a caching data layer. Normalize relational data.</li>
+      </ul></div>
+      <details class="qa"><summary>How do you decide where a piece of state should live?</summary><div class="ans"><p>Ask: is it from the server? → server-cache lib (React Query). Shared across the tree? → context/store. Used by one component? → local <code class="inline">useState</code>. Should it survive refresh / be shareable? → URL. Form? → a form library. Wrong placement (e.g. server data in Redux) causes most state bugs.</p></div></details>
+    </section>
+
+    <!-- 11 -->
+    <section id="dataflow">
+      <h2><span class="num"></span> Data Flow</h2>
+      <p class="lead">Predictable UIs use <b>unidirectional data flow</b>: data goes down (props), events go up (callbacks), a store is the single source of truth.</p>
+      <div class="diagram">Store / server cache
+   │ (state down)
+   ▼
+Components render
+   │ user acts
+   ▼
+Dispatch action / mutation
+   │
+   ▼
+Store updates → components re-render   (one direction, no surprises)</div>
+      <h3>Optimistic updates</h3>
+      <p>For snappy UX, update the UI <em>before</em> the server confirms, then roll back on failure — essential for likes, drag-and-drop, chat.</p>
+      <div class="code"><div class="code-head"><span>Optimistic like (React Query)</span><button class="copy">Copy</button></div><pre>useMutation({
+  mutationFn: like,
+  onMutate: <span class="tok-key">async</span> (id) =&gt; {
+    <span class="tok-key">await</span> qc.<span class="tok-fn">cancelQueries</span>([<span class="tok-str">"post"</span>, id]);
+    <span class="tok-key">const</span> prev = qc.<span class="tok-fn">getQueryData</span>([<span class="tok-str">"post"</span>, id]);
+    qc.<span class="tok-fn">setQueryData</span>([<span class="tok-str">"post"</span>, id], (p) =&gt; ({ ...p, liked: <span class="tok-key">true</span> })); <span class="tok-com">// optimistic</span>
+    <span class="tok-key">return</span> { prev };
+  },
+  onError: (_e, id, ctx) =&gt; qc.<span class="tok-fn">setQueryData</span>([<span class="tok-str">"post"</span>, id], ctx.prev), <span class="tok-com">// rollback</span>
+});</pre></div>
+      <div class="callout tip"><b>Interview point:</b> optimistic UI trades correctness-latency for perceived speed. Always design the rollback path and reconcile with the server's real response.</div>
+    </section>
+
+    <!-- 12 -->
+    <section id="caching">
+      <h2><span class="num"></span> Caching (every layer)</h2>
+      <p class="lead">The fastest request is the one you don't make. The frontend touches several cache layers — know each.</p>
+      <div class="diagram">Browser memory (JS: React Query cache, in-memory maps)
+   ↓ miss
+Service Worker Cache (offline, precache, runtime cache)
+   ↓ miss
+HTTP cache (Cache-Control, ETag, 304 Not Modified)
+   ↓ miss
+CDN edge cache
+   ↓ miss
+Origin server → Database</div>
+      <table>
+        <tr><th>Layer</th><th>Controlled by</th><th>Use</th></tr>
+        <tr><td>App/data cache</td><td>React Query/SWR (staleTime, cacheTime)</td><td>Dedupe, background refetch, SWR</td></tr>
+        <tr><td>Service Worker</td><td>Cache API + strategies</td><td>Offline, instant repeat visits</td></tr>
+        <tr><td>HTTP cache</td><td><code>Cache-Control</code>, <code>ETag</code></td><td>Static assets, API GETs</td></tr>
+        <tr><td>CDN</td><td>Cache headers + purge</td><td>Global, near-user delivery</td></tr>
+      </table>
+      <h3>Cache invalidation strategies</h3>
+      <ul>
+        <li><b>Stale-While-Revalidate:</b> serve cached instantly, refetch in the background, swap in fresh — the default UX win.</li>
+        <li><b>Cache-busting:</b> content-hashed filenames (<code class="inline">app.9f3a.js</code>) + long <code class="inline">max-age</code> for immutable assets.</li>
+        <li><b>Tag/key invalidation:</b> after a mutation, invalidate the affected query keys so they refetch.</li>
+      </ul>
+      <div class="callout warn"><b>"There are only two hard things…":</b> cache invalidation. Design <em>how</em> a cached value becomes stale before you cache it (time-based? event-based? version-based?).</div>
+    </section>
+
+    <!-- 13 -->
+    <section id="api">
+      <h2><span class="num"></span> API &amp; Data Fetching Design</h2>
+      <p class="lead">The client–server contract shapes your whole frontend. Design it deliberately.</p>
+      <table>
+        <tr><th>Concern</th><th>Options / guidance</th></tr>
+        <tr><td>Style</td><td>REST (simple, cacheable), GraphQL (flexible, avoids over/under-fetch), gRPC-web (perf)</td></tr>
+        <tr><td>Over-fetching</td><td>Ask for only needed fields (GraphQL) or design task-specific REST endpoints (BFF)</td></tr>
+        <tr><td>Waterfalls</td><td>Parallelize independent requests; prefetch on hover/route</td></tr>
+        <tr><td>Errors</td><td>Consistent shape (code + message); handle loading/empty/error states in the UI</td></tr>
+        <tr><td>Real-time</td><td>WebSocket (bi-directional), SSE (server→client), polling (simple)</td></tr>
+      </table>
+      <div class="callout tip"><b>BFF pattern (Backend-for-Frontend):</b> a thin API tailored to the UI that aggregates/reshapes microservice data — kills client-side waterfalls and over-fetching. Common in large frontends.</div>
+      <details class="qa"><summary>WebSocket vs SSE vs polling — how do you choose?</summary><div class="ans"><p>Polling: simplest, fine for low-frequency updates; wastes requests. SSE: one-way server→client stream over HTTP, auto-reconnect — great for feeds/notifications. WebSocket: full-duplex, low latency — needed for chat, collaboration, live cursors. Choose the least powerful option that meets the latency/direction needs.</p></div></details>
+    </section>
+
+    <!-- 14 -->
+    <section id="pagination">
+      <h2><span class="num"></span> Pagination</h2>
+      <p class="lead">Loading huge lists in chunks. Two models: <b>offset</b> and <b>cursor</b> — the choice is a classic interview question.</p>
+      <div class="vs-grid">
+        <div class="vs-card b"><h4>Offset / page</h4><ul>
+          <li><code>?page=2&amp;limit=20</code> / <code>?offset=20</code></li>
+          <li>Simple; can jump to any page</li>
+          <li>Slow deep in large tables; <b>items shift</b> if data changes (duplicates/skips)</li>
+        </ul></div>
+        <div class="vs-card a"><h4>Cursor / keyset</h4><ul>
+          <li><code>?cursor=&lt;lastId&gt;&amp;limit=20</code></li>
+          <li>Stable &amp; fast for large/real-time feeds</li>
+          <li>Opaque cursor; no random page jumps</li>
+        </ul></div>
+      </div>
+      <div class="callout tip"><b>Rule:</b> use <b>cursor pagination for feeds/infinite scroll</b> (data changes underneath you), <b>offset for admin tables</b> where users pick page numbers.</div>
+    </section>
+
+    <!-- 15 -->
+    <section id="infinite">
+      <h2><span class="num"></span> Infinite Scroll</h2>
+      <p class="lead">Load the next page as the user nears the bottom. Use <code class="inline">IntersectionObserver</code> (not scroll listeners) to detect the sentinel.</p>
+      <div class="code"><div class="code-head"><span>IntersectionObserver sentinel</span><button class="copy">Copy</button></div><pre><span class="tok-key">const</span> ref = <span class="tok-fn">useRef</span>();
+<span class="tok-fn">useEffect</span>(() =&gt; {
+  <span class="tok-key">const</span> io = <span class="tok-key">new</span> <span class="tok-fn">IntersectionObserver</span>(([e]) =&gt; {
+    <span class="tok-key">if</span> (e.isIntersecting) <span class="tok-fn">fetchNextPage</span>();   <span class="tok-com">// near bottom → load more</span>
+  }, { rootMargin: <span class="tok-str">"200px"</span> });        <span class="tok-com">// prefetch before fully visible</span>
+  <span class="tok-key">if</span> (ref.current) io.<span class="tok-fn">observe</span>(ref.current);
+  <span class="tok-key">return</span> () =&gt; io.<span class="tok-fn">disconnect</span>();
+}, []);
+<span class="tok-com">// &lt;div ref={ref} /&gt; sentinel at the end of the list</span></pre></div>
+      <div class="callout warn"><b>Combine with virtualization:</b> infinite scroll keeps <em>appending</em> DOM — after thousands of items the page dies. Pair it with virtualization (§18) so only visible rows are in the DOM. Also preserve scroll position and provide a "back to top" + real footer access.</div>
+      <div class="realworld"><h4>🌍 Real-world</h4><p>Twitter/Instagram feeds = cursor pagination + IntersectionObserver + virtualization + optimistic likes + image lazy-load. This combination is a canonical frontend SD answer.</p></div>
+    </section>
+
+    <!-- 16 -->
+    <section id="search">
+      <h2><span class="num"></span> Search &amp; Autocomplete (Typeahead)</h2>
+      <p class="lead">A staple machine-coding + system-design question. It combines debouncing, caching, cancellation, and a11y.</p>
+      <div class="diagram">keystroke → debounce(300ms) → cache hit? ─yes→ show
+                                   │ no
+                                   ▼
+                     cancel in-flight request (AbortController)
+                                   ▼
+                     fetch /search?q=... → cache by query → render → highlight</div>
+      <ul>
+        <li><b>Debounce</b> input so you don't fire per keystroke.</li>
+        <li><b>Cancel</b> stale requests (<code class="inline">AbortController</code>) so a slow old response can't overwrite a newer one (race condition).</li>
+        <li><b>Cache</b> results by query string; instantly serve repeats.</li>
+        <li><b>a11y:</b> <code class="inline">role="combobox"</code>, <code class="inline">aria-activedescendant</code>, arrow-key navigation, announce result counts.</li>
+        <li><b>Backend:</b> prefix index / trie / search engine (Elasticsearch); return ranked, minimal fields.</li>
+      </ul>
+      <div class="callout warn"><b>The classic race bug:</b> "reactjs" results arrive after "react" results and overwrite them. Fix by cancelling stale requests <em>or</em> ignoring responses whose query no longer matches the current input.</div>
+    </section>
+
+    <!-- 17 -->
+    <section id="debounce-throttle">
+      <h2><span class="num"></span> Debounce &amp; Throttle</h2>
+      <p class="lead">Both limit how often a function runs — the difference is <em>when</em>.</p>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>Debounce</h4><p>Runs after activity <b>stops</b> for N ms. Use: search input, resize, autosave.</p>
+          <div class="code"><div class="code-head"><span>debounce</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">debounce</span>(fn, d) {
+  <span class="tok-key">let</span> t;
+  <span class="tok-key">return</span> (...a) =&gt; { <span class="tok-fn">clearTimeout</span>(t); t = <span class="tok-fn">setTimeout</span>(() =&gt; <span class="tok-fn">fn</span>(...a), d); };
+}</pre></div>
+        </div>
+        <div class="vs-card b"><h4>Throttle</h4><p>Runs at most <b>once per N ms</b>. Use: scroll, mousemove, drag, rapid clicks.</p>
+          <div class="code"><div class="code-head"><span>throttle</span><button class="copy">Copy</button></div><pre><span class="tok-key">function</span> <span class="tok-fn">throttle</span>(fn, l) {
+  <span class="tok-key">let</span> wait = <span class="tok-key">false</span>;
+  <span class="tok-key">return</span> (...a) =&gt; { <span class="tok-key">if</span> (wait) <span class="tok-key">return</span>;
+    <span class="tok-fn">fn</span>(...a); wait = <span class="tok-key">true</span>; <span class="tok-fn">setTimeout</span>(() =&gt; wait = <span class="tok-key">false</span>, l); };
+}</pre></div>
+        </div>
+      </div>
+      <div class="callout tip"><b>Pick by intent:</b> "do it once the user finishes" → debounce. "do it steadily but not too often" → throttle. Scroll-driven UI = throttle; search = debounce.</div>
+    </section>
+
+    <!-- 18 -->
+    <section id="virtualization">
+      <h2><span class="num"></span> Virtualization (Windowing)</h2>
+      <p class="lead">Render only the rows currently in (and near) the viewport, no matter how many total. The single most important technique for large lists/tables.</p>
+      <div class="diagram">10,000 items, viewport shows ~15
+   ↓ virtualization
+DOM contains ~20 rows (visible + buffer)
+   ↓ scroll
+recycle: unmount rows that leave, mount rows that enter
+   ↓ absolutely position rows; a tall spacer preserves scrollbar height</div>
+      <div class="callout"><b>How it works:</b> a container of the full scroll height (<code class="inline">totalItems × rowHeight</code>) with only the visible slice absolutely positioned. As you scroll, compute the start index from <code class="inline">scrollTop</code> and render that window. Libraries: <code class="inline">react-window</code>, <code class="inline">react-virtuoso</code>, TanStack Virtual.</p></div>
+      <div class="callout warn"><b>Hard parts:</b> variable row heights (measure &amp; cache), scroll restoration, keyboard access, and find-in-page (Ctrl+F won't find off-DOM rows). Weigh these before virtualizing.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Virtualization caps DOM nodes to the viewport → constant render cost regardless of list size.</li>
+        <li>It's the answer to "how do you render 100k rows?" — pair with infinite scroll + cursor pagination.</li>
+      </ul></div>
+    </section>
+
+    <!-- 19 -->
+    <section id="lazy">
+      <h2><span class="num"></span> Lazy Loading</h2>
+      <p class="lead">Load resources only when needed — components, images, routes, data.</p>
+      <table>
+        <tr><th>What</th><th>How</th></tr>
+        <tr><td>Components</td><td><code>React.lazy(() =&gt; import("./X"))</code> + <code>&lt;Suspense&gt;</code></td></tr>
+        <tr><td>Routes</td><td>Per-route dynamic import (route-based code splitting)</td></tr>
+        <tr><td>Images / iframes</td><td><code>loading="lazy"</code>, IntersectionObserver</td></tr>
+        <tr><td>Data</td><td>Fetch on demand / on interaction / on visibility</td></tr>
+      </table>
+      <div class="callout tip"><b>Prefetch on intent:</b> lazy-load by default, but <b>prefetch</b> the likely-next chunk on hover/focus/idle so the click still feels instant. Lazy ≠ slow if you prefetch smartly.</div>
+    </section>
+
+    <!-- 20 -->
+    <section id="code-splitting">
+      <h2><span class="num"></span> Code Splitting &amp; Bundling</h2>
+      <p class="lead">Ship less JS up front by splitting the bundle into chunks loaded on demand. Fewer bytes → faster TTI/INP.</p>
+      <div class="diagram">One big bundle (2MB)  →  slow parse/execute  →  high TTI
+   ↓ split
+route chunks + vendor chunk + lazy feature chunks
+   ↓
+initial load ships only the current route's JS; rest loads on navigation</div>
+      <ul>
+        <li><b>Route-based splitting</b> — biggest win; each route is a chunk.</li>
+        <li><b>Component-based</b> — split heavy widgets (charts, editors, maps).</li>
+        <li><b>Tree shaking</b> — bundler drops unused exports (needs ES modules, <code class="inline">sideEffects:false</code>).</li>
+        <li><b>Vendor/runtime chunking</b> — cache stable deps separately from your changing code.</li>
+        <li><b>Bundle budgets</b> — fail CI if a chunk exceeds a size threshold.</li>
+      </ul>
+      <div class="callout warn"><b>Common mistake:</b> importing a huge library for one function (e.g. all of lodash/moment). Import submodules (<code class="inline">lodash/debounce</code>) or use lighter alternatives (<code class="inline">date-fns</code>). Analyze with a bundle analyzer.</div>
+    </section>
+
+    <!-- 21 -->
+    <section id="assets">
+      <h2><span class="num"></span> Asset Optimization</h2>
+      <p class="lead">JS, CSS, fonts, and images are bytes over the network. Shrink and sequence them well.</p>
+      <table>
+        <tr><th>Asset</th><th>Technique</th></tr>
+        <tr><td>JS/CSS</td><td>Minify, compress (Brotli/gzip), code-split, remove dead CSS (PurgeCSS)</td></tr>
+        <tr><td>Fonts</td><td>Self-host, subset, <code>font-display: swap</code>, preload, WOFF2, variable fonts</td></tr>
+        <tr><td>Loading order</td><td><code>preload</code> critical, <code>prefetch</code> next, <code>preconnect</code> to origins, <code>defer</code> JS</td></tr>
+        <tr><td>Transfer</td><td>HTTP/2-3 multiplexing; long cache + content hashing for immutables</td></tr>
+      </table>
+      <div class="callout tip"><b>Resource hints cheat sheet:</b> <code class="inline">preconnect</code> (warm a connection to an origin), <code class="inline">preload</code> (fetch a critical resource now), <code class="inline">prefetch</code> (fetch a likely-next resource at low priority), <code class="inline">dns-prefetch</code> (resolve DNS early).</div>
+    </section>
+
+    <!-- 22 -->
+    <section id="images">
+      <h2><span class="num"></span> Image Optimization</h2>
+      <p class="lead">Images are usually the largest bytes on a page and the most common LCP element. Optimizing them is the highest-ROI performance work.</p>
+      <div class="diagram">Original 4MB JPEG
+   ↓ resize to displayed size (responsive srcset)
+   ↓ modern format (AVIF/WebP by Accept header)
+   ↓ compress (quality ~75)
+   ↓ lazy-load below the fold; priority-load the LCP image
+   ↓ set width/height (no CLS) → serve from CDN</div>
+      <ul>
+        <li><b>Responsive:</b> <code class="inline">srcset</code>/<code class="inline">sizes</code> serve the right resolution per device (don't ship a 2000px image to a phone).</li>
+        <li><b>Format:</b> AVIF/WebP over JPEG/PNG; SVG for icons.</li>
+        <li><b>No CLS:</b> always set <code class="inline">width</code>/<code class="inline">height</code> (or <code class="inline">aspect-ratio</code>); use a blur/LQIP placeholder.</li>
+        <li><b>LCP:</b> preload/priority the hero image; lazy-load the rest.</li>
+      </ul>
+      <div class="callout tip"><b>Framework help:</b> <code class="inline">next/image</code> and image CDNs (Cloudinary, imgix) automate resize + format + CDN. Roll-your-own = an image proxy + CDN.</div>
+    </section>
+
+    <!-- 23 -->
+    <section id="cdn">
+      <h2><span class="num"></span> CDN &amp; Edge Delivery</h2>
+      <p class="lead">A <b>Content Delivery Network</b> caches your assets on servers around the world so users download from a nearby edge, not a distant origin.</p>
+      <div class="diagram">User (Tokyo)  →  nearest CDN edge (Tokyo)  ──cache hit──▶  instant
+                                   │ miss
+                                   ▼
+                          Origin (US) → fill edge cache → serve</div>
+      <ul>
+        <li><b>Static assets</b> (JS/CSS/images/fonts) — served from the edge with long cache + content hashing.</li>
+        <li><b>Edge compute</b> — run logic (auth, A/B, personalization, SSR) at the edge for low latency.</li>
+        <li><b>Benefits:</b> lower latency, less origin load, DDoS absorption, TLS termination.</li>
+      </ul>
+      <div class="callout tip"><b>Cache strategy:</b> immutable hashed assets → <code class="inline">Cache-Control: max-age=31536000, immutable</code>. HTML → short TTL or revalidate so deploys go live. Purge the CDN on deploy for anything cached long.</div>
+    </section>
+
+    <!-- 24 -->
+    <section id="security">
+      <h2><span class="num"></span> Frontend Security</h2>
+      <p class="lead">The browser is a hostile environment. Design against the OWASP-relevant frontend threats.</p>
+      <table>
+        <tr><th>Threat</th><th>Defense</th></tr>
+        <tr><td><b>XSS</b> (script injection)</td><td>Framework auto-escaping; never <code>dangerouslySetInnerHTML</code> with untrusted input (sanitize w/ DOMPurify); a strict <b>CSP</b></td></tr>
+        <tr><td><b>CSRF</b></td><td><code>SameSite</code> cookies + CSRF tokens for cookie-based auth</td></tr>
+        <tr><td><b>Token theft</b></td><td>Store tokens in <code>httpOnly</code> cookies, not <code>localStorage</code> (XSS-readable)</td></tr>
+        <tr><td><b>Clickjacking</b></td><td><code>X-Frame-Options</code> / CSP <code>frame-ancestors</code></td></tr>
+        <tr><td><b>Supply chain</b></td><td>Lockfiles, SRI on external scripts, audit deps, pin versions</td></tr>
+        <tr><td><b>Sensitive data</b></td><td>Never trust the client; enforce authZ on the server; don't ship secrets to the bundle</td></tr>
+      </table>
+      <div class="callout warn"><b>Golden rule:</b> the frontend can improve UX security but <b>can never be the security boundary</b> — any client check is bypassable. Validate and authorize on the server.</div>
+    </section>
+
+    <!-- 25 -->
+    <section id="accessibility">
+      <h2><span class="num"></span> Accessibility (a11y)</h2>
+      <p class="lead">An accessible design decision, not an afterthought. Bake in semantics, keyboard support, and ARIA where native HTML falls short.</p>
+      <ul>
+        <li><b>Semantic HTML first</b> — <code class="inline">button</code>/<code class="inline">nav</code>/<code class="inline">main</code> give roles + keyboard behavior free.</li>
+        <li><b>Keyboard</b> — everything operable via Tab/Enter/Space/Arrows; visible focus; no traps (except modals).</li>
+        <li><b>ARIA</b> — for custom widgets follow the APG patterns (combobox, tabs, dialog); ARIA adds semantics, not behavior.</li>
+        <li><b>Screen readers</b> — labels, <code class="inline">alt</code> text, live regions for async updates.</li>
+        <li><b>Contrast &amp; motion</b> — WCAG AA 4.5:1; respect <code class="inline">prefers-reduced-motion</code>.</li>
+      </ul>
+      <div class="callout tip"><b>System-design angle:</b> a design system with accessible primitives (or headless libs like Radix/React Aria) makes every feature accessible by default — the scalable way to "do a11y" across a big org.</div>
+    </section>
+
+    <!-- 26 -->
+    <section id="offline">
+      <h2><span class="num"></span> Offline Support &amp; PWA</h2>
+      <p class="lead">A <b>Service Worker</b> is a background script that proxies network requests, enabling offline, caching, and push — the core of a Progressive Web App.</p>
+      <div class="diagram">Page  ⇄  Service Worker (proxy)  ⇄  Cache API  /  Network
+                    │
+     strategies:  cache-first (assets)  ·  network-first (API)
+                  stale-while-revalidate (best of both)</div>
+      <ul>
+        <li><b>Precache</b> the app shell at install → instant repeat loads &amp; offline.</li>
+        <li><b>Runtime caching</b> strategies per route/resource type.</li>
+        <li><b>Background sync</b> — queue failed mutations (e.g. a sent message) and replay when back online.</li>
+        <li><b>Manifest</b> + HTTPS → installable app; push notifications.</li>
+      </ul>
+      <div class="callout warn"><b>Gotcha:</b> Service Workers cache aggressively — a bad SW can serve stale code forever. Version your caches, clean old ones on <code class="inline">activate</code>, and have an update flow (skipWaiting + reload prompt).</div>
+    </section>
+
+    <!-- 27 -->
+    <section id="monitoring">
+      <h2><span class="num"></span> Monitoring &amp; Error Tracking</h2>
+      <p class="lead">You can't fix what you can't see. Production frontends need real-user monitoring and error tracking.</p>
+      <table>
+        <tr><th>Signal</th><th>Tooling</th></tr>
+        <tr><td><b>Real-User Monitoring (RUM)</b></td><td><code>web-vitals</code> lib → analytics; field LCP/INP/CLS by device/route</td></tr>
+        <tr><td><b>Errors</b></td><td>Sentry: JS exceptions + source maps + user/session context, error boundaries</td></tr>
+        <tr><td><b>Logging/tracing</b></td><td>Breadcrumbs, distributed tracing (frontend → API), correlation IDs</td></tr>
+        <tr><td><b>Analytics/product</b></td><td>Funnels, session replay, custom events</td></tr>
+        <tr><td><b>Alerts/SLOs</b></td><td>Alert on error-rate/latency regressions; track budgets</td></tr>
+      </table>
+      <div class="callout tip"><b>Error boundaries</b> catch render errors in a subtree and show a fallback (React <code class="inline">componentDidCatch</code> / <code class="inline">error.tsx</code>) — pair with Sentry so users see a graceful UI while you get the stack trace.</div>
+    </section>
+
+    <!-- 28 -->
+    <section id="feature-flags">
+      <h2><span class="num"></span> Feature Flags &amp; Experimentation</h2>
+      <p class="lead">Ship code dark, release with a flag. Decouple deploy from release for safe rollouts, A/B tests, and instant kill-switches.</p>
+      <ul>
+        <li><b>Release flags</b> — gradually roll a feature to 1% → 100%; roll back instantly on issues.</li>
+        <li><b>Experiment flags</b> — A/B test variants, measure impact.</li>
+        <li><b>Permission/entitlement flags</b> — gate by plan/role.</li>
+        <li><b>Ops flags / kill switches</b> — disable a broken feature without a deploy.</li>
+      </ul>
+      <div class="callout warn"><b>Design considerations:</b> evaluate flags without flicker (server-render the correct variant to avoid a flash), avoid shipping both variants' heavy code to everyone (split by flag), and clean up stale flags (they become tech debt). Tools: LaunchDarkly, Unleash, Statsig.</div>
+    </section>
+
+    <!-- 29 -->
+    <section id="micro-frontends">
+      <h2><span class="num"></span> Micro-Frontends</h2>
+      <p class="lead">Split a large app into independently-built, independently-deployed pieces owned by different teams — the frontend analog of microservices.</p>
+      <table>
+        <tr><th>Approach</th><th>How</th></tr>
+        <tr><td>Build-time</td><td>Packages composed at build (simple, but coupled deploys)</td></tr>
+        <tr><td>Run-time (Module Federation)</td><td>Webpack MF loads remote bundles at runtime — independent deploys</td></tr>
+        <tr><td>Iframe / Web Components</td><td>Strong isolation; integration/UX cost</td></tr>
+        <tr><td>Route-based (shell)</td><td>A shell app routes to team-owned sub-apps</td></tr>
+      </table>
+      <div class="callout warn"><b>Trade-off:</b> micro-frontends solve an <em>organizational</em> scaling problem (many teams), at the cost of duplicated dependencies, version skew, and integration complexity. Don't adopt them for a single small team — the overhead outweighs the benefit.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Micro-frontends = independent deploys per team; use Module Federation for runtime composition.</li>
+        <li>They're an org-scaling tool, not a default — they add real integration cost.</li>
+      </ul></div>
+    </section>
+
+    <!-- 30 -->
+    <section id="design-systems">
+      <h2><span class="num"></span> Design Systems</h2>
+      <p class="lead">A shared library of accessible, themeable components + design tokens + guidelines — the way large orgs ship consistent UI fast.</p>
+      <ul>
+        <li><b>Design tokens</b> — colors/spacing/typography as named values; one source of truth, themeable.</li>
+        <li><b>Primitives</b> — accessible Button, Input, Modal, Menu (often headless + styled).</li>
+        <li><b>Docs</b> — Storybook: browse, test, and document components in isolation.</li>
+        <li><b>Versioning</b> — semver the package; a change ripples to every consumer, so test thoroughly.</li>
+      </ul>
+      <div class="callout tip"><b>Why it's a system-design topic:</b> a design system is how you keep 50 engineers producing consistent, accessible, performant UI without re-solving buttons and modals in every feature. It encodes your a11y and perf decisions once.</div>
+    </section>
+
+    <!-- 31 -->
+    <section id="i18n">
+      <h2><span class="num"></span> Internationalization &amp; Real-Time</h2>
+      <h3>i18n / l10n</h3>
+      <ul>
+        <li><b>Externalize strings</b> (no hard-coded text); load locale bundles on demand (don't ship all languages).</li>
+        <li><b>Formatting</b> — <code class="inline">Intl</code> APIs for dates/numbers/currency/plurals per locale.</li>
+        <li><b>RTL</b> — logical CSS properties (<code class="inline">margin-inline-start</code>) + <code class="inline">dir="rtl"</code>; mirror layouts.</li>
+      </ul>
+      <h3>Real-time UI</h3>
+      <div class="diagram">Transport:  polling  <  long-polling  <  SSE  <  WebSocket
+Use cases:  notifications (SSE)  ·  chat/collab (WS)  ·  presence/cursors (WS)
+Concerns:   reconnection/backoff, ordering, dedupe, optimistic + reconcile,
+            conflict resolution (CRDT/OT for collaborative editing)</div>
+      <div class="callout tip"><b>Collaboration (Google-Docs-style):</b> concurrent edits need conflict resolution — <b>OT</b> (Operational Transform) or <b>CRDTs</b> — plus presence, cursors, and offline reconciliation. A staff-level topic worth naming in interviews.</div>
+    </section>
+
+    <!-- 32 -->
+    <section id="case-studies">
+      <h2><span class="num"></span> Real-World Case Studies</h2>
+      <p class="lead">Apply the framework to canonical prompts. For each: requirements → architecture → data → optimizations.</p>
+
+      <h3>📰 Design a News Feed (Twitter / Facebook)</h3>
+      <div class="diagram">Requirements: infinite feed, real-time new posts, images, likes, offline-ish
+Architecture:  FeedPage → VirtualizedList → FeedItem(LikeButton leaf)
+Data:          posts normalized by id; cursor pagination; WS for new posts
+Optimizations: virtualization + cursor infinite scroll, image lazy-load + LCP priority,
+               optimistic likes, prefetch next page, skeletons, SWR cache</div>
+
+      <h3>🔎 Design an Autocomplete / Typeahead</h3>
+      <div class="diagram">debounce(300ms) → cache by query → cancel stale (AbortController) →
+fetch ranked results → highlight match → combobox a11y (arrows, aria-activedescendant)
+Backend: trie/prefix index or search engine; return top-N minimal fields</div>
+
+      <h3>🖼️ Design an Image Gallery / Pinterest grid</h3>
+      <div class="diagram">Masonry/virtualized grid → responsive srcset + AVIF/WebP → lazy-load + LQIP blur →
+CDN delivery → infinite scroll (cursor) → set dimensions (no CLS) → priority the LCP tile</div>
+
+      <h3>📝 Design a Collaborative Editor (Google Docs)</h3>
+      <div class="diagram">WebSocket transport → CRDT/OT for concurrent edits → presence + remote cursors →
+optimistic local apply + server reconcile → offline queue + sync → autosave (debounced)</div>
+      <div class="callout tip"><b>How to shine:</b> state the requirements &amp; assumptions, draw the component + data diagram, then go deep on the 1–2 areas the interviewer probes (usually virtualization/pagination for feeds, or conflict resolution for editors).</div>
+    </section>
+
+    <!-- 33 -->
+    <section id="decision-matrix">
+      <h2><span class="num"></span> Decision Matrix</h2>
+      <p class="lead">Given a problem, reach for the right technique.</p>
+      <table>
+        <tr><th>Problem</th><th>Use</th></tr>
+        <tr><td>Render 100k rows</td><td>Virtualization (+ cursor pagination)</td></tr>
+        <tr><td>Load more on scroll</td><td>IntersectionObserver + cursor pagination + virtualization</td></tr>
+        <tr><td>Admin table w/ page numbers</td><td>Offset pagination</td></tr>
+        <tr><td>Search input</td><td>Debounce + cancel stale + cache by query</td></tr>
+        <tr><td>Scroll/drag handler</td><td>Throttle + rAF; animate transform/opacity</td></tr>
+        <tr><td>Large bundle / slow TTI</td><td>Route-based code splitting + lazy load + prefetch</td></tr>
+        <tr><td>Server data + loading/refetch</td><td>React Query / SWR (not manual Redux)</td></tr>
+        <tr><td>Global theme/auth</td><td>Context / lightweight store</td></tr>
+        <tr><td>Shareable filters/tabs</td><td>URL state (searchParams)</td></tr>
+        <tr><td>Snappy mutations</td><td>Optimistic update + rollback</td></tr>
+        <tr><td>Offline / instant repeat load</td><td>Service Worker + Cache API</td></tr>
+        <tr><td>Global low-latency delivery</td><td>CDN + edge + long-cache hashed assets</td></tr>
+        <tr><td>Many teams, one app</td><td>Micro-frontends (Module Federation)</td></tr>
+        <tr><td>Consistent UI at scale</td><td>Design system + tokens</td></tr>
+        <tr><td>Live updates</td><td>SSE (one-way) / WebSocket (two-way)</td></tr>
+      </table>
+    </section>
+
+    <!-- 34 -->
+    <section id="mistakes">
+      <h2><span class="num"></span> Common Mistakes &amp; Anti-Patterns</h2>
+      <table>
+        <tr><th>Mistake</th><th>Fix</th></tr>
+        <tr><td>Server state in Redux with manual fetching</td><td>React Query / SWR</td></tr>
+        <tr><td>Rendering huge lists without virtualization</td><td>Windowing (react-window)</td></tr>
+        <tr><td>Scroll/resize listeners without throttle</td><td>Throttle + rAF, IntersectionObserver</td></tr>
+        <tr><td>Animating layout properties</td><td>Animate <code>transform</code>/<code>opacity</code></td></tr>
+        <tr><td>Layout thrashing (read/write DOM in a loop)</td><td>Batch reads then writes</td></tr>
+        <tr><td>One giant bundle</td><td>Code split by route; lazy heavy widgets</td></tr>
+        <tr><td>Search without debounce/cancellation</td><td>Debounce + AbortController</td></tr>
+        <tr><td>Tokens in localStorage</td><td>httpOnly cookies</td></tr>
+        <tr><td>Unset image dimensions → CLS</td><td>Set width/height/aspect-ratio</td></tr>
+        <tr><td>Prop drilling everything</td><td>Colocate state; context/store for global only</td></tr>
+        <tr><td>No error boundaries / monitoring</td><td>Boundaries + Sentry + RUM</td></tr>
+        <tr><td>Accessibility as an afterthought</td><td>Semantic HTML + accessible design system</td></tr>
+      </table>
+    </section>
+
+    <!-- 35 -->
+    <section id="interview">
+      <h2><span class="num"></span> Interview Questions</h2>
+      <h3>🟢 Fundamentals</h3>
+      <details class="qa"><summary>How does the browser render a page (pixel pipeline)?</summary><div class="ans"><p>Parse HTML→DOM and CSS→CSSOM, combine into the render tree, run Layout (geometry), Paint (pixels), then Composite (GPU layers). Layout is most expensive; compositing (transform/opacity) is cheapest.</p></div></details>
+      <details class="qa"><summary>What is the Critical Rendering Path and how do you optimize it?</summary><div class="ans"><p>The minimum steps to first paint. Optimize by minimizing/inlining critical CSS, deferring non-critical JS (defer/async), preloading the LCP image/font, and server-rendering the initial HTML.</p></div></details>
+      <details class="qa"><summary>reflow vs repaint vs composite?</summary><div class="ans"><p>Reflow/layout recomputes geometry (expensive); repaint fills pixels (medium); composite moves existing GPU layers (cheap). Animate transform/opacity to stay composite-only.</p></div></details>
+      <h3>🟡 Patterns</h3>
+      <details class="qa"><summary>How do you render a list of 100,000 items?</summary><div class="ans"><p>Virtualization/windowing — only render the ~20 rows in/near the viewport with a tall spacer for scroll height, recycling rows as you scroll. Pair with cursor pagination + infinite scroll for the data.</p></div></details>
+      <details class="qa"><summary>Offset vs cursor pagination?</summary><div class="ans"><p>Offset (page/limit) is simple and allows page jumps but is slow deep in large tables and shifts items when data changes. Cursor (keyset) is stable and fast for feeds/real-time but can't jump to arbitrary pages. Use cursor for feeds, offset for admin tables.</p></div></details>
+      <details class="qa"><summary>Design autocomplete — what are the key concerns?</summary><div class="ans"><p>Debounce input, cancel stale requests (AbortController) to avoid race conditions, cache results by query, combobox a11y (arrow keys, aria-activedescendant), and an efficient backend index (trie/search engine). Handle loading/empty/error states.</p></div></details>
+      <details class="qa"><summary>Debounce vs throttle — when each?</summary><div class="ans"><p>Debounce runs after activity stops (search, autosave, resize). Throttle runs at most once per interval (scroll, mousemove, drag). "Do it when they finish" → debounce; "do it steadily" → throttle.</p></div></details>
+      <h3>🔵 Architecture</h3>
+      <details class="qa"><summary>How do you classify and place state?</summary><div class="ans"><p>Server state → React Query/SWR; global UI → context/store; local UI → useState; shareable (filters/tabs) → URL; forms → a form lib. Don't manage server state manually in Redux.</p></div></details>
+      <details class="qa"><summary>How do you keep a large frontend maintainable across many teams?</summary><div class="ans"><p>Feature-based folders with enforced boundaries, a shared design system + tokens, typed contracts, and (at org scale) micro-frontends with independent deploys. Encode a11y/perf once in the design system.</p></div></details>
+      <details class="qa"><summary>How do you make navigation feel instant?</summary><div class="ans"><p>Route-based code splitting + prefetch the next chunk/data on hover/idle, cache with SWR, optimistic updates for mutations, and skeletons/streaming so the shell paints immediately.</p></div></details>
+      <h3>🟣 Performance &amp; Production</h3>
+      <details class="qa"><summary>Your app feels janky (poor INP) — how do you debug?</summary><div class="ans"><p>Long main-thread tasks block input. Profile with Chrome Performance to find long tasks; break them up (yield, <code class="inline">scheduler</code>), move heavy work to a Web Worker, debounce/throttle handlers, virtualize lists, and ship less JS (code-split). Animate transform/opacity only.</p></div></details>
+      <details class="qa"><summary>How do you improve LCP?</summary><div class="ans"><p>Fast TTFB (CDN/SSR), preload + priority the hero image, optimize its size/format (AVIF/WebP + srcset), self-host + preload the LCP font, and remove render-blocking CSS/JS. Set dimensions to avoid CLS.</p></div></details>
+      <details class="qa"><summary>How do you make a frontend observable?</summary><div class="ans"><p>RUM with the <code class="inline">web-vitals</code> library (field LCP/INP/CLS), error tracking (Sentry + source maps + error boundaries), breadcrumbs/tracing with correlation IDs to the API, and alerts on regressions.</p></div></details>
+      <details class="qa"><summary>When would you NOT use micro-frontends?</summary><div class="ans"><p>For a single small/medium team — the org-scaling benefit doesn't justify the cost of duplicated deps, version skew, and integration complexity. Prefer a modular monolith with feature folders + a design system.</p></div></details>
+    </section>
+
+    <!-- 36 -->
+    <section id="checklist">
+      <h2><span class="num"></span> Mastery Checklist</h2>
+      <table>
+        <tr><th>Area</th><th>Covered</th></tr>
+        <tr><td>Framework (RADIO) &amp; requirements</td><td>✅ §2</td></tr>
+        <tr><td>Scalability &amp; performance (CWV, RAIL)</td><td>✅ §3, §4</td></tr>
+        <tr><td>Browser internals, rendering pipeline, CRP</td><td>✅ §5–§7</td></tr>
+        <tr><td>Component / folder / state / data-flow architecture</td><td>✅ §8–§11</td></tr>
+        <tr><td>Caching &amp; API design</td><td>✅ §12, §13</td></tr>
+        <tr><td>Pagination, infinite scroll, search, debounce/throttle, virtualization</td><td>✅ §14–§18</td></tr>
+        <tr><td>Lazy loading, code splitting, assets, images, CDN</td><td>✅ §19–§23</td></tr>
+        <tr><td>Security, accessibility, offline/PWA, monitoring, feature flags</td><td>✅ §24–§28</td></tr>
+        <tr><td>Micro-frontends, design systems, i18n/real-time</td><td>✅ §29–§31</td></tr>
+        <tr><td>Case studies, decision matrix, mistakes, interview</td><td>✅ §32–§35</td></tr>
+      </table>
+      <div class="callout tip"><b>Next in this series:</b> Backend System Design → Redis → Apache Kafka.</div>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>🧩 <b>Frontend System Design — The Complete Zero-to-Staff Guide</b> · Part of the Tech Learning Library. RADIO framework, rendering pipeline, architecture, data-loading patterns, performance, security, a11y, micro-frontends, design systems, case studies, and interview prep.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
