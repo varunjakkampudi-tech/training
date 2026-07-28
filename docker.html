@@ -64,6 +64,19 @@
   .tok-fn  { color: #7ee787; }
   .tok-cmd { color: #7cc4f7; }
   .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #163b58; }
+  figure.fig { margin: 20px 0; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px 14px; box-shadow: var(--shadow); overflow-x: auto; }
+  figure.fig svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  figure.fig figcaption { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 12px; font-style: italic; }
+  .fig .s-lbl { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 700; fill: var(--blue-dark); }
+  .fig .s-sub { font-family: "Cascadia Code", Consolas, monospace; fill: var(--muted); }
+  .fig .bx { fill: #fff; stroke: var(--blue-mid); stroke-width: 1.5; }
+  .fig .bxl { fill: var(--light-blue-2); stroke: var(--blue-mid); stroke-width: 1.3; }
+  .fig .bxf { fill: var(--blue-mid); }
+  .fig .bxg { fill: #f0fdf4; stroke: #16a34a; }
+  .fig .bxr { fill: #fef2f2; stroke: #dc2626; }
+  .fig .arl { stroke: var(--blue-mid); stroke-width: 1.7; fill: none; }
+  .fig .arh { fill: var(--blue-mid); }
+  .fig .tw { fill: #fff; } .fig .tg { fill: #166534; } .fig .tr { fill: #b91c1c; }
   .callout.tip { border-color: var(--accent); background: #fff8e6; }
   .callout.warn { border-color: var(--danger); background: #fdeaea; }
   .callout b { color: var(--blue-dark); }
@@ -246,6 +259,29 @@
     <section id="layers">
       <h2><span class="num"></span> Layers &amp; Build Caching</h2>
       <p class="lead">Each instruction creates a cached layer. If a layer's inputs don't change, Docker reuses the cache — so <b>order matters</b>.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 680 250" role="img" aria-label="A Docker image built from stacked read-only layers with a writable container layer on top">
+          <defs><marker id="amDk" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path class="arh" d="M0,0 L7,3 L0,6 Z"/></marker></defs>
+          <!-- dockerfile instructions -->
+          <text x="120" y="30" text-anchor="middle" class="s-lbl" font-size="11">Dockerfile</text>
+          <g class="s-sub" font-size="10">
+            <rect x="20" y="44" width="200" height="30" rx="6" class="bxl"/><text x="32" y="64">FROM node:20</text>
+            <rect x="20" y="84" width="200" height="30" rx="6" class="bxl"/><text x="32" y="104">COPY package*.json ./</text>
+            <rect x="20" y="124" width="200" height="30" rx="6" class="bxl"/><text x="32" y="144">RUN npm ci</text>
+            <rect x="20" y="164" width="200" height="30" rx="6" class="bxl"/><text x="32" y="184">COPY . .</text>
+            <rect x="20" y="204" width="200" height="30" rx="6" class="bxl"/><text x="32" y="224">CMD ["node","app"]</text>
+          </g>
+          <!-- image layer stack -->
+          <text x="470" y="30" text-anchor="middle" class="s-lbl" font-size="11">Image = stacked layers</text>
+          <rect x="330" y="196" width="300" height="40" rx="8" class="bxf"/><text x="480" y="221" text-anchor="middle" class="s-lbl tw" font-size="10.5">base image layer (FROM)</text>
+          <rect x="330" y="152" width="300" height="40" rx="8" class="bx"/><text x="480" y="177" text-anchor="middle" class="s-lbl" font-size="10.5">deps layer (npm ci)</text>
+          <rect x="330" y="108" width="300" height="40" rx="8" class="bx"/><text x="480" y="133" text-anchor="middle" class="s-lbl" font-size="10.5">app code layer (COPY .)</text>
+          <rect x="330" y="56" width="300" height="44" rx="8" class="bxg" stroke-dasharray="5 4"/><text x="480" y="75" text-anchor="middle" class="s-lbl" font-size="10.5" fill="#166534">container writable layer</text><text x="480" y="91" text-anchor="middle" class="s-sub" font-size="8.5" fill="#166534">ephemeral · lost on rm</text>
+          <text x="645" y="178" class="s-sub" font-size="8.5" transform="rotate(90 645 178)">read-only layers</text>
+          <path d="M222,132 L326,150" class="arl" marker-end="url(#amDk)"/>
+        </svg>
+        <figcaption>Each Dockerfile instruction adds one read-only layer; Docker caches them and reuses any whose inputs didn't change. Putting <code>COPY package.json + npm ci</code> before <code>COPY . .</code> means code edits don't bust the deps layer. The running container adds a thin writable layer on top.</figcaption>
+      </figure>
       <div class="code"><div class="code-head"><span>Cache-friendly ordering</span><button class="copy">Copy</button></div><pre><span class="tok-com"># ✅ deps copied &amp; installed BEFORE source</span>
 <span class="tok-key">COPY</span> package*.json ./
 <span class="tok-key">RUN</span> npm ci            <span class="tok-com"># cached unless deps change</span>

@@ -210,6 +210,21 @@
   .callout.tip b { color: #b7791f; }
   .callout.warn b { color: #b71c1c; }
 
+  /* Figures / SVG diagrams */
+  figure.fig { margin: 20px 0; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px 14px; box-shadow: var(--shadow); overflow-x: auto; }
+  figure.fig svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  figure.fig figcaption { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 12px; font-style: italic; }
+  .fig .s-lbl { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 700; fill: var(--blue-dark); }
+  .fig .s-sub { font-family: "Cascadia Code", Consolas, monospace; fill: var(--muted); }
+  .fig .bx { fill: #fff; stroke: var(--blue-mid); stroke-width: 1.5; }
+  .fig .bxl { fill: var(--light-blue-2); stroke: var(--blue-mid); stroke-width: 1.3; }
+  .fig .bxf { fill: var(--blue-mid); }
+  .fig .bxg { fill: #f0fdf4; stroke: #16a34a; }
+  .fig .bxr { fill: #fef2f2; stroke: #dc2626; }
+  .fig .arl { stroke: var(--blue-mid); stroke-width: 1.7; fill: none; }
+  .fig .arh { fill: var(--blue-mid); }
+  .fig .tw { fill: #fff; } .fig .tg { fill: #166534; } .fig .tr { fill: #b91c1c; }
+
   /* Real-world box */
   .realworld {
     background: linear-gradient(160deg, #ffffff, var(--light-blue-2));
@@ -982,6 +997,22 @@ db.categories.<span class="tok-fn">find</span>({ path: { <span class="tok-op">$r
     <section id="replication">
       <h2><span class="num">19</span> Replication (High Availability)</h2>
       <p class="lead">A <b>replica set</b> is a group of <code class="inline">mongod</code> nodes holding the same data, giving you redundancy and automatic failover.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 680 240" role="img" aria-label="A MongoDB replica set with a primary replicating its oplog to secondaries">
+          <defs><marker id="amMdb" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path class="arh" d="M0,0 L7,3 L0,6 Z"/></marker></defs>
+          <rect x="16" y="92" width="120" height="60" rx="11" class="bxl"/><text x="76" y="118" text-anchor="middle" class="s-lbl" font-size="11">App</text><text x="76" y="135" text-anchor="middle" class="s-sub" font-size="8.5">driver</text>
+          <rect x="244" y="36" width="176" height="70" rx="12" class="bxf"/><text x="332" y="66" text-anchor="middle" class="s-lbl tw" font-size="13">PRIMARY</text><text x="332" y="86" text-anchor="middle" class="s-sub tw" font-size="9">receives all writes</text>
+          <rect x="500" y="22" width="162" height="58" rx="11" class="bx"/><text x="581" y="46" text-anchor="middle" class="s-lbl" font-size="11">Secondary</text><text x="581" y="63" text-anchor="middle" class="s-sub" font-size="8.5">replicates oplog</text>
+          <rect x="500" y="110" width="162" height="58" rx="11" class="bx"/><text x="581" y="134" text-anchor="middle" class="s-lbl" font-size="11">Secondary</text><text x="581" y="151" text-anchor="middle" class="s-sub" font-size="8.5">can serve reads</text>
+          <path d="M136,116 C185,104 200,74 242,72" class="arl" marker-end="url(#amMdb)"/>
+          <text x="178" y="92" class="s-sub" font-size="9">writes</text>
+          <path d="M420,58 L498,52" class="arl" marker-end="url(#amMdb)"/>
+          <path d="M420,86 L498,134" class="arl" marker-end="url(#amMdb)"/>
+          <text x="455" y="74" class="s-sub" font-size="8.5">oplog</text>
+          <text x="340" y="210" text-anchor="middle" class="s-lbl" font-size="9.5" fill="#166534">Primary down → election promotes a secondary (~seconds) → driver reconnects automatically</text>
+        </svg>
+        <figcaption>All writes go to the single primary, which streams its oplog to secondaries. If the primary fails, the members elect a new one within seconds and drivers transparently reconnect — the app keeps running.</figcaption>
+      </figure>
       <table>
         <tr><th>Role</th><th>Responsibility</th></tr>
         <tr><td><b>Primary</b></td><td>Receives all writes; the single source of truth</td></tr>
@@ -1007,6 +1038,24 @@ db.orders.<span class="tok-fn">insertOne</span>(doc, { writeConcern: { w: <span 
     <section id="sharding">
       <h2><span class="num">20</span> Sharding (Horizontal Scaling)</h2>
       <p class="lead">Sharding splits one large collection across multiple servers so you can scale beyond a single machine's storage and write throughput.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 680 250" role="img" aria-label="A sharded MongoDB cluster routing queries through mongos to shards">
+          <defs><marker id="amMsh" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path class="arh" d="M0,0 L7,3 L0,6 Z"/></marker></defs>
+          <rect x="16" y="100" width="110" height="54" rx="11" class="bxl"/><text x="71" y="131" text-anchor="middle" class="s-lbl" font-size="11">App</text>
+          <rect x="168" y="98" width="140" height="58" rx="12" class="bxf"/><text x="238" y="122" text-anchor="middle" class="s-lbl tw" font-size="11.5">mongos</text><text x="238" y="140" text-anchor="middle" class="s-sub tw" font-size="8.5">query router</text>
+          <rect x="168" y="186" width="140" height="48" rx="10" class="bxl"/><text x="238" y="208" text-anchor="middle" class="s-lbl" font-size="10">config servers</text><text x="238" y="224" text-anchor="middle" class="s-sub" font-size="8.5">chunk → shard map</text>
+          <rect x="366" y="22" width="180" height="52" rx="11" class="bx"/><text x="456" y="44" text-anchor="middle" class="s-lbl" font-size="10.5">Shard A</text><text x="456" y="61" text-anchor="middle" class="s-sub" font-size="8.5">replica set · key range 1</text>
+          <rect x="366" y="100" width="180" height="52" rx="11" class="bx"/><text x="456" y="122" text-anchor="middle" class="s-lbl" font-size="10.5">Shard B</text><text x="456" y="139" text-anchor="middle" class="s-sub" font-size="8.5">replica set · key range 2</text>
+          <rect x="366" y="178" width="180" height="52" rx="11" class="bx"/><text x="456" y="200" text-anchor="middle" class="s-lbl" font-size="10.5">Shard C</text><text x="456" y="217" text-anchor="middle" class="s-sub" font-size="8.5">replica set · key range 3</text>
+          <path d="M126,127 L166,127" class="arl" marker-end="url(#amMsh)"/>
+          <path d="M238,156 L238,184" class="arl" marker-end="url(#amMsh)"/>
+          <path d="M308,116 C340,90 344,58 364,50" class="arl" marker-end="url(#amMsh)"/>
+          <path d="M308,127 L364,127" class="arl" marker-end="url(#amMsh)"/>
+          <path d="M308,140 C340,168 344,196 364,204" class="arl" marker-end="url(#amMsh)"/>
+          <text x="338" y="92" text-anchor="middle" class="s-sub" font-size="8.5">route by shard key</text>
+        </svg>
+        <figcaption><code>mongos</code> routes each query to the right shard using the chunk map in the config servers; each shard is itself a replica set. A good shard key spreads data &amp; load evenly — a poor one creates hotspots.</figcaption>
+      </figure>
       <table>
         <tr><th>Component</th><th>Role</th></tr>
         <tr><td><b>Shard</b></td><td>A replica set holding a subset of the data</td></tr>

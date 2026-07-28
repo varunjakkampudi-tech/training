@@ -63,6 +63,19 @@
   .tok-com { color: #6f9a89; font-style: italic; }
   .tok-fn  { color: #7ee787; }
   .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #164033; }
+  figure.fig { margin: 20px 0; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px 14px; box-shadow: var(--shadow); overflow-x: auto; }
+  figure.fig svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  figure.fig figcaption { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 12px; font-style: italic; }
+  .fig .s-lbl { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 700; fill: var(--blue-dark); }
+  .fig .s-sub { font-family: "Cascadia Code", Consolas, monospace; fill: var(--muted); }
+  .fig .bx { fill: #fff; stroke: var(--blue-mid); stroke-width: 1.5; }
+  .fig .bxl { fill: var(--light-blue-2); stroke: var(--blue-mid); stroke-width: 1.3; }
+  .fig .bxf { fill: var(--blue-mid); }
+  .fig .bxg { fill: #f0fdf4; stroke: #16a34a; }
+  .fig .bxr { fill: #fef2f2; stroke: #dc2626; }
+  .fig .arl { stroke: var(--blue-mid); stroke-width: 1.7; fill: none; }
+  .fig .arh { fill: var(--blue-mid); }
+  .fig .tw { fill: #fff; } .fig .tg { fill: #166534; } .fig .tr { fill: #b91c1c; }
   .callout.tip { border-color: var(--accent); background: #fff8e6; }
   .callout.warn { border-color: var(--danger); background: #fdeaea; }
   .callout b { color: var(--blue-dark); }
@@ -320,6 +333,25 @@ app = <span class="tok-fn">FastAPI</span>(title=<span class="tok-str">"Shop API"
     <section id="internals">
       <h2><span class="num"></span> ASGI Internals</h2>
       <p class="lead">Understanding the stack helps in senior interviews.</p>
+      <figure class="fig">
+        <svg viewBox="0 0 680 200" role="img" aria-label="A request travelling down the FastAPI/Starlette/Uvicorn stack">
+          <defs><marker id="amFa" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path class="arh" d="M0,0 L7,3 L0,6 Z"/></marker></defs>
+          <rect x="6" y="66" width="74" height="58" rx="10" class="bxl"/><text x="43" y="99" text-anchor="middle" class="s-lbl" font-size="10">Request</text>
+          <rect x="90" y="66" width="104" height="58" rx="10" class="bx"/><text x="142" y="90" text-anchor="middle" class="s-lbl" font-size="10">Uvicorn</text><text x="142" y="107" text-anchor="middle" class="s-sub" font-size="8.5">ASGI server</text>
+          <rect x="204" y="66" width="116" height="58" rx="10" class="bx"/><text x="262" y="90" text-anchor="middle" class="s-lbl" font-size="10">Starlette</text><text x="262" y="107" text-anchor="middle" class="s-sub" font-size="8.5">routing · middleware</text>
+          <rect x="330" y="66" width="134" height="58" rx="10" class="bxf"/><text x="397" y="90" text-anchor="middle" class="s-lbl tw" font-size="10">FastAPI</text><text x="397" y="107" text-anchor="middle" class="s-sub tw" font-size="8.5">validate + inject</text>
+          <rect x="474" y="66" width="96" height="58" rx="10" class="bx"/><text x="522" y="99" text-anchor="middle" class="s-lbl" font-size="10">your handler</text>
+          <rect x="580" y="66" width="94" height="58" rx="10" class="bxg"/><text x="627" y="92" text-anchor="middle" class="s-lbl" font-size="10" fill="#166534">Response</text><text x="627" y="108" text-anchor="middle" class="s-sub" font-size="8" fill="#166534">JSON (serialized)</text>
+          <path d="M80,95 L88,95" class="arl" marker-end="url(#amFa)"/>
+          <path d="M194,95 L202,95" class="arl" marker-end="url(#amFa)"/>
+          <path d="M320,95 L328,95" class="arl" marker-end="url(#amFa)"/>
+          <path d="M464,95 L472,95" class="arl" marker-end="url(#amFa)"/>
+          <path d="M570,95 L578,95" class="arl" marker-end="url(#amFa)"/>
+          <text x="397" y="150" text-anchor="middle" class="s-sub" font-size="9">Pydantic validation · dependency injection · auto OpenAPI docs</text>
+          <text x="340" y="40" text-anchor="middle" class="s-sub" font-size="9.5">each layer adds one job; your handler only sees clean, validated data</text>
+        </svg>
+        <figcaption>Uvicorn speaks ASGI, Starlette routes, and FastAPI validates the request body/params (Pydantic) and resolves dependencies before calling your handler — so your function receives typed, validated inputs and returns objects that are auto-serialized.</figcaption>
+      </figure>
       <table>
         <tr><th>Layer</th><th>Role</th></tr>
         <tr><td><b>Uvicorn/Hypercorn</b></td><td>ASGI server — runs the event loop, handles HTTP/WebSocket</td></tr>

@@ -1027,6 +1027,19 @@
             box-shadow: var(--shadow-xs);
         }
 
+        figure.fig { margin: 22px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px 18px 14px; box-shadow: var(--shadow-soft); overflow-x: auto; }
+        figure.fig svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+        figure.fig figcaption { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 12px; font-style: italic; }
+        .fig .s-lbl { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 700; fill: var(--text); }
+        .fig .s-sub { font-family: "Cascadia Code", Consolas, monospace; fill: var(--muted); }
+        .fig .bx { fill: #fff; stroke: var(--accent); stroke-width: 1.5; }
+        .fig .bxl { fill: #f5f3ff; stroke: var(--accent); stroke-width: 1.3; }
+        .fig .bxf { fill: var(--accent); }
+        .fig .bxg { fill: #ecfdf5; stroke: #12805c; }
+        .fig .arl { stroke: var(--accent); stroke-width: 1.7; fill: none; }
+        .fig .arh { fill: var(--accent); }
+        .fig .tw { fill: #fff; } .fig .tg { fill: #0f5132; }
+
         .table-wrap {
             overflow-x: auto;
             overflow-y: hidden;
@@ -2295,6 +2308,39 @@
                     <div class="callout">
                         <strong>How the pieces fit:</strong> you put your servers (EC2) and databases inside a private network (VPC), spread them across Availability Zones for reliability, store files in S3, control who can touch them with IAM, and pay only for what runs. Every module below is a deeper look at one of these building blocks.
                     </div>
+                    <figure class="fig">
+                        <svg viewBox="0 0 680 340" role="img" aria-label="A typical multi-AZ AWS web application architecture">
+                          <defs><marker id="amAws" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path class="arh" d="M0,0 L7,3 L0,6 Z"/></marker></defs>
+                          <rect x="14" y="24" width="120" height="42" rx="10" class="bxl"/><text x="74" y="50" text-anchor="middle" class="s-lbl" font-size="11">Users</text>
+                          <rect x="14" y="96" width="150" height="50" rx="10" class="bx"/><text x="89" y="118" text-anchor="middle" class="s-lbl" font-size="10.5">Route 53 + CloudFront</text><text x="89" y="134" text-anchor="middle" class="s-sub" font-size="8.5">DNS + CDN edge</text>
+                          <rect x="14" y="172" width="150" height="46" rx="10" class="bxg"/><text x="89" y="193" text-anchor="middle" class="s-lbl" font-size="10.5" fill="#0f5132">S3</text><text x="89" y="209" text-anchor="middle" class="s-sub" font-size="8.5" fill="#0f5132">static site / assets</text>
+                          <!-- region -->
+                          <rect x="204" y="20" width="462" height="304" rx="14" fill="none" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="7 5"/>
+                          <text x="220" y="40" class="s-lbl" font-size="11" fill="var(--accent)">Region · us-east-1</text>
+                          <rect x="250" y="52" width="168" height="46" rx="10" class="bxf"/><text x="334" y="73" text-anchor="middle" class="s-lbl tw" font-size="10.5">Application Load Balancer</text><text x="334" y="89" text-anchor="middle" class="s-sub tw" font-size="8">spreads traffic across AZs</text>
+                          <!-- AZ A -->
+                          <rect x="224" y="118" width="200" height="188" rx="12" fill="none" stroke="#94a3b8" stroke-dasharray="4 4"/>
+                          <text x="324" y="137" text-anchor="middle" class="s-sub" font-size="9.5">Availability Zone A</text>
+                          <rect x="242" y="148" width="164" height="46" rx="9" class="bx"/><text x="324" y="176" text-anchor="middle" class="s-lbl" font-size="10">EC2 (web / app)</text>
+                          <rect x="242" y="244" width="164" height="46" rx="9" class="bx"/><text x="324" y="272" text-anchor="middle" class="s-lbl" font-size="10">RDS primary</text>
+                          <!-- AZ B -->
+                          <rect x="440" y="118" width="206" height="188" rx="12" fill="none" stroke="#94a3b8" stroke-dasharray="4 4"/>
+                          <text x="543" y="137" text-anchor="middle" class="s-sub" font-size="9.5">Availability Zone B</text>
+                          <rect x="460" y="148" width="166" height="46" rx="9" class="bx"/><text x="543" y="176" text-anchor="middle" class="s-lbl" font-size="10">EC2 (web / app)</text>
+                          <rect x="460" y="244" width="166" height="46" rx="9" class="bx"/><text x="543" y="272" text-anchor="middle" class="s-lbl" font-size="10">RDS standby</text>
+                          <!-- arrows -->
+                          <path d="M74,66 L74,94" class="arl" marker-end="url(#amAws)"/>
+                          <path d="M89,146 L89,170" class="arl" marker-end="url(#amAws)"/>
+                          <path d="M164,116 C210,110 220,84 248,78" class="arl" marker-end="url(#amAws)"/>
+                          <path d="M300,98 L324,146" class="arl" marker-end="url(#amAws)"/>
+                          <path d="M370,98 L536,146" class="arl" marker-end="url(#amAws)"/>
+                          <path d="M324,194 L324,242" class="arl" marker-end="url(#amAws)"/>
+                          <path d="M543,194 L543,242" class="arl" marker-end="url(#amAws)"/>
+                          <path d="M406,267 L458,267" class="arl" marker-end="url(#amAws)"/>
+                          <text x="432" y="260" text-anchor="middle" class="s-sub" font-size="8">sync replication</text>
+                        </svg>
+                        <figcaption>A resilient AWS web app: edge (Route 53 + CloudFront + S3) fronts an ALB that spreads traffic across EC2 in two Availability Zones, backed by a Multi-AZ RDS (primary + standby). Losing one AZ leaves the app running — the core of the Well-Architected reliability pillar.</figcaption>
+                    </figure>
                 </div>
             </section>
 
