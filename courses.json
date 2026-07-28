@@ -34,9 +34,9 @@
       "id": "cloud-devops",
       "title": "Cloud & DevOps",
       "courses": [
-        { "id": "aws", "icon": "☁️", "title": "AWS", "href": "./aws.html", "status": "done", "live": true, "desc": "Foundations, compute, messaging, serverless, containers, IaC, region strategy, interview recap.", "tags": ["EC2", "Serverless", "IaC"] },
-        { "id": "linux", "icon": "🐧", "title": "Linux Administration", "href": "./linux.html", "status": "done", "live": true, "desc": "Permissions, processes, systemd, networking, storage, scripting, cron, SSH, hardening.", "tags": ["systemd", "Shell", "Security"] },
-        { "id": "docker", "icon": "🐳", "title": "Docker", "href": "./docker.html", "status": "done", "live": true, "desc": "Images, Dockerfile, multi-stage, volumes, networks, Compose, real-world React/FastAPI/Express.", "tags": ["Multi-Stage", "Compose", "Real-World"] }
+        { "id": "aws", "icon": "☁️", "title": "AWS", "href": "./aws.html", "status": "done", "live": false, "desc": "Foundations, compute, messaging, serverless, containers, IaC, region strategy, interview recap.", "tags": ["EC2", "Serverless", "IaC"] },
+        { "id": "linux", "icon": "🐧", "title": "Linux Administration", "href": "./linux.html", "status": "done", "live": false, "desc": "Permissions, processes, systemd, networking, storage, scripting, cron, SSH, hardening.", "tags": ["systemd", "Shell", "Security"] },
+        { "id": "docker", "icon": "🐳", "title": "Docker", "href": "./docker.html", "status": "done", "live": false, "desc": "Images, Dockerfile, multi-stage, volumes, networks, Compose, real-world React/FastAPI/Express.", "tags": ["Multi-Stage", "Compose", "Real-World"] }
       ]
     },
     {
