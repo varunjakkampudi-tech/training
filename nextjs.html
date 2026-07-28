@@ -770,7 +770,7 @@ Mutation ──▶ Server Action: re-verify session + role  (never trust the cli
         <tr><td>Fine authorization (role/ownership)</td><td>Inside the Server Action / Route Handler</td></tr>
         <tr><td>Session storage</td><td><b>httpOnly, Secure, SameSite</b> cookie (not localStorage)</td></tr>
       </table>
-      <div class="callout warn"><b>Golden rule:</b> middleware is a convenience gate, not real security. <b>Always re-check auth + authorization on the server where the data/mutation happens</b> — a user can hit a Server Action or Route Handler directly.</div>
+      <div class="callout warn"><b>Golden rule:</b> middleware is a convenience gate, not real security. Middleware should perform only <b>coarse-grained authentication</b> (is there a valid session?); <b>authorization and data-ownership checks must happen in the Route Handler, Server Action, or Server Component</b> where the data lives — a user can hit those directly, bypassing middleware.</div>
       <div class="keytk"><h4>✅ Key takeaways</h4><ul>
         <li>Store sessions in httpOnly cookies; gate cheaply in middleware; enforce for real on the server.</li>
         <li>Authentication = who you are; authorization = what you're allowed to do (check both).</li>
