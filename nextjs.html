@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="The complete Next.js (App Router) guide — from zero to production: routing, layouts, Server & Client Components, SSR/SSG/ISR/PPR rendering, data fetching & caching, Server Actions, streaming, middleware, auth, security, performance, testing, deployment, and interview questions." />
+<title>Next.js — The Complete Zero-to-Production Guide</title>
+<style>
+  :root {
+    --blue: #111827; --blue-dark: #000000; --blue-mid: #4f46e5; --sky: #818cf8;
+    --light-blue: #eef0ff; --light-blue-2: #f6f7ff;
+    --bg: #ffffff; --bg-soft: #f8f9fc; --panel: #ffffff;
+    --text: #111827; --muted: #55607a; --border: #e4e7f2;
+    --code-bg: #0b1020; --accent: #f59e0b; --danger: #e53935; --green: #16a34a;
+    --shadow: 0 8px 24px rgba(79, 70, 229, 0.10); --shadow-lg: 0 14px 40px rgba(17, 24, 39, 0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; display: flex; }
+  a { color: var(--blue-mid); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #sidebar { width: 310px; background: linear-gradient(180deg, #ffffff, var(--light-blue-2)); border-right: 1px solid var(--border); height: 100vh; position: sticky; top: 0; overflow-y: auto; padding: 24px 0 40px; flex-shrink: 0; }
+  #sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 0 22px 12px; font-weight: 800; font-size: 1.15rem; color: var(--blue-dark); }
+  #sidebar .home-link { display: block; margin: 0 18px 14px; padding: 8px 12px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: var(--blue-mid); text-align: center; }
+  #sidebar .home-link:hover { text-decoration: none; background: var(--sky); color: #fff; }
+  #sidebar .search { margin: 0 18px 16px; }
+  #sidebar .search input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text); font-size: 0.85rem; outline: none; }
+  #sidebar .search input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--light-blue); }
+  #sidebar nav a { display: block; padding: 6px 22px; color: var(--muted); font-size: 0.88rem; border-left: 3px solid transparent; transition: all 0.15s ease; }
+  #sidebar nav a:hover { color: var(--blue-dark); background: var(--light-blue); text-decoration: none; }
+  #sidebar nav a.section-title { margin-top: 14px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; color: var(--blue-mid); font-weight: 800; pointer-events: none; }
+  #sidebar nav a.active { color: var(--blue-dark); border-left-color: var(--blue-mid); background: var(--light-blue); font-weight: 600; }
+  main { flex: 1; min-width: 0; background: var(--bg-soft); }
+  header.hero { padding: 74px 48px 58px; background: radial-gradient(900px 380px at 82% -10%, rgba(79, 70, 229, 0.16), transparent), linear-gradient(160deg, #eceefe, #ffffff); border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.9rem; color: var(--blue-dark); line-height: 1.1; margin-bottom: 14px; }
+  header.hero h1 .g { background: linear-gradient(90deg, var(--blue-mid), var(--sky)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  header.hero p { max-width: 780px; color: var(--muted); font-size: 1.1rem; }
+  header.hero .badges { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { background: var(--light-blue); border: 1px solid var(--sky); color: var(--blue-mid); padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; }
+  .content { padding: 20px 48px 100px; max-width: 1080px; counter-reset: section; }
+  section { padding: 42px 0 12px; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+  h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 12px; counter-increment: section; }
+  h2 .num { font-size: 0; background: linear-gradient(135deg, var(--blue-mid), var(--sky)); color: #fff; width: 34px; height: 34px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; box-shadow: var(--shadow); }
+  h2 .num::before { content: counter(section); font-size: 0.9rem; }
+  h3 { font-size: 1.22rem; color: var(--blue-mid); margin: 26px 0 10px; }
+  h4 { color: var(--blue-dark); margin: 18px 0 6px; font-size: 1.02rem; }
+  p.lead { color: var(--muted); margin: 6px 0 16px; font-size: 1.02rem; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin: 5px 0; }
+  b, strong { color: var(--blue-dark); }
+  code.inline { background: var(--light-blue); color: var(--blue-mid); padding: 2px 7px; border-radius: 5px; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.88em; border: 1px solid var(--border); }
+  .code { position: relative; background: var(--code-bg); border: 1px solid #23294a; border-radius: 10px; margin: 14px 0; overflow: hidden; box-shadow: var(--shadow); }
+  .code .code-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #070a16; border-bottom: 1px solid #23294a; font-size: 0.75rem; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.06em; }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: "Cascadia Code", Consolas, "Courier New", monospace; font-size: 0.86rem; line-height: 1.6; color: #e5e9f7; white-space: pre; }
+  .code .copy { cursor: pointer; background: transparent; border: 1px solid #3a4270; color: #a5b4fc; border-radius: 6px; padding: 3px 10px; font-size: 0.72rem; transition: all 0.15s; }
+  .code .copy:hover { color: #fff; border-color: var(--sky); background: rgba(129,140,248,0.15); }
+  .code .copy.copied { color: #fff; background: var(--green); border-color: var(--green); }
+  .tok-key { color: #ff9ecb; }
+  .tok-op  { color: #7fdfff; }
+  .tok-str { color: #ffe58a; }
+  .tok-num { color: #c3a6ff; }
+  .tok-com { color: #7c85ad; font-style: italic; }
+  .tok-fn  { color: #7ee787; }
+  .tok-cmd { color: #a5b4fc; }
+  .tok-tag { color: #7fdfff; }
+  .callout { border-left: 4px solid var(--blue-mid); background: var(--light-blue-2); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; color: #2b3352; }
+  .callout.tip { border-color: var(--accent); background: #fff8e6; }
+  .callout.warn { border-color: var(--danger); background: #fdeaea; }
+  .callout b { color: var(--blue-dark); }
+  .callout.tip b { color: #b7791f; }
+  .callout.warn b { color: #b71c1c; }
+  .realworld { background: linear-gradient(160deg, #ffffff, var(--light-blue-2)); border: 1px solid var(--border); border-left: 4px solid var(--sky); border-radius: 12px; padding: 18px 22px; margin: 18px 0; box-shadow: var(--shadow); }
+  .realworld h4 { margin-top: 0; color: var(--blue-mid); display: flex; align-items: center; gap: 8px; }
+  .keytk { background: linear-gradient(160deg, #ffffff, #f0fdf4); border: 1px solid #bbf7d0; border-left: 4px solid var(--green); border-radius: 12px; padding: 14px 20px; margin: 18px 0; }
+  .keytk h4 { margin-top: 0; color: #15803d; }
+  .keytk ul { margin-bottom: 4px; }
+  details.qa { border: 1px solid var(--border); border-radius: 10px; margin: 10px 0; background: #fff; overflow: hidden; box-shadow: var(--shadow); }
+  details.qa summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 10px; background: var(--light-blue-2); }
+  details.qa summary::before { content: "Q"; background: var(--blue-mid); color: #fff; width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
+  details.qa[open] summary { border-bottom: 1px solid var(--border); }
+  details.qa .ans { padding: 14px 18px; color: #2c3550; }
+  details.qa .ans p:first-child { margin-top: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--light-blue); color: var(--blue-dark); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg-soft); }
+  td code { color: var(--blue-mid); background: var(--light-blue); padding: 1px 6px; border-radius: 4px; font-family: "Cascadia Code", monospace; font-size: 0.86em; }
+  .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .vs-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; box-shadow: var(--shadow); }
+  .vs-card.a { border-top: 4px solid var(--green); }
+  .vs-card.b { border-top: 4px solid #f29111; }
+  .vs-card h4 { margin-top: 0; font-size: 1.15rem; color: var(--blue-dark); }
+  .vs-card ul { margin-left: 18px; }
+  .vs-card li { color: var(--muted); font-size: 0.9rem; }
+  .diagram { background: #0b1020; color: #cdd6f4; border-radius: 10px; padding: 18px 20px; margin: 16px 0; font-family: "Cascadia Code", Consolas, monospace; font-size: 0.82rem; line-height: 1.65; overflow-x: auto; white-space: pre; box-shadow: var(--shadow); }
+  footer { padding: 30px 48px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); background: var(--light-blue-2); }
+  footer b { color: var(--blue-dark); }
+  .menu-btn { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    #sidebar { position: fixed; z-index: 50; transform: translateX(-100%); transition: transform 0.25s; box-shadow: var(--shadow-lg); }
+    #sidebar.open { transform: translateX(0); }
+    .menu-btn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 60; background: var(--blue-mid); color: #fff; border: none; border-radius: 8px; padding: 10px 13px; font-size: 1.1rem; cursor: pointer; font-weight: 700; box-shadow: var(--shadow); }
+    header.hero { padding: 70px 22px 40px; }
+    header.hero h1 { font-size: 2rem; }
+    .content { padding: 20px 22px 80px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-soft); }
+  ::-webkit-scrollbar-thumb { background: var(--sky); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+</style>
+</head>
+<body>
+
+<button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">▲ Next.js Guide</div>
+  <a class="home-link" href="./index.html">← Learning Library</a>
+  <div class="search"><input type="text" id="navSearch" placeholder="Filter topics…" /></div>
+  <nav id="nav">
+    <a class="section-title">Foundations</a>
+    <a href="#intro">1 · Introduction</a>
+    <a href="#why">2 · Why Next.js</a>
+    <a href="#structure">3 · Project Structure</a>
+    <a href="#app-router">4 · App Router</a>
+    <a href="#conventions">5 · File Conventions</a>
+    <a class="section-title">Routing &amp; UI</a>
+    <a href="#routing">6 · Routing</a>
+    <a href="#dynamic">7 · Dynamic Routes &amp; Params</a>
+    <a href="#layouts">8 · Layouts &amp; Templates</a>
+    <a href="#loading-error">9 · Loading, Error &amp; Not-Found UI</a>
+    <a href="#navigation">10 · Links &amp; Navigation</a>
+    <a href="#metadata">11 · Metadata, Fonts &amp; Images</a>
+    <a class="section-title">Rendering Model</a>
+    <a href="#server-components">12 · Server Components</a>
+    <a href="#client-components">13 · Client Components</a>
+    <a href="#rendering">14 · Rendering (SSR/SSG/ISR/CSR/PPR)</a>
+    <a class="section-title">Data &amp; Caching</a>
+    <a href="#data-fetching">15 · Data Fetching</a>
+    <a href="#caching">16 · Caching &amp; Revalidation</a>
+    <a href="#route-handlers">17 · Route Handlers (API)</a>
+    <a href="#server-actions">18 · Server Actions &amp; Forms</a>
+    <a href="#streaming">19 · Streaming &amp; Suspense</a>
+    <a class="section-title">Advanced Routing</a>
+    <a href="#middleware">20 · Middleware</a>
+    <a href="#advanced-routing">21 · Parallel &amp; Intercepting Routes</a>
+    <a href="#cookies-headers">22 · Cookies &amp; Headers</a>
+    <a class="section-title">Production</a>
+    <a href="#auth">23 · Authentication &amp; Authorization</a>
+    <a href="#env">24 · Environment Variables</a>
+    <a href="#security">25 · Security</a>
+    <a href="#performance">26 · Performance</a>
+    <a href="#testing">27 · Testing</a>
+    <a href="#deployment">28 · Deployment &amp; Monitoring</a>
+    <a href="#folder">29 · Production Folder Structure</a>
+    <a class="section-title">Mastery</a>
+    <a href="#project">30 · Mini Project</a>
+    <a href="#enterprise">31 · Enterprise Architecture</a>
+    <a href="#interview">32 · Interview Questions</a>
+    <a href="#checklist">33 · Mastery Checklist</a>
+  </nav>
+</aside>
+
+<main>
+  <header class="hero">
+    <h1>The Complete <span class="g">Next.js</span> Guide</h1>
+    <p>Zero to production with the App Router — routing, layouts, Server &amp; Client Components, the SSR/SSG/ISR/PPR rendering models, data fetching &amp; the caching system, Server Actions, streaming, middleware, auth, security, performance, testing, deployment, and interview prep. Assumes you know HTML, CSS, JS/TS, React, Node, Express, and REST.</p>
+    <div class="badges">
+      <span class="badge">App Router</span>
+      <span class="badge">Server Components</span>
+      <span class="badge">SSR · SSG · ISR · PPR</span>
+      <span class="badge">Caching</span>
+      <span class="badge">Server Actions</span>
+      <span class="badge">Production</span>
+      <span class="badge">Interview Ready</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- 1. INTRODUCTION -->
+    <section id="intro">
+      <h2><span class="num"></span> Introduction</h2>
+      <p class="lead">Next.js is a <b>full-stack React framework</b>. React by itself only renders UI in the browser; Next.js adds the missing production pieces — a router, server rendering, data fetching, caching, bundling, an API layer, and deployment conventions — so you can build a complete app, not just a component tree.</p>
+
+      <h3>What it is</h3>
+      <p>Next.js is built and maintained by <b>Vercel</b>. It runs your React components on a <b>Node.js (or edge) server</b> as well as in the browser, and it ships an opinionated project layout where the <b>file system is your router</b>. The current, recommended model is the <b>App Router</b> (the <code class="inline">app/</code> directory, stable since Next 13.4); the older <b>Pages Router</b> (<code class="inline">pages/</code>) still works but new projects should use the App Router — this guide focuses on it.</p>
+
+      <h3>Why it exists — the problem it solves</h3>
+      <p>A plain React app (e.g. Create-React-App / Vite SPA) has real gaps in production:</p>
+      <table>
+        <tr><th>Plain React SPA problem</th><th>How Next.js solves it</th></tr>
+        <tr><td>Blank HTML until JS loads → bad SEO &amp; slow first paint</td><td>Server-renders HTML so crawlers &amp; users see content immediately</td></tr>
+        <tr><td>No routing built in (add React Router)</td><td>File-system routing built in</td></tr>
+        <tr><td>All code shipped to the browser (big bundles)</td><td>Server Components keep data/logic on the server — zero JS for them</td></tr>
+        <tr><td>You wire up your own bundler, code-splitting, image optimization</td><td>Built-in bundling, automatic code-splitting, <code>&lt;Image&gt;</code>, <code>&lt;font&gt;</code></td></tr>
+        <tr><td>Need a separate backend for APIs</td><td>Route Handlers &amp; Server Actions run backend code in the same project</td></tr>
+        <tr><td>No caching strategy</td><td>A multi-layer caching system with revalidation</td></tr>
+      </table>
+
+      <h3>Mental model</h3>
+      <div class="diagram">Request  ─▶  Next.js server (Node / Edge)
+                 │
+                 ├─ match URL to a file in app/       (routing)
+                 ├─ run Server Components on server    (fetch data, no JS shipped)
+                 ├─ render HTML  ───────────────▶  browser shows content instantly (fast FCP, SEO)
+                 └─ send minimal JS for Client Components
+                                                   │
+                                          hydration makes it interactive</div>
+      <div class="callout"><b>One-line definition:</b> Next.js = React + a server + a router + a data/caching layer + a build system, wrapped in file-based conventions so you ship a fast, SEO-friendly, full-stack app with far less boilerplate.</div>
+
+      <h3>Setup (your first app)</h3>
+      <div class="code"><div class="code-head"><span>Create &amp; run</span><button class="copy">Copy</button></div><pre><span class="tok-cmd">npx</span> create-next-app@latest my-app   <span class="tok-com"># choose: TypeScript, App Router, ESLint, Tailwind (optional)</span>
+<span class="tok-cmd">cd</span> my-app
+<span class="tok-cmd">npm</span> run dev                          <span class="tok-com"># http://localhost:3000</span>
+<span class="tok-cmd">npm</span> run build &amp;&amp; <span class="tok-cmd">npm</span> start          <span class="tok-com"># production build + serve</span></pre></div>
+
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Next.js is a full-stack React framework: server rendering, routing, data/caching, and an API layer in one project.</li>
+        <li>It solves SPA weaknesses: SEO, first-paint speed, bundle size, and backend wiring.</li>
+        <li>Use the <b>App Router</b> (<code class="inline">app/</code>) for new projects; <code class="inline">create-next-app</code> scaffolds it.</li>
+      </ul></div>
+      <details class="qa"><summary>What is Next.js and why use it over plain React?</summary><div class="ans"><p>Next.js is a React framework that adds server-side rendering, file-based routing, Server Components, a caching layer, and an API layer. Over a plain React SPA it gives you SEO-friendly server-rendered HTML, faster first paint, smaller client bundles, and full-stack capability without stitching together many libraries.</p></div></details>
+    </section>
+
+    <!-- 2. WHY NEXT.JS -->
+    <section id="why">
+      <h2><span class="num"></span> Why Next.js (vs the alternatives)</h2>
+      <p class="lead">Choosing a framework is a design decision. Here's when Next.js is the right call and when it isn't.</p>
+      <table>
+        <tr><th>Option</th><th>Best for</th><th>Trade-off</th></tr>
+        <tr><td><b>Next.js</b></td><td>SEO-critical apps, full-stack apps, content + dashboards, teams wanting one framework</td><td>Opinionated; server infra to run (or use Vercel)</td></tr>
+        <tr><td>Vite + React SPA</td><td>Internal tools, dashboards behind login (SEO irrelevant)</td><td>No SSR/SEO, no built-in backend</td></tr>
+        <tr><td>Remix</td><td>Web-standards-first, nested data loading</td><td>Smaller ecosystem</td></tr>
+        <tr><td>Astro</td><td>Mostly-static content sites, minimal JS</td><td>Less suited to highly interactive apps</td></tr>
+        <tr><td>Plain Node/Express + React</td><td>Full control</td><td>You build everything Next gives free</td></tr>
+      </table>
+      <h3>Advantages</h3>
+      <ul>
+        <li><b>Performance by default</b> — server rendering, automatic code splitting, image/font optimization, streaming.</li>
+        <li><b>SEO</b> — real HTML for crawlers, first-class Metadata API.</li>
+        <li><b>Full-stack</b> — Route Handlers + Server Actions remove the need for a separate API for many apps.</li>
+        <li><b>DX</b> — file-based routing, fast refresh, TypeScript, conventions reduce decisions.</li>
+      </ul>
+      <h3>Disadvantages / when to avoid</h3>
+      <ul>
+        <li>You need a Node/edge runtime to serve it (a purely static host works only for fully static output).</li>
+        <li>The caching model is powerful but has a learning curve (covered in depth later).</li>
+        <li>For a small internal SPA with no SEO needs, Vite may be simpler.</li>
+      </ul>
+      <div class="callout tip"><b>Interview framing:</b> "Next.js trades some flexibility for production-ready defaults (rendering, routing, caching, images). Choose it when SEO/performance/full-stack matter; choose a Vite SPA when you only need a client-rendered app behind auth."</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Pick Next.js for SEO/performance/full-stack; pick a SPA for simple internal tools.</li>
+        <li>Its superpower is production-ready defaults; its cost is opinionation + a server to run it.</li>
+      </ul></div>
+    </section>
+
+    <!-- 3. PROJECT STRUCTURE -->
+    <section id="structure">
+      <h2><span class="num"></span> Project Structure</h2>
+      <p class="lead">Everything routable lives under <code class="inline">app/</code>. Folders become URL segments; special files give each segment behavior.</p>
+      <div class="diagram">my-app/
+├─ app/                      # the App Router (routes live here)
+│  ├─ layout.tsx             # ROOT layout (required) — wraps every page, has &lt;html&gt;&lt;body&gt;
+│  ├─ page.tsx               # the "/" route
+│  ├─ globals.css
+│  ├─ loading.tsx            # loading UI for "/"
+│  ├─ error.tsx              # error UI (Client Component)
+│  ├─ not-found.tsx
+│  ├─ dashboard/
+│  │  ├─ page.tsx            # "/dashboard"
+│  │  └─ settings/page.tsx   # "/dashboard/settings"
+│  └─ api/
+│     └─ users/route.ts      # "/api/users" (Route Handler)
+├─ components/               # shared React components (not routes)
+├─ lib/                      # data access, helpers (server-only code)
+├─ public/                   # static assets served at "/"
+├─ next.config.js
+├─ middleware.ts             # runs before requests (edge)
+└─ tsconfig.json</div>
+      <table>
+        <tr><th>Folder</th><th>Purpose</th></tr>
+        <tr><td><code>app/</code></td><td>Routes + route-scoped UI (layouts, loading, error).</td></tr>
+        <tr><td><code>public/</code></td><td>Static files (images, robots.txt) served from the root URL.</td></tr>
+        <tr><td><code>components/</code>, <code>lib/</code></td><td>Non-routable code you import. Convention, not enforced.</td></tr>
+        <tr><td><code>next.config.js</code></td><td>Framework config (images, redirects, experimental flags).</td></tr>
+      </table>
+      <div class="callout warn"><b>Common mistake:</b> putting a <code class="inline">page.tsx</code> in a folder you only meant as a helper — any folder with <code class="inline">page</code> becomes a public URL. Keep non-route code out of <code class="inline">app/</code> (or in a <code class="inline">_folder</code> which is private).</div>
+    </section>
+
+    <!-- 4. APP ROUTER -->
+    <section id="app-router">
+      <h2><span class="num"></span> App Router (the core model)</h2>
+      <p class="lead">The App Router is the routing + rendering engine built on React Server Components. Understanding it is 80% of understanding Next.js.</p>
+      <h3>App Router vs Pages Router</h3>
+      <div class="vs-grid">
+        <div class="vs-card a"><h4>✅ App Router (<code>app/</code>)</h4><ul>
+          <li>Server Components by default (less JS)</li>
+          <li>Nested layouts, streaming, Suspense</li>
+          <li><code>fetch</code>-based data + caching</li>
+          <li>Server Actions, PPR — the future</li>
+        </ul></div>
+        <div class="vs-card b"><h4>Pages Router (<code>pages/</code>)</h4><ul>
+          <li>Client Components by default</li>
+          <li><code>getServerSideProps</code>/<code>getStaticProps</code></li>
+          <li>Simpler, mature, still supported</li>
+          <li>No new features being added</li>
+        </ul></div>
+      </div>
+      <h3>How a request flows</h3>
+      <div class="diagram">URL "/dashboard/settings"
+   │
+   ▼ match nested segments
+app/layout.tsx  ──▶  app/dashboard/layout.tsx  ──▶  app/dashboard/settings/page.tsx
+(root shell)         (dashboard shell)              (the page)
+   │
+   ▼ Server Components render on the server → HTML streamed to the browser
+   ▼ Client Components hydrate for interactivity</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>The App Router nests layouts down the URL and renders on the server by default.</li>
+        <li>Prefer it for new apps; the Pages Router is legacy-but-supported.</li>
+      </ul></div>
+    </section>
+
+    <!-- 5. FILE CONVENTIONS -->
+    <section id="conventions">
+      <h2><span class="num"></span> File Conventions</h2>
+      <p class="lead">Special filenames inside a route folder give it behavior. Memorize these — they are the vocabulary of the App Router.</p>
+      <table>
+        <tr><th>File</th><th>Role</th></tr>
+        <tr><td><code>page.tsx</code></td><td>The UI for a route (makes the segment publicly reachable).</td></tr>
+        <tr><td><code>layout.tsx</code></td><td>Shared shell that wraps a segment + its children; <b>preserves state</b> across navigation, doesn't re-render.</td></tr>
+        <tr><td><code>template.tsx</code></td><td>Like layout but <b>re-creates</b> a new instance on each navigation (resets state/effects).</td></tr>
+        <tr><td><code>loading.tsx</code></td><td>Instant loading UI (wraps the segment in a Suspense boundary).</td></tr>
+        <tr><td><code>error.tsx</code></td><td>Error boundary for the segment (must be a Client Component).</td></tr>
+        <tr><td><code>not-found.tsx</code></td><td>Rendered by <code>notFound()</code> or unmatched routes.</td></tr>
+        <tr><td><code>route.ts</code></td><td>An API endpoint (Route Handler) instead of a page.</td></tr>
+        <tr><td><code>[id]</code>, <code>[...slug]</code>, <code>[[...slug]]</code></td><td>Dynamic, catch-all, optional-catch-all segments.</td></tr>
+        <tr><td><code>(group)</code></td><td>Route group — organizes files without adding a URL segment.</td></tr>
+        <tr><td><code>@slot</code></td><td>Named slot for parallel routes.</td></tr>
+      </table>
+      <div class="callout tip"><b>Design tip:</b> a folder with only a <code class="inline">layout.tsx</code> and no <code class="inline">page.tsx</code> is not itself reachable — it just wraps its children. That's how you add a shell (e.g. a dashboard sidebar) to a group of routes.</div>
+    </section>
+
+    <!-- 6. ROUTING -->
+    <section id="routing">
+      <h2><span class="num"></span> Routing</h2>
+      <p class="lead">Folders map to URL paths; a <code class="inline">page.tsx</code> makes a path public. There is no route config file — the file tree <em>is</em> the config.</p>
+      <div class="code"><div class="code-head"><span>app/dashboard/page.tsx → /dashboard</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">function</span> <span class="tok-fn">DashboardPage</span>() {
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;h1&gt;</span>Dashboard<span class="tok-tag">&lt;/h1&gt;</span>;
+}</pre></div>
+      <h3>Route groups &amp; private folders</h3>
+      <div class="code"><div class="code-head"><span>Organize without changing URLs</span><button class="copy">Copy</button></div><pre>app/
+  (marketing)/       <span class="tok-com"># group: NOT in the URL</span>
+    about/page.tsx    <span class="tok-com"># → /about   (not /marketing/about)</span>
+    layout.tsx        <span class="tok-com"># a marketing-only shell</span>
+  (app)/
+    dashboard/page.tsx
+  _components/        <span class="tok-com"># private folder: never a route</span></pre></div>
+      <div class="callout"><b>Why groups matter:</b> you can give the marketing pages one layout and the app pages a different layout, while keeping clean URLs — a real-world pattern for public site + logged-in app in one project.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Folder = URL segment; <code class="inline">page.tsx</code> = public page.</li>
+        <li><code class="inline">(group)</code> organizes routes and lets you scope layouts without affecting the URL.</li>
+      </ul></div>
+    </section>
+
+    <!-- 7. DYNAMIC ROUTES -->
+    <section id="dynamic">
+      <h2><span class="num"></span> Dynamic Routes &amp; Params</h2>
+      <p class="lead">Square-bracket folders capture URL segments. In the App Router, <code class="inline">params</code> and <code class="inline">searchParams</code> are async (await them).</p>
+      <div class="code"><div class="code-head"><span>app/blog/[slug]/page.tsx → /blog/hello</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">Post</span>({ params }: { params: <span class="tok-key">Promise</span>&lt;{ slug: <span class="tok-key">string</span> }&gt; }) {
+  <span class="tok-key">const</span> { slug } = <span class="tok-key">await</span> params;          <span class="tok-com">// e.g. "hello"</span>
+  <span class="tok-key">const</span> post = <span class="tok-key">await</span> <span class="tok-fn">getPost</span>(slug);
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;article&gt;</span>{post.title}<span class="tok-tag">&lt;/article&gt;</span>;
+}</pre></div>
+      <table>
+        <tr><th>Pattern</th><th>Matches</th><th>params</th></tr>
+        <tr><td><code>[slug]</code></td><td>/blog/hello</td><td><code>{ slug: "hello" }</code></td></tr>
+        <tr><td><code>[...slug]</code></td><td>/docs/a/b/c</td><td><code>{ slug: ["a","b","c"] }</code></td></tr>
+        <tr><td><code>[[...slug]]</code></td><td>/docs and /docs/a/b</td><td>optional (may be undefined)</td></tr>
+      </table>
+      <h3>Pre-generating dynamic pages</h3>
+      <div class="code"><div class="code-head"><span>generateStaticParams — build a static page per slug (SSG)</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">generateStaticParams</span>() {
+  <span class="tok-key">const</span> posts = <span class="tok-key">await</span> <span class="tok-fn">getAllPosts</span>();
+  <span class="tok-key">return</span> posts.<span class="tok-fn">map</span>((p) =&gt; ({ slug: p.slug })); <span class="tok-com">// each becomes a static route at build</span>
+}</pre></div>
+      <div class="callout warn"><b>Common mistake:</b> forgetting to <code class="inline">await params</code> in Next 15 — <code class="inline">params</code>/<code class="inline">searchParams</code> are Promises now. Destructuring them synchronously throws.</div>
+    </section>
+
+    <!-- 8. LAYOUTS -->
+    <section id="layouts">
+      <h2><span class="num"></span> Layouts &amp; Templates</h2>
+      <p class="lead">Layouts are persistent shells shared by a segment and its children. The <b>root layout is required</b> and must render <code class="inline">&lt;html&gt;</code> and <code class="inline">&lt;body&gt;</code>.</p>
+      <div class="code"><div class="code-head"><span>app/layout.tsx (root)</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">function</span> <span class="tok-fn">RootLayout</span>({ children }: { children: <span class="tok-key">React</span>.ReactNode }) {
+  <span class="tok-key">return</span> (
+    <span class="tok-tag">&lt;html</span> lang=<span class="tok-str">"en"</span><span class="tok-tag">&gt;</span>
+      <span class="tok-tag">&lt;body&gt;</span>
+        <span class="tok-tag">&lt;Nav /&gt;</span>
+        {children}          <span class="tok-com">/* the active page renders here */</span>
+      <span class="tok-tag">&lt;/body&gt;</span>
+    <span class="tok-tag">&lt;/html&gt;</span>
+  );
+}</pre></div>
+      <h3>Layout vs Template</h3>
+      <table>
+        <tr><th></th><th>layout.tsx</th><th>template.tsx</th></tr>
+        <tr><td>State across navigation</td><td><b>Preserved</b> (not remounted)</td><td><b>Reset</b> (new instance each nav)</td></tr>
+        <tr><td>Effects re-run on nav</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Use for</td><td>Persistent nav, sidebars</td><td>Per-page enter animations, resetting logs</td></tr>
+      </table>
+      <div class="callout"><b>Nesting:</b> layouts compose down the tree. <code class="inline">app/layout</code> wraps everything; <code class="inline">app/dashboard/layout</code> wraps only <code class="inline">/dashboard/*</code>. Navigating <em>within</em> a shared layout only re-renders the changing part — this is why the App Router feels instant.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Root layout is required and owns <code class="inline">&lt;html&gt;/&lt;body&gt;</code>.</li>
+        <li>Layouts persist (keep state); templates remount (reset state).</li>
+      </ul></div>
+    </section>
+
+    <!-- 9. LOADING/ERROR/NOT-FOUND -->
+    <section id="loading-error">
+      <h2><span class="num"></span> Loading, Error &amp; Not-Found UI</h2>
+      <p class="lead">Drop a special file into any segment to get built-in loading skeletons and error boundaries — no manual Suspense/try-catch wiring.</p>
+      <div class="code"><div class="code-head"><span>loading.tsx — shown instantly while the page's data loads</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">function</span> <span class="tok-fn">Loading</span>() {
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;div</span> className=<span class="tok-str">"skeleton"</span><span class="tok-tag">&gt;</span>Loading…<span class="tok-tag">&lt;/div&gt;</span>;   <span class="tok-com">/* Next wraps page in &lt;Suspense fallback={this}&gt; */</span>
+}</pre></div>
+      <div class="code"><div class="code-head"><span>error.tsx — must be a Client Component</span><button class="copy">Copy</button></div><pre><span class="tok-str">"use client"</span>;
+<span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">function</span> <span class="tok-fn">Error</span>({ error, reset }: { error: <span class="tok-key">Error</span>; reset: () =&gt; <span class="tok-key">void</span> }) {
+  <span class="tok-key">return</span> (
+    <span class="tok-tag">&lt;div&gt;</span>
+      <span class="tok-tag">&lt;p&gt;</span>Something went wrong: {error.message}<span class="tok-tag">&lt;/p&gt;</span>
+      <span class="tok-tag">&lt;button</span> onClick={reset}<span class="tok-tag">&gt;</span>Try again<span class="tok-tag">&lt;/button&gt;</span>  <span class="tok-com">/* re-render the segment */</span>
+    <span class="tok-tag">&lt;/div&gt;</span>
+  );
+}</pre></div>
+      <div class="callout warn"><b>Why error.tsx is a Client Component:</b> error boundaries need React state and event handlers (the <code class="inline">reset</code> button), which only exist on the client. It catches errors from the <b>page and its children</b>, not from the layout at the same level (put a higher <code class="inline">error.tsx</code> for that, or use <code class="inline">global-error.tsx</code>).</div>
+    </section>
+
+    <!-- 10. NAVIGATION -->
+    <section id="navigation">
+      <h2><span class="num"></span> Links &amp; Navigation</h2>
+      <p class="lead"><code class="inline">&lt;Link&gt;</code> does client-side navigation with automatic <b>prefetching</b> — the linked route is fetched in the background so clicks feel instant.</p>
+      <div class="code"><div class="code-head"><span>Link + programmatic navigation</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> Link <span class="tok-key">from</span> <span class="tok-str">"next/link"</span>;
+<span class="tok-tag">&lt;Link</span> href=<span class="tok-str">"/dashboard"</span> prefetch<span class="tok-tag">&gt;</span>Dashboard<span class="tok-tag">&lt;/Link&gt;</span>
+
+<span class="tok-com">// Programmatic (Client Component only)</span>
+<span class="tok-str">"use client"</span>;
+<span class="tok-key">import</span> { useRouter } <span class="tok-key">from</span> <span class="tok-str">"next/navigation"</span>;   <span class="tok-com">// NOT next/router (that's Pages Router)</span>
+<span class="tok-key">const</span> router = <span class="tok-fn">useRouter</span>();
+router.<span class="tok-fn">push</span>(<span class="tok-str">"/login"</span>);        router.<span class="tok-fn">refresh</span>();  <span class="tok-com">// refetch server data, keep client state</span></pre></div>
+      <table>
+        <tr><th>Hook (from <code>next/navigation</code>)</th><th>Gives you</th></tr>
+        <tr><td><code>useRouter()</code></td><td><code>push/replace/back/refresh/prefetch</code></td></tr>
+        <tr><td><code>usePathname()</code></td><td>Current path string (for active links)</td></tr>
+        <tr><td><code>useSearchParams()</code></td><td>Read <code>?query</code> params (Client Component)</td></tr>
+        <tr><td><code>useParams()</code></td><td>Dynamic route params on the client</td></tr>
+      </table>
+      <div class="callout warn"><b>Common mistake:</b> importing <code class="inline">useRouter</code> from <code class="inline">next/router</code> (Pages Router) in the App Router — it must be <code class="inline">next/navigation</code>. Also, navigation hooks only work in Client Components.</div>
+    </section>
+
+    <!-- 11. METADATA/FONTS/IMAGES -->
+    <section id="metadata">
+      <h2><span class="num"></span> Metadata, Fonts &amp; Images</h2>
+      <p class="lead">Next.js gives first-class, SEO-friendly primitives for the head tags, web fonts, and images — three things you'd otherwise hand-optimize.</p>
+      <h3>Metadata API (SEO)</h3>
+      <div class="code"><div class="code-head"><span>Static &amp; dynamic metadata</span><button class="copy">Copy</button></div><pre><span class="tok-com">// static — export a metadata object from a layout or page</span>
+<span class="tok-key">export</span> <span class="tok-key">const</span> metadata = { title: <span class="tok-str">"Blog"</span>, description: <span class="tok-str">"Latest posts"</span> };
+
+<span class="tok-com">// dynamic — compute per-request (e.g. per blog post)</span>
+<span class="tok-key">export</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">generateMetadata</span>({ params }) {
+  <span class="tok-key">const</span> { slug } = <span class="tok-key">await</span> params;
+  <span class="tok-key">const</span> post = <span class="tok-key">await</span> <span class="tok-fn">getPost</span>(slug);
+  <span class="tok-key">return</span> { title: post.title, openGraph: { images: [post.cover] } };
+}</pre></div>
+      <h3>Images &amp; Fonts</h3>
+      <div class="code"><div class="code-head"><span>next/image &amp; next/font</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> Image <span class="tok-key">from</span> <span class="tok-str">"next/image"</span>;
+<span class="tok-tag">&lt;Image</span> src={cover} alt=<span class="tok-str">"Cover"</span> width={800} height={400} priority<span class="tok-tag">/&gt;</span>
+<span class="tok-com">// auto: resizing, modern formats (WebP/AVIF), lazy-load, no layout shift (CLS)</span>
+
+<span class="tok-key">import</span> { Inter } <span class="tok-key">from</span> <span class="tok-str">"next/font/google"</span>;
+<span class="tok-key">const</span> inter = <span class="tok-fn">Inter</span>({ subsets: [<span class="tok-str">"latin"</span>] }); <span class="tok-com">// self-hosted, zero layout shift, no external request</span></pre></div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li><code class="inline">metadata</code> / <code class="inline">generateMetadata</code> handle SEO head tags (static or per-request).</li>
+        <li><code class="inline">next/image</code> prevents layout shift and serves optimized formats; <code class="inline">next/font</code> self-hosts fonts for speed + no CLS.</li>
+      </ul></div>
+    </section>
+
+    <!-- 12. SERVER COMPONENTS -->
+    <section id="server-components">
+      <h2><span class="num"></span> Server Components (RSC)</h2>
+      <p class="lead">In the App Router, components are <b>Server Components by default</b>. They render on the server, can be <code class="inline">async</code>, can access the database/filesystem directly, and ship <b>zero JavaScript</b> to the browser.</p>
+      <h3>What / Why / How they work</h3>
+      <ul>
+        <li><b>What:</b> a React component that runs only on the server during the request; its output is serialized to the client as RSC payload (not re-executed in the browser).</li>
+        <li><b>Why:</b> smaller bundles (their code never ships), direct data access (no API round-trip), keep secrets server-side.</li>
+        <li><b>Internal working:</b> the server renders the RSC tree → produces HTML + a compact "RSC payload" describing the component tree → the browser paints HTML instantly and reconciles; only Client Components hydrate.</li>
+      </ul>
+      <div class="code"><div class="code-head"><span>An async Server Component fetching data</span><button class="copy">Copy</button></div><pre><span class="tok-com">// app/users/page.tsx — no "use client", so it's a Server Component</span>
+<span class="tok-key">import</span> { db } <span class="tok-key">from</span> <span class="tok-str">"@/lib/db"</span>;
+<span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">Users</span>() {
+  <span class="tok-key">const</span> users = <span class="tok-key">await</span> db.user.<span class="tok-fn">findMany</span>();   <span class="tok-com">// direct DB access — runs on server only</span>
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;ul&gt;</span>{users.<span class="tok-fn">map</span>((u) =&gt; <span class="tok-tag">&lt;li</span> key={u.id}<span class="tok-tag">&gt;</span>{u.name}<span class="tok-tag">&lt;/li&gt;</span>)}<span class="tok-tag">&lt;/ul&gt;</span>;
+}</pre></div>
+      <div class="callout warn"><b>Server Components can't:</b> use hooks (<code class="inline">useState</code>/<code class="inline">useEffect</code>), use browser APIs, or attach event handlers (<code class="inline">onClick</code>). Those require a Client Component.</div>
+      <div class="callout tip"><b>Best practice:</b> keep components on the server as long as possible; push the <code class="inline">"use client"</code> boundary <em>down</em> to the smallest interactive leaf (e.g. a like button), not up at the page. This minimizes shipped JS.</div>
+    </section>
+
+    <!-- 13. CLIENT COMPONENTS -->
+    <section id="client-components">
+      <h2><span class="num"></span> Client Components</h2>
+      <p class="lead">Add <code class="inline">"use client"</code> at the top of a file to opt a component (and its imports) into the browser: state, effects, event handlers, browser APIs.</p>
+      <div class="code"><div class="code-head"><span>A Client Component</span><button class="copy">Copy</button></div><pre><span class="tok-str">"use client"</span>;
+<span class="tok-key">import</span> { useState } <span class="tok-key">from</span> <span class="tok-str">"react"</span>;
+<span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">function</span> <span class="tok-fn">Counter</span>() {
+  <span class="tok-key">const</span> [n, setN] = <span class="tok-fn">useState</span>(0);
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;button</span> onClick={() =&gt; <span class="tok-fn">setN</span>(n + 1)}<span class="tok-tag">&gt;</span>{n}<span class="tok-tag">&lt;/button&gt;</span>;
+}</pre></div>
+      <h3>The golden rule: composition</h3>
+      <p>A Server Component can <b>import and render</b> a Client Component. A Client Component can't import a Server Component, but it can receive one as <code class="inline">children</code> (or a prop). This "server wraps client, passes server content as children" pattern keeps most of the tree on the server.</p>
+      <div class="code"><div class="code-head"><span>Pass a Server Component as children into a Client Component</span><button class="copy">Copy</button></div><pre><span class="tok-com">// ClientShell is "use client"; ServerData is a Server Component</span>
+<span class="tok-tag">&lt;ClientShell&gt;</span>
+  <span class="tok-tag">&lt;ServerData /&gt;</span>   <span class="tok-com">/* still rendered on the server, just slotted in */</span>
+<span class="tok-tag">&lt;/ClientShell&gt;</span></pre></div>
+      <table>
+        <tr><th></th><th>Server Component</th><th>Client Component</th></tr>
+        <tr><td>Default in <code>app/</code></td><td>Yes</td><td>No (opt in with "use client")</td></tr>
+        <tr><td>Data fetching</td><td>Direct (async, DB, fetch)</td><td>via effects/SWR/React Query or props</td></tr>
+        <tr><td>Hooks / events</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Ships JS to browser</td><td>No</td><td>Yes (hydrates)</td></tr>
+        <tr><td>Access secrets/env</td><td>Yes</td><td>No (only <code>NEXT_PUBLIC_*</code>)</td></tr>
+      </table>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Server = default, no JS, data + secrets. Client = interactivity, ships JS.</li>
+        <li>Push <code class="inline">"use client"</code> to the leaves; pass server content as <code class="inline">children</code> into client wrappers.</li>
+      </ul></div>
+      <details class="qa"><summary>Server vs Client Components — when do you use each?</summary><div class="ans"><p>Use Server Components for data fetching, accessing secrets, and static content (they ship no JS). Use Client Components only where you need interactivity — state, effects, event handlers, or browser APIs. Keep the client boundary as small as possible to minimize bundle size, and pass server-rendered content into client components via <code class="inline">children</code>.</p></div></details>
+    </section>
+
+    <!-- 14. RENDERING -->
+    <section id="rendering">
+      <h2><span class="num"></span> Rendering: SSR · SSG · ISR · CSR · PPR</h2>
+      <p class="lead">"Rendering strategy" = <b>when and where</b> a page's HTML is produced. Next.js supports all of them, chosen per-route by how you fetch data.</p>
+      <table>
+        <tr><th>Strategy</th><th>When HTML is built</th><th>Best for</th><th>How to get it</th></tr>
+        <tr><td><b>SSG</b> (Static)</td><td>At <b>build time</b>, once</td><td>Blogs, docs, marketing — same for everyone</td><td>Default when no dynamic data / <code>generateStaticParams</code></td></tr>
+        <tr><td><b>ISR</b> (Incremental)</td><td>Build time, then <b>re-generated</b> on a timer/on-demand</td><td>Content that changes occasionally (product pages)</td><td><code>fetch(url,{next:{revalidate:60}})</code></td></tr>
+        <tr><td><b>SSR</b> (Dynamic)</td><td>On <b>every request</b></td><td>Personalized/real-time (dashboards, auth'd data)</td><td><code>cache:"no-store"</code> or reading cookies/headers</td></tr>
+        <tr><td><b>CSR</b> (Client)</td><td>In the <b>browser</b> after load</td><td>Highly interactive widgets behind auth</td><td>Client Component + client fetch</td></tr>
+        <tr><td><b>PPR</b> (Partial Prerender)</td><td>Static shell instantly + dynamic holes streamed</td><td>Pages mixing static + personalized parts</td><td>Experimental: static page with Suspense'd dynamic parts</td></tr>
+      </table>
+      <div class="callout"><b>Key idea:</b> in the App Router you don't pick a strategy with a special export — you pick it by <b>how you fetch</b>. Cached fetch → static; <code class="inline">no-store</code> or dynamic APIs (cookies/headers) → per-request SSR; a revalidate time → ISR. This is the single most-asked Next.js interview concept.</div>
+      <div class="diagram">SSG:  build ──▶ [HTML on CDN] ──▶ user (fastest, but stale until rebuild)
+ISR:  build ──▶ [HTML on CDN] ──(after N s)──▶ regenerate in background
+SSR:  request ──▶ server renders fresh HTML ──▶ user (always current, slower)
+CSR:  load JS ──▶ browser fetches + renders (no SEO for that data)
+PPR:  static shell now  +  dynamic parts streamed in  (best of both)</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Strategy is chosen by data-fetching options, not a mode flag.</li>
+        <li>Static/ISR for shareable content; SSR for per-user/real-time; PPR blends them.</li>
+      </ul></div>
+      <details class="qa"><summary>Explain SSR vs SSG vs ISR and how you choose in Next.js.</summary><div class="ans"><p>SSG builds HTML once at build time (fast, cacheable, but static). ISR is SSG plus background regeneration after a revalidate window (fresh-ish without rebuilds). SSR renders on every request (always current, needed for personalized/auth'd data, but higher latency). In the App Router you select these implicitly: a cached <code class="inline">fetch</code> → static; <code class="inline">revalidate: N</code> → ISR; <code class="inline">no-store</code> or using cookies/headers → SSR.</p></div></details>
+    </section>
+
+    <!-- 15. DATA FETCHING -->
+    <section id="data-fetching">
+      <h2><span class="num"></span> Data Fetching</h2>
+      <p class="lead">Fetch data directly in Server Components with <code class="inline">async/await</code>. No <code class="inline">getServerSideProps</code>, no client loading spinners for initial data.</p>
+      <div class="code"><div class="code-head"><span>Fetch in a Server Component + parallelize</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">Page</span>() {
+  <span class="tok-com">// ❌ sequential (waterfall): each await blocks the next</span>
+  <span class="tok-com">// const user = await getUser(); const posts = await getPosts();</span>
+
+  <span class="tok-com">// ✅ parallel: start both, then await together</span>
+  <span class="tok-key">const</span> [user, posts] = <span class="tok-key">await</span> <span class="tok-key">Promise</span>.<span class="tok-fn">all</span>([<span class="tok-fn">getUser</span>(), <span class="tok-fn">getPosts</span>()]);
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;Profile</span> user={user} posts={posts} <span class="tok-tag">/&gt;</span>;
+}</pre></div>
+      <table>
+        <tr><th>Where</th><th>How to fetch</th></tr>
+        <tr><td>Server Component (preferred)</td><td><code>await fetch(...)</code> or a DB client directly</td></tr>
+        <tr><td>Client Component</td><td>React Query / SWR, or call a Route Handler / Server Action</td></tr>
+        <tr><td>Mutations</td><td>Server Actions (next section) or POST to a Route Handler</td></tr>
+      </table>
+      <div class="callout warn"><b>Avoid request waterfalls:</b> independent requests should run with <code class="inline">Promise.all</code>. Dependent requests (need result A to fetch B) are unavoidable — isolate them behind a <code class="inline">&lt;Suspense&gt;</code> so the rest of the page streams.</div>
+    </section>
+
+    <!-- 16. CACHING -->
+    <section id="caching">
+      <h2><span class="num"></span> Caching &amp; Revalidation</h2>
+      <p class="lead">Caching is Next.js's most powerful — and most confusing — feature. There are four caches; know what each does and how to bust it.</p>
+      <table>
+        <tr><th>Cache</th><th>What it stores</th><th>Invalidate with</th></tr>
+        <tr><td><b>Request Memoization</b></td><td>Duplicate <code>fetch</code>es in one render</td><td>Automatic (per request)</td></tr>
+        <tr><td><b>Data Cache</b></td><td><code>fetch</code> results across requests/users</td><td><code>revalidate</code> time, <code>revalidateTag</code>, <code>no-store</code></td></tr>
+        <tr><td><b>Full Route Cache</b></td><td>Rendered HTML/RSC of static routes</td><td>Redeploy, <code>revalidatePath</code></td></tr>
+        <tr><td><b>Router Cache</b> (client)</td><td>Visited routes in the browser</td><td><code>router.refresh()</code>, time</td></tr>
+      </table>
+      <div class="code"><div class="code-head"><span>Control caching per fetch</span><button class="copy">Copy</button></div><pre><span class="tok-fn">fetch</span>(url, { cache: <span class="tok-str">"force-cache"</span> });                 <span class="tok-com">// static (default-ish): cache forever</span>
+<span class="tok-fn">fetch</span>(url, { next: { revalidate: 60 } });              <span class="tok-com">// ISR: refresh at most every 60s</span>
+<span class="tok-fn">fetch</span>(url, { cache: <span class="tok-str">"no-store"</span> });                    <span class="tok-com">// SSR: always fresh, never cache</span>
+<span class="tok-fn">fetch</span>(url, { next: { tags: [<span class="tok-str">"posts"</span>] } });            <span class="tok-com">// tag it for on-demand invalidation</span></pre></div>
+      <div class="code"><div class="code-head"><span>On-demand revalidation (e.g. after a mutation / CMS webhook)</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> { revalidateTag, revalidatePath } <span class="tok-key">from</span> <span class="tok-str">"next/cache"</span>;
+<span class="tok-fn">revalidateTag</span>(<span class="tok-str">"posts"</span>);          <span class="tok-com">// bust every fetch tagged "posts"</span>
+<span class="tok-fn">revalidatePath</span>(<span class="tok-str">"/blog"</span>);         <span class="tok-com">// rebuild a specific route's cache</span></pre></div>
+      <div class="callout warn"><b>Common mistake:</b> expecting fresh data but a cached <code class="inline">fetch</code> silently serves stale results. When data must be live (dashboards, cart), use <code class="inline">no-store</code>; when it changes on an event, use tags + <code class="inline">revalidateTag</code>.</div>
+      <div class="callout tip"><b>Next 15 note:</b> defaults shifted toward <em>less</em> aggressive caching (uncached <code class="inline">fetch</code> and Route Handlers are dynamic by default). Always be explicit about caching intent rather than relying on defaults.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Four caches: request-memo, data, full-route, router. Learn what busts each.</li>
+        <li>Choose per fetch: <code class="inline">force-cache</code> (static), <code class="inline">revalidate</code> (ISR), <code class="inline">no-store</code> (dynamic), <code class="inline">tags</code> (on-demand).</li>
+      </ul></div>
+    </section>
+
+    <!-- 17. ROUTE HANDLERS -->
+    <section id="route-handlers">
+      <h2><span class="num"></span> Route Handlers (API endpoints)</h2>
+      <p class="lead">A <code class="inline">route.ts</code> file is a backend endpoint built on the Web <code class="inline">Request</code>/<code class="inline">Response</code> APIs — your REST/webhook layer inside the same project.</p>
+      <div class="code"><div class="code-head"><span>app/api/users/route.ts → /api/users</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> { NextResponse } <span class="tok-key">from</span> <span class="tok-str">"next/server"</span>;
+
+<span class="tok-key">export</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">GET</span>(req: <span class="tok-key">Request</span>) {
+  <span class="tok-key">const</span> users = <span class="tok-key">await</span> db.user.<span class="tok-fn">findMany</span>();
+  <span class="tok-key">return</span> NextResponse.<span class="tok-fn">json</span>(users);
+}
+
+<span class="tok-key">export</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">POST</span>(req: <span class="tok-key">Request</span>) {
+  <span class="tok-key">const</span> body = <span class="tok-key">await</span> req.<span class="tok-fn">json</span>();
+  <span class="tok-key">const</span> user = <span class="tok-key">await</span> db.user.<span class="tok-fn">create</span>({ data: body });
+  <span class="tok-key">return</span> NextResponse.<span class="tok-fn">json</span>(user, { status: 201 });
+}</pre></div>
+      <div class="callout"><b>When to use a Route Handler vs a Server Action:</b> use Route Handlers for <b>public APIs, webhooks, or non-form clients</b> (mobile app, third parties). Use Server Actions for <b>your own app's form mutations</b> (next section) — less boilerplate, progressive enhancement.</div>
+      <div class="callout warn"><b>Common mistake:</b> naming the file <code class="inline">route.ts</code> in a folder that also has <code class="inline">page.tsx</code> — a segment can't be both a page and an endpoint. Give the API its own path (usually under <code class="inline">app/api/</code>).</div>
+    </section>
+
+    <!-- 18. SERVER ACTIONS -->
+    <section id="server-actions">
+      <h2><span class="num"></span> Server Actions &amp; Forms</h2>
+      <p class="lead">A <b>Server Action</b> is a function marked <code class="inline">"use server"</code> that runs on the server but is called directly from your components/forms — no manual API route, no <code class="inline">fetch</code>. It's the modern way to do mutations.</p>
+      <div class="code"><div class="code-head"><span>A form powered by a Server Action</span><button class="copy">Copy</button></div><pre><span class="tok-com">// app/todos/actions.ts</span>
+<span class="tok-str">"use server"</span>;
+<span class="tok-key">import</span> { revalidatePath } <span class="tok-key">from</span> <span class="tok-str">"next/cache"</span>;
+<span class="tok-key">export</span> <span class="tok-key">async</span> <span class="tok-key">function</span> <span class="tok-fn">addTodo</span>(formData: <span class="tok-key">FormData</span>) {
+  <span class="tok-key">const</span> title = formData.<span class="tok-fn">get</span>(<span class="tok-str">"title"</span>) <span class="tok-key">as</span> <span class="tok-key">string</span>;
+  <span class="tok-key">await</span> db.todo.<span class="tok-fn">create</span>({ data: { title } });
+  <span class="tok-fn">revalidatePath</span>(<span class="tok-str">"/todos"</span>);        <span class="tok-com">// refresh the list</span>
+}
+
+<span class="tok-com">// app/todos/page.tsx (Server Component) — no client JS needed</span>
+<span class="tok-tag">&lt;form</span> action={addTodo}<span class="tok-tag">&gt;</span>
+  <span class="tok-tag">&lt;input</span> name=<span class="tok-str">"title"</span> /<span class="tok-tag">&gt;</span> <span class="tok-tag">&lt;button&gt;</span>Add<span class="tok-tag">&lt;/button&gt;</span>
+<span class="tok-tag">&lt;/form&gt;</span></pre></div>
+      <ul>
+        <li><b>Progressive enhancement:</b> the form works even before/without JS (it POSTs to the server).</li>
+        <li><b>Pending/optimistic UI:</b> use <code class="inline">useFormStatus</code> and <code class="inline">useOptimistic</code> in a client wrapper for instant feedback.</li>
+        <li><b>Security:</b> validate inputs (Zod) and check auth <em>inside</em> the action — it's a public entry point, treat it like an API route.</li>
+      </ul>
+      <div class="callout warn"><b>Common mistake:</b> trusting Server Action input. Anyone can invoke it; always authenticate and validate server-side.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Server Actions = server mutations callable from components/forms, no API boilerplate.</li>
+        <li>They enable progressive enhancement; still require auth + validation server-side.</li>
+      </ul></div>
+    </section>
+
+    <!-- 19. STREAMING -->
+    <section id="streaming">
+      <h2><span class="num"></span> Streaming &amp; Suspense</h2>
+      <p class="lead">Streaming sends HTML to the browser in chunks as it becomes ready, so a slow data fetch doesn't block the whole page. <code class="inline">&lt;Suspense&gt;</code> marks the boundaries.</p>
+      <div class="code"><div class="code-head"><span>Stream a slow section while the shell renders instantly</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> { Suspense } <span class="tok-key">from</span> <span class="tok-str">"react"</span>;
+<span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">function</span> <span class="tok-fn">Page</span>() {
+  <span class="tok-key">return</span> (
+    <span class="tok-tag">&lt;&gt;</span>
+      <span class="tok-tag">&lt;Header /&gt;</span>                          <span class="tok-com">/* instant */</span>
+      <span class="tok-tag">&lt;Suspense</span> fallback={<span class="tok-tag">&lt;Skeleton /&gt;</span>}<span class="tok-tag">&gt;</span>
+        <span class="tok-tag">&lt;SlowFeed /&gt;</span>                       <span class="tok-com">/* streams in when its data resolves */</span>
+      <span class="tok-tag">&lt;/Suspense&gt;</span>
+    <span class="tok-tag">&lt;/&gt;</span>
+  );
+}</pre></div>
+      <div class="callout"><b>Why it matters:</b> Time-to-First-Byte and First-Contentful-Paint stay low even when part of the page is slow. <code class="inline">loading.tsx</code> is just a Suspense boundary around the whole page; explicit <code class="inline">&lt;Suspense&gt;</code> lets you stream <em>parts</em>.</div>
+    </section>
+
+    <!-- 20. MIDDLEWARE -->
+    <section id="middleware">
+      <h2><span class="num"></span> Middleware</h2>
+      <p class="lead"><code class="inline">middleware.ts</code> runs on the <b>edge, before a request reaches a route</b> — perfect for auth gating, redirects, rewrites, i18n, and headers.</p>
+      <div class="code"><div class="code-head"><span>middleware.ts — protect /dashboard</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> { NextResponse } <span class="tok-key">from</span> <span class="tok-str">"next/server"</span>;
+<span class="tok-key">import</span> <span class="tok-key">type</span> { NextRequest } <span class="tok-key">from</span> <span class="tok-str">"next/server"</span>;
+
+<span class="tok-key">export</span> <span class="tok-key">function</span> <span class="tok-fn">middleware</span>(req: NextRequest) {
+  <span class="tok-key">const</span> token = req.cookies.<span class="tok-fn">get</span>(<span class="tok-str">"session"</span>)?.value;
+  <span class="tok-key">if</span> (!token) <span class="tok-key">return</span> NextResponse.<span class="tok-fn">redirect</span>(<span class="tok-key">new</span> <span class="tok-fn">URL</span>(<span class="tok-str">"/login"</span>, req.url));
+  <span class="tok-key">return</span> NextResponse.<span class="tok-fn">next</span>();
+}
+<span class="tok-key">export</span> <span class="tok-key">const</span> config = { matcher: [<span class="tok-str">"/dashboard/:path*"</span>] }; <span class="tok-com">// only run on these paths</span></pre></div>
+      <div class="callout warn"><b>Edge constraints:</b> middleware runs on the Edge runtime — no Node APIs, no heavy DB drivers, keep it fast. Do a <em>cheap</em> check (cookie present, JWT verify); do full auth/data in the route/Server Component.</div>
+    </section>
+
+    <!-- 21. ADVANCED ROUTING -->
+    <section id="advanced-routing">
+      <h2><span class="num"></span> Parallel &amp; Intercepting Routes</h2>
+      <p class="lead">Two advanced patterns that unlock dashboard-style and modal UX.</p>
+      <h3>Parallel routes (<code class="inline">@slot</code>)</h3>
+      <p>Render multiple independent pages in the same layout at once (e.g. a dashboard with <code class="inline">@team</code> and <code class="inline">@analytics</code> slots that load and error independently).</p>
+      <div class="code"><div class="code-head"><span>app/dashboard/layout.tsx</span><button class="copy">Copy</button></div><pre><span class="tok-key">export</span> <span class="tok-key">default</span> <span class="tok-key">function</span> <span class="tok-fn">Layout</span>({ children, team, analytics }) {
+  <span class="tok-key">return</span> <span class="tok-tag">&lt;&gt;</span>{children}{team}{analytics}<span class="tok-tag">&lt;/&gt;</span>;  <span class="tok-com">/* @team, @analytics folders */</span>
+}</pre></div>
+      <h3>Intercepting routes (<code class="inline">(.)</code>)</h3>
+      <p>Show a route in a modal over the current page (e.g. clicking a photo opens it in a modal, but a direct URL shows the full page). Used with parallel routes for the classic "photo modal" pattern.</p>
+      <div class="callout tip"><b>Real-world:</b> Instagram-style photo modals, "quick view" product dialogs, and multi-pane dashboards are the canonical uses. These are advanced; reach for them when the UX genuinely needs them.</div>
+    </section>
+
+    <!-- 22. COOKIES/HEADERS -->
+    <section id="cookies-headers">
+      <h2><span class="num"></span> Cookies &amp; Headers</h2>
+      <p class="lead">Read/write cookies and read headers on the server. Note: using these makes a route <b>dynamic</b> (per-request SSR).</p>
+      <div class="code"><div class="code-head"><span>cookies() &amp; headers() (async in Next 15)</span><button class="copy">Copy</button></div><pre><span class="tok-key">import</span> { cookies, headers } <span class="tok-key">from</span> <span class="tok-str">"next/headers"</span>;
+<span class="tok-key">const</span> cookieStore = <span class="tok-key">await</span> <span class="tok-fn">cookies</span>();
+<span class="tok-key">const</span> session = cookieStore.<span class="tok-fn">get</span>(<span class="tok-str">"session"</span>)?.value;
+cookieStore.<span class="tok-fn">set</span>(<span class="tok-str">"theme"</span>, <span class="tok-str">"dark"</span>, { httpOnly: <span class="tok-key">true</span>, secure: <span class="tok-key">true</span>, sameSite: <span class="tok-str">"lax"</span> });
+
+<span class="tok-key">const</span> h = <span class="tok-key">await</span> <span class="tok-fn">headers</span>();
+<span class="tok-key">const</span> ua = h.<span class="tok-fn">get</span>(<span class="tok-str">"user-agent"</span>);</pre></div>
+      <div class="callout warn"><b>Trade-off:</b> reading cookies/headers opts the route out of static rendering (it must run per request). Only read them where you truly need per-user data.</div>
+    </section>
+
+    <!-- 23. AUTH -->
+    <section id="auth">
+      <h2><span class="num"></span> Authentication &amp; Authorization</h2>
+      <p class="lead">Auth in Next.js spans middleware (gate), Server Components (read session), Server Actions/Route Handlers (verify on mutation). A library like <b>Auth.js (NextAuth)</b> or <b>Clerk</b> wires the flow.</p>
+      <div class="diagram">Login  ──▶  set httpOnly session cookie (server)
+Request ──▶ middleware: cookie present? no → /login
+         ──▶ Server Component: read session, load user data
+Mutation ──▶ Server Action: re-verify session + role  (never trust the client)</div>
+      <table>
+        <tr><th>Concern</th><th>Where</th></tr>
+        <tr><td>Coarse gate (is there a session?)</td><td>middleware.ts</td></tr>
+        <tr><td>Load current user</td><td>Server Component / a <code>getSession()</code> helper</td></tr>
+        <tr><td>Fine authorization (role/ownership)</td><td>Inside the Server Action / Route Handler</td></tr>
+        <tr><td>Session storage</td><td><b>httpOnly, Secure, SameSite</b> cookie (not localStorage)</td></tr>
+      </table>
+      <div class="callout warn"><b>Golden rule:</b> middleware is a convenience gate, not real security. <b>Always re-check auth + authorization on the server where the data/mutation happens</b> — a user can hit a Server Action or Route Handler directly.</div>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Store sessions in httpOnly cookies; gate cheaply in middleware; enforce for real on the server.</li>
+        <li>Authentication = who you are; authorization = what you're allowed to do (check both).</li>
+      </ul></div>
+    </section>
+
+    <!-- 24. ENV -->
+    <section id="env">
+      <h2><span class="num"></span> Environment Variables</h2>
+      <p class="lead">Server env vars stay secret; only <code class="inline">NEXT_PUBLIC_*</code> variables are exposed to the browser bundle.</p>
+      <div class="code"><div class="code-head"><span>.env.local</span><button class="copy">Copy</button></div><pre>DATABASE_URL=postgres://...        <span class="tok-com"># server only — never shipped to client</span>
+STRIPE_SECRET=sk_live_...          <span class="tok-com"># server only</span>
+NEXT_PUBLIC_API_URL=https://api... <span class="tok-com"># exposed to the browser (build-time inlined)</span></pre></div>
+      <div class="callout warn"><b>Critical mistake:</b> putting a secret in a <code class="inline">NEXT_PUBLIC_</code> variable or reading a server secret inside a Client Component — it gets inlined into the JS bundle and is public. Secrets must only be read in server code.</div>
+    </section>
+
+    <!-- 25. SECURITY -->
+    <section id="security">
+      <h2><span class="num"></span> Security</h2>
+      <p class="lead">Next.js closes some holes (JSX escaping, server-only secrets) but you own the rest.</p>
+      <ul>
+        <li><b>XSS:</b> JSX auto-escapes; never use <code class="inline">dangerouslySetInnerHTML</code> with untrusted input (sanitize with DOMPurify).</li>
+        <li><b>Server Action / Route Handler abuse:</b> validate (Zod) + authenticate + authorize every one.</li>
+        <li><b>Secrets:</b> server-only env; never in <code class="inline">NEXT_PUBLIC_</code> or client components.</li>
+        <li><b>Cookies:</b> <code class="inline">httpOnly</code>, <code class="inline">Secure</code>, <code class="inline">SameSite</code>; CSRF protection for cookie-based mutations.</li>
+        <li><b>Headers/CSP:</b> set security headers in <code class="inline">next.config.js</code> or middleware (CSP, HSTS, X-Frame-Options).</li>
+        <li><b>Rate limiting:</b> protect auth + mutation endpoints (edge middleware + a store like Redis).</li>
+        <li><b>Open redirect / SSRF:</b> validate user-supplied URLs before redirecting or fetching.</li>
+      </ul>
+      <div class="callout tip"><b>OWASP mindset:</b> treat every Server Action and Route Handler as a public, untrusted entry point — the same discipline you'd apply to an Express route.</div>
+    </section>
+
+    <!-- 26. PERFORMANCE -->
+    <section id="performance">
+      <h2><span class="num"></span> Performance</h2>
+      <p class="lead">Next.js is fast by default; these levers make it faster and keep Core Web Vitals green.</p>
+      <table>
+        <tr><th>Lever</th><th>Effect</th></tr>
+        <tr><td>Keep components on the server</td><td>Less JS shipped → faster hydration (TBT/INP)</td></tr>
+        <tr><td>Stream with <code>Suspense</code></td><td>Lower TTFB/FCP; slow parts don't block</td></tr>
+        <tr><td><code>next/image</code> + <code>priority</code></td><td>Optimized formats, no CLS, faster LCP</td></tr>
+        <tr><td><code>next/font</code></td><td>Self-hosted fonts, no layout shift</td></tr>
+        <tr><td>Cache/ISR shareable data</td><td>Serve from CDN instead of recomputing</td></tr>
+        <tr><td><code>next/dynamic</code> lazy import</td><td>Split heavy client components out of the initial bundle</td></tr>
+        <tr><td>Analyze bundle</td><td><code>@next/bundle-analyzer</code> to find bloat</td></tr>
+      </table>
+      <div class="callout"><b>Core Web Vitals mapping:</b> LCP → images/fonts + server render; CLS → <code class="inline">next/image</code> dimensions + font strategy; INP/TBT → ship less client JS (Server Components, code-split).</div>
+    </section>
+
+    <!-- 27. TESTING -->
+    <section id="testing">
+      <h2><span class="num"></span> Testing</h2>
+      <p class="lead">Test the pyramid: unit (Vitest/Jest), component (React Testing Library), and end-to-end (Playwright/Cypress).</p>
+      <table>
+        <tr><th>Level</th><th>Tool</th><th>What</th></tr>
+        <tr><td>Unit</td><td>Vitest / Jest</td><td>Pure functions, utils, Server Action logic</td></tr>
+        <tr><td>Component</td><td>React Testing Library</td><td>Client Components (render, interact, assert)</td></tr>
+        <tr><td>E2E</td><td>Playwright</td><td>Full flows (login → dashboard → mutate) in a real browser</td></tr>
+      </table>
+      <div class="callout tip"><b>Note:</b> async Server Components are still stabilizing in unit runners — many teams cover them with E2E tests (Playwright) plus unit tests on the data/logic they call.</div>
+    </section>
+
+    <!-- 28. DEPLOYMENT -->
+    <section id="deployment">
+      <h2><span class="num"></span> Deployment &amp; Monitoring</h2>
+      <p class="lead">Next.js runs anywhere Node/edge runs. Vercel is zero-config; Docker/Node self-hosting is fully supported.</p>
+      <div class="code"><div class="code-head"><span>Self-host with a standalone build (Docker-friendly)</span><button class="copy">Copy</button></div><pre><span class="tok-com">// next.config.js</span>
+module.exports = { output: <span class="tok-str">"standalone"</span> };  <span class="tok-com">// emits a minimal server bundle</span>
+
+<span class="tok-com"># then: node .next/standalone/server.js  (or build a small Docker image)</span></pre></div>
+      <ul>
+        <li><b>Vercel:</b> push to git → build → global CDN + serverless/edge functions automatically.</li>
+        <li><b>Docker/Node:</b> <code class="inline">output: "standalone"</code> → tiny image; run behind a reverse proxy.</li>
+        <li><b>Monitoring:</b> Web Vitals reporting (<code class="inline">useReportWebVitals</code>), OpenTelemetry hooks, error tracking (Sentry), structured server logs.</li>
+      </ul>
+      <div class="keytk"><h4>✅ Key takeaways</h4><ul>
+        <li>Vercel = zero-config; self-host with <code class="inline">output: "standalone"</code>.</li>
+        <li>Monitor Web Vitals + errors; wire OpenTelemetry/Sentry for production visibility.</li>
+      </ul></div>
+    </section>
+
+    <!-- 29. FOLDER -->
+    <section id="folder">
+      <h2><span class="num"></span> Production Folder Structure</h2>
+      <p class="lead">A scalable layout separates routes from domain logic, keeps server-only code out of the client, and colocates by feature.</p>
+      <div class="diagram">src/
+├─ app/                     # routes only (thin: fetch + compose)
+│  ├─ (marketing)/ (app)/   # route groups per audience
+│  └─ api/                  # route handlers
+├─ features/                # domain logic by feature
+│  └─ auth/ { actions.ts, queries.ts, components/, schema.ts }
+├─ components/ui/           # shared, presentational
+├─ lib/                     # db.ts, auth.ts, env.ts (server-only)
+├─ hooks/                   # client hooks
+└─ types/</div>
+      <div class="callout tip"><b>Design decisions:</b> keep <code class="inline">app/</code> pages thin (fetch + layout), push business logic to <code class="inline">features/</code>, mark server-only modules with <code class="inline">import "server-only"</code> so they can never be imported into a client bundle.</div>
+    </section>
+
+    <!-- 30. PROJECT -->
+    <section id="project">
+      <h2><span class="num"></span> Mini Project — a full CRUD app</h2>
+      <p class="lead">Tie it together: a "Notes" app using Server Components (list), Server Actions (create/delete), caching (revalidatePath), and auth (middleware).</p>
+      <ol>
+        <li><b>Route:</b> <code class="inline">app/notes/page.tsx</code> — Server Component fetches notes from the DB directly.</li>
+        <li><b>Create/Delete:</b> <code class="inline">actions.ts</code> Server Actions insert/delete + <code class="inline">revalidatePath("/notes")</code>.</li>
+        <li><b>Form:</b> <code class="inline">&lt;form action={addNote}&gt;</code> (works without JS); <code class="inline">useFormStatus</code> for a pending state.</li>
+        <li><b>Auth:</b> <code class="inline">middleware.ts</code> redirects unauthenticated users; each action re-checks the session.</li>
+        <li><b>Detail:</b> <code class="inline">app/notes/[id]/page.tsx</code> dynamic route + <code class="inline">generateMetadata</code> for SEO.</li>
+      </ol>
+      <div class="callout"><b>Why this project:</b> it exercises every core pillar (routing, RSC, actions, caching, auth) — exactly what an interviewer or a real feature ticket asks for.</div>
+    </section>
+
+    <!-- 31. ENTERPRISE -->
+    <section id="enterprise">
+      <h2><span class="num"></span> Enterprise Architecture</h2>
+      <p class="lead">At scale, Next.js is one tier in a larger system.</p>
+      <ul>
+        <li><b>BFF pattern:</b> Next Route Handlers act as a Backend-for-Frontend in front of microservices.</li>
+        <li><b>Monorepo:</b> Turborepo with shared UI/config packages across multiple Next apps.</li>
+        <li><b>Edge + origin split:</b> auth/redirects/personalization at the edge; heavy logic at the origin.</li>
+        <li><b>Caching tiers:</b> CDN (full-route) → Data Cache → Redis (app cache) → DB.</li>
+        <li><b>Observability:</b> distributed tracing across Next → services; feature flags; canary deploys.</li>
+      </ul>
+      <div class="callout tip"><b>Design decision:</b> don't force all backend logic into Next. Use it as the presentation + BFF tier and keep durable/domain services separate for independent scaling and ownership.</div>
+    </section>
+
+    <!-- 32. INTERVIEW -->
+    <section id="interview">
+      <h2><span class="num"></span> Interview Questions</h2>
+      <details class="qa"><summary>What are React Server Components and what problem do they solve?</summary><div class="ans"><p>Components that render only on the server and ship no JavaScript to the client. They reduce bundle size, allow direct data/DB access without an API, and keep secrets server-side. Only interactive Client Components hydrate in the browser.</p></div></details>
+      <details class="qa"><summary>How do you choose between SSR, SSG, and ISR in the App Router?</summary><div class="ans"><p>By how you fetch: cached fetch → static (SSG); <code class="inline">revalidate: N</code> → ISR; <code class="inline">no-store</code> or reading cookies/headers → per-request SSR. Static/ISR for shareable content, SSR for personalized/real-time data.</p></div></details>
+      <details class="qa"><summary>Explain the Next.js caching layers.</summary><div class="ans"><p>Request Memoization (dedupes fetches in one render), Data Cache (fetch results across requests, revalidate/tags), Full Route Cache (rendered static routes), and the client Router Cache (visited routes). You invalidate with <code class="inline">revalidateTag</code>/<code class="inline">revalidatePath</code>, <code class="inline">no-store</code>, or <code class="inline">router.refresh()</code>.</p></div></details>
+      <details class="qa"><summary>Server Actions vs Route Handlers — when do you use each?</summary><div class="ans"><p>Server Actions for your own app's form mutations (less boilerplate, progressive enhancement). Route Handlers for public APIs, webhooks, and non-form clients (mobile, third-party). Both must validate + authenticate on the server.</p></div></details>
+      <details class="qa"><summary>How does authentication work and why isn't middleware enough?</summary><div class="ans"><p>Store sessions in httpOnly cookies; middleware does a cheap gate (cookie present) at the edge. But middleware can be bypassed by hitting a Server Action/Route Handler directly, so you must re-verify authentication and authorization on the server where the data or mutation actually happens.</p></div></details>
+      <details class="qa"><summary>How do you keep the client bundle small?</summary><div class="ans"><p>Default to Server Components; push <code class="inline">"use client"</code> to the smallest interactive leaves; pass server content into client components via <code class="inline">children</code>; lazy-load heavy client components with <code class="inline">next/dynamic</code>; analyze the bundle.</p></div></details>
+      <details class="qa"><summary>What is streaming and how does Suspense enable it?</summary><div class="ans"><p>The server sends HTML in chunks as data resolves. Wrapping a slow subtree in <code class="inline">&lt;Suspense fallback&gt;</code> lets the shell render immediately and the slow part stream in later, improving TTFB/FCP. <code class="inline">loading.tsx</code> is a Suspense boundary around the whole page.</p></div></details>
+      <details class="qa"><summary>Common Next.js production mistakes?</summary><div class="ans"><p>Leaking secrets via <code class="inline">NEXT_PUBLIC_</code>/client components; over-fetching in waterfalls instead of <code class="inline">Promise.all</code>; relying on stale cached fetches when data must be live; trusting Server Action input; making everything a Client Component (huge bundles); using <code class="inline">next/router</code> instead of <code class="inline">next/navigation</code>.</p></div></details>
+    </section>
+
+    <!-- 33. CHECKLIST -->
+    <section id="checklist">
+      <h2><span class="num"></span> Mastery Checklist</h2>
+      <p class="lead">You can call Next.js "done to 100%" when you can confidently explain and build each of these.</p>
+      <table>
+        <tr><th>Area</th><th>Covered</th></tr>
+        <tr><td>Fundamentals &amp; terminology</td><td>✅ Intro, Why, Structure</td></tr>
+        <tr><td>Routing (static, dynamic, groups, parallel, intercepting)</td><td>✅ §6, §7, §21</td></tr>
+        <tr><td>Rendering pipeline (SSR/SSG/ISR/CSR/PPR)</td><td>✅ §14</td></tr>
+        <tr><td>Server &amp; Client Components + hydration</td><td>✅ §12, §13</td></tr>
+        <tr><td>Data fetching &amp; the 4 caches</td><td>✅ §15, §16</td></tr>
+        <tr><td>Route Handlers &amp; Server Actions</td><td>✅ §17, §18</td></tr>
+        <tr><td>Streaming &amp; Suspense</td><td>✅ §19</td></tr>
+        <tr><td>Middleware, cookies, headers</td><td>✅ §20, §22</td></tr>
+        <tr><td>Auth &amp; authorization</td><td>✅ §23</td></tr>
+        <tr><td>Env, security, performance</td><td>✅ §24, §25, §26</td></tr>
+        <tr><td>Testing, deployment, monitoring</td><td>✅ §27, §28</td></tr>
+        <tr><td>Folder structure &amp; enterprise design</td><td>✅ §29, §31</td></tr>
+        <tr><td>Real project &amp; interview questions</td><td>✅ §30, §32</td></tr>
+      </table>
+      <div class="callout tip"><b>Next steps in this series:</b> Frontend System Design → Backend System Design → Redis → Kafka.</div>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>▲ <b>Next.js — The Complete Zero-to-Production Guide</b> · Part of the Tech Learning Library. App Router, Server Components, rendering models, caching, Server Actions, security, performance, and interview prep.</p>
+    <p style="margin-top:6px;"><a href="./index.html">← Back to Library</a></p>
+  </footer>
+</main>
+
+<script>
+  document.querySelectorAll(".code .copy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.closest(".code").querySelector("pre").innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = "Copied!"; btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+      });
+    });
+  });
+  const links = [...document.querySelectorAll("#nav a[href^='#']")];
+  const sections = links.map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+  const spy = () => {
+    let current = sections[0];
+    for (const s of sections) { if (s.getBoundingClientRect().top <= 120) current = s; }
+    links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + (current && current.id)));
+  };
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+  const search = document.getElementById("navSearch");
+  search.addEventListener("input", () => {
+    const q = search.value.toLowerCase();
+    links.forEach(l => { if (l.classList.contains("section-title")) return;
+      l.style.display = l.textContent.toLowerCase().includes(q) ? "" : "none"; });
+  });
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () => sidebar.classList.toggle("open"));
+  document.querySelectorAll("#nav a[href^='#']").forEach(a => a.addEventListener("click", () => sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
