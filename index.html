@@ -31,7 +31,7 @@
   .wrap { max-width: 1120px; margin: 0 auto; padding: 56px 24px 90px; }
   h2.section { font-size: 1.4rem; margin: 10px 0 22px; color: #cfe4fa; display: flex; align-items: center; gap: 10px; }
   h2.section::before { content: ""; width: 6px; height: 22px; background: var(--blue-mid); border-radius: 3px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 44px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 44px; }
   .card {
     background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px;
     box-shadow: var(--shadow); transition: transform 0.18s, border-color 0.18s; position: relative; display: block;
@@ -48,7 +48,9 @@
   .status.wip { background: #3d3414; color: #fbbf24; border: 1px solid #6b571f; }
   .status.soon2 { background: #2a2f3d; color: #94a3b8; border: 1px solid #3d4759; }
   footer { text-align: center; padding: 30px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
-  @media (max-width: 600px) { header.hero h1 { font-size: 2.1rem; } }
+  @media (max-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { header.hero h1 { font-size: 2.1rem; } .grid { grid-template-columns: repeat(2, 1fr); gap: 14px; } .card { padding: 18px; } .card .ico { font-size: 1.9rem; } .card h3 { font-size: 1.1rem; } }
 </style>
 </head>
 <body>
@@ -71,30 +73,6 @@
         <div class="ico">▲</div><h3>Next.js</h3>
         <p>App Router, Server &amp; Client Components, SSR/SSG/ISR/PPR, caching, Server Actions, streaming, middleware, auth, deployment.</p>
         <div class="tags"><span>App Router</span><span>RSC</span><span>Caching</span><span>SSR</span></div>
-      </a>
-      <a class="card" href="./frontend-system-design.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🧩</div><h3>Frontend System Design</h3>
-        <p>RADIO framework, rendering pipeline, state/data architecture, pagination, infinite scroll, virtualization, code splitting, CDN, micro-frontends, case studies.</p>
-        <div class="tags"><span>Rendering</span><span>State</span><span>Virtualization</span><span>Case Studies</span></div>
-      </a>
-      <a class="card" href="./backend-system-design.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🏗️</div><h3>Backend System Design</h3>
-        <p>Architecture styles, REST/GraphQL/gRPC/queues, caching, SQL/NoSQL, CAP, replication, sharding, load balancing, API gateway, K8s, HA/DR, case studies.</p>
-        <div class="tags"><span>Scaling</span><span>Databases</span><span>Microservices</span><span>Case Studies</span></div>
-      </a>
-      <a class="card" href="./redis.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🔴</div><h3>Redis</h3>
-        <p>In-memory model, all data types, persistence (RDB/AOF), replication, Sentinel, Cluster, caching patterns, locks, rate limiting, leaderboards, queues, case studies.</p>
-        <div class="tags"><span>Cache</span><span>Data Types</span><span>Cluster</span><span>Patterns</span></div>
-      </a>
-      <a class="card" href="./kafka.html">
-        <span class="status done">Ready</span>
-        <div class="ico">🌊</div><h3>Apache Kafka</h3>
-        <p>The commit log, partitions &amp; replication, producers &amp; consumer groups, delivery guarantees, exactly-once, Schema Registry, Connect, Streams, patterns, case studies.</p>
-        <div class="tags"><span>Streaming</span><span>Partitions</span><span>Exactly-Once</span><span>Patterns</span></div>
       </a>
       <a class="card" href="./javascript.html">
         <span class="status done">Ready</span>
@@ -191,6 +169,34 @@
         <div class="ico">🐳</div><h3>Docker</h3>
         <p>Images, Dockerfile, multi-stage, volumes, networks, Compose, real-world React/FastAPI/Express.</p>
         <div class="tags"><span>Multi-Stage</span><span>Compose</span><span>Real-World</span></div>
+      </a>
+    </div>
+
+    <h2 class="section">System Design &amp; Data Infrastructure</h2>
+    <div class="grid">
+      <a class="card" href="./frontend-system-design.html">
+        <span class="status done">Ready</span>
+        <div class="ico">🧩</div><h3>Frontend System Design</h3>
+        <p>RADIO framework, rendering pipeline, state/data architecture, pagination, infinite scroll, virtualization, code splitting, CDN, micro-frontends, case studies.</p>
+        <div class="tags"><span>Rendering</span><span>State</span><span>Virtualization</span><span>Case Studies</span></div>
+      </a>
+      <a class="card" href="./backend-system-design.html">
+        <span class="status done">Ready</span>
+        <div class="ico">🏗️</div><h3>Backend System Design</h3>
+        <p>Architecture styles, REST/GraphQL/gRPC/queues, caching, SQL/NoSQL, CAP, replication, sharding, load balancing, API gateway, K8s, HA/DR, case studies.</p>
+        <div class="tags"><span>Scaling</span><span>Databases</span><span>Microservices</span><span>Case Studies</span></div>
+      </a>
+      <a class="card" href="./redis.html">
+        <span class="status done">Ready</span>
+        <div class="ico">🔴</div><h3>Redis</h3>
+        <p>In-memory model, all data types, persistence (RDB/AOF), replication, Sentinel, Cluster, caching patterns, locks, rate limiting, leaderboards, queues, case studies.</p>
+        <div class="tags"><span>Cache</span><span>Data Types</span><span>Cluster</span><span>Patterns</span></div>
+      </a>
+      <a class="card" href="./kafka.html">
+        <span class="status done">Ready</span>
+        <div class="ico">🌊</div><h3>Apache Kafka</h3>
+        <p>The commit log, partitions &amp; replication, producers &amp; consumer groups, delivery guarantees, exactly-once, Schema Registry, Connect, Streams, patterns, case studies.</p>
+        <div class="tags"><span>Streaming</span><span>Partitions</span><span>Exactly-Once</span><span>Patterns</span></div>
       </a>
     </div>
   </div>
