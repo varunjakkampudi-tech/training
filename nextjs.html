@@ -269,6 +269,13 @@
         <li>For a small internal SPA with no SEO needs, Vite may be simpler.</li>
       </ul>
       <div class="callout tip"><b>Interview framing:</b> "Next.js trades some flexibility for production-ready defaults (rendering, routing, caching, images). Choose it when SEO/performance/full-stack matter; choose a Vite SPA when you only need a client-rendered app behind auth."</div>
+      <h3>Version evolution (why the framework changed)</h3>
+      <div class="diagram">Pages Router  (getServerSideProps / getStaticProps, client-first)
+   ↓  React 18 (Suspense, streaming SSR, concurrent features)
+App Router    (React Server Components, nested layouts, caching)
+   ↓  React 19 (async components, use(), Server Actions, useOptimistic)
+Today         (App Router + PPR + Turbopack)</div>
+      <p>Understanding this arc explains the API: the App Router exists because React 18/19 added the primitives (streaming, RSC, Actions) that make server-first rendering practical. Migrating from Pages → App is incremental (they coexist in one app).</p>
       <div class="keytk"><h4>✅ Key takeaways</h4><ul>
         <li>Pick Next.js for SEO/performance/full-stack; pick a SPA for simple internal tools.</li>
         <li>Its superpower is production-ready defaults; its cost is opinionation + a server to run it.</li>
@@ -691,6 +698,14 @@ PPR:  static shell now  +  dynamic parts streamed in  (best of both)</div>
   );
 }</pre></div>
       <div class="callout"><b>Why it matters:</b> Time-to-First-Byte and First-Contentful-Paint stay low even when part of the page is slow. <code class="inline">loading.tsx</code> is just a Suspense boundary around the whole page; explicit <code class="inline">&lt;Suspense&gt;</code> lets you stream <em>parts</em>.</div>
+      <h3>Concurrent rendering (what powers streaming)</h3>
+      <p>Streaming rides on React's <b>concurrent renderer</b>. Instead of rendering the whole tree in one blocking pass, React can:</p>
+      <ul>
+        <li><b>Interruptible rendering:</b> pause low-priority work to handle urgent updates (typing, clicks) first.</li>
+        <li><b>Priorities / Scheduler:</b> urgent updates (input) beat transitions (<code class="inline">useTransition</code>) and background streaming.</li>
+        <li><b>Suspense coordination:</b> a boundary shows its fallback while its subtree's data is pending, then swaps in the resolved content — the server streams these swaps as chunks.</li>
+      </ul>
+      <div class="callout tip"><b>Mental model:</b> Suspense = “wait here, show a fallback”; the concurrent scheduler decides <em>what renders first</em>; streaming is how the server delivers those resolved boundaries over time.</div>
     </section>
 
     <!-- 20. MIDDLEWARE -->
@@ -994,6 +1009,16 @@ Router Cache          (client-side, visited routes in the browser)</div>
 <span class="tok-key">export</span> <span class="tok-key">const</span> preferredRegion = <span class="tok-str">"iad1"</span>;        <span class="tok-com">// deploy edge fn close to your DB</span>
 <span class="tok-key">export</span> <span class="tok-key">const</span> maxDuration = 10;               <span class="tok-com">// max seconds the function may run</span></pre></div>
       <div class="callout warn"><b>Most-confused point:</b> the Data Cache is shared across <em>all users</em> — never cache per-user/private data with it. Use <code class="inline">no-store</code> (or dynamic APIs like <code class="inline">cookies()</code>) for anything personalized.</div>
+      <h3>Fetch caching decision tree</h3>
+      <div class="diagram">fetch(url, options)
+   ↓ cache / next.revalidate ?
+   ├─ "force-cache"        → Data Cache (static / SSG)
+   ├─ next:{revalidate:N}  → Data Cache + rebuild after N s (ISR)
+   ├─ next:{tags:[...]}    → Data Cache, bust via revalidateTag (on-demand)
+   └─ "no-store"          → no Data Cache (dynamic / SSR, per request)
+
+Reads cookies()/headers()/searchParams ?  → route becomes dynamic (SSR)
+Static route output → Full Route Cache (CDN)   |   client visits → Router Cache</div>
     </section>
 
     <!-- 36. BUILD -->
@@ -1051,6 +1076,13 @@ Server Action runs on the server
    ↓ dynamic routes       (app/ pages, route handlers)
    ↓ Response</div>
       <div class="callout warn"><b>Keep middleware tiny:</b> it runs on <em>every</em> matched request on the edge. Do cheap work (read a cookie, verify a JWT signature); never hit a database or do heavy compute there.</div>
+      <h3>Server Action security internals</h3>
+      <ul>
+        <li><b>Encrypted action references:</b> Next generates an encrypted ID/closure for each action; the client can only invoke it by ID and can't read or forge the server code.</li>
+        <li><b>Origin validation:</b> Next checks the request Origin/Host against the app to block cross-site invocation (a built-in CSRF-style guard); still add your own CSRF token for cookie auth.</li>
+        <li><b>Serialization restrictions:</b> only serializable args/returns cross the boundary — you can't smuggle functions; bind trusted values (e.g. the current user id) on the server, not from client input.</li>
+        <li><b>Replay/authorization:</b> treat every call as a fresh untrusted request — re-verify session + RBAC and validate the body (Zod) every time.</li>
+      </ul>
     </section>
 
     <!-- 38. ASSET INTERNALS -->
@@ -1174,6 +1206,18 @@ Mutation → Server Action: re-verify session + RBAC (never trust the client)</d
         <tr><td>Large images</td><td><b>next/image</b></td><td>Resizing, modern formats, no CLS</td></tr>
         <tr><td>Mix of static + personalized</td><td><b>PPR</b> + Suspense</td><td>Static shell instant, dynamic streamed</td></tr>
       </table>
+      <h3>Decision tree (flowchart form)</h3>
+      <div class="diagram">Need SEO / shareable HTML?
+   ├─ No  → CSR / Client Component (dashboard behind auth)
+   └─ Yes
+        ↓ Content same for everyone?
+        ├─ Yes → Changes often?
+        │          ├─ No  → SSG
+        │          └─ Yes → ISR (revalidate)
+        └─ No (per-user) → SSR (dynamic)
+
+Mutation?  → Server Action (own app)  |  Route Handler (public API)
+Global gate?  → Middleware</div>
     </section>
 
     <!-- 43. COMMON MISTAKES -->
@@ -1192,6 +1236,17 @@ Mutation → Server Action: re-verify session + RBAC (never trust the client)</d
         <tr><td>Trusting Server Action input</td><td>Authenticate + validate (Zod) inside every action</td></tr>
         <tr><td><code>next/router</code> in App Router</td><td>Use <code>next/navigation</code></td></tr>
         <tr><td>Hydration mismatches</td><td>Move <code>Date.now()</code>/<code>random</code>/<code>window</code> to <code>useEffect</code></td></tr>
+      </table>
+      <h3>Production debugging walkthroughs</h3>
+      <table>
+        <tr><th>Symptom</th><th>Likely cause → fix</th></tr>
+        <tr><td>Hydration mismatch warning</td><td>Server/client render differ (time, random, <code>window</code>) → move to <code>useEffect</code> / <code>suppressHydrationWarning</code></td></tr>
+        <tr><td>Slow route / high LCP</td><td>Big client bundle or unoptimized image → Server Components, <code>next/image priority</code>, code-split, stream</td></tr>
+        <tr><td>Stale data after update</td><td>Cached fetch/route → <code>revalidateTag</code>/<code>revalidatePath</code> after the mutation, or <code>no-store</code></td></tr>
+        <tr><td>Infinite re-render</td><td>State set during render / effect without deps → fix deps, move updates to handlers</td></tr>
+        <tr><td>Unexpected dynamic rendering</td><td>Read <code>cookies()</code>/<code>headers()</code> somewhere → remove or accept SSR; check the build output's ○/ƒ markers</td></tr>
+        <tr><td>Edge runtime error</td><td>Used a Node API/DB driver on the edge → set <code>runtime = "nodejs"</code> for that route</td></tr>
+        <tr><td>Secret shows in browser</td><td><code>NEXT_PUBLIC_</code> or read in client → move to server-only code</td></tr>
       </table>
     </section>
 
@@ -1212,6 +1267,15 @@ Streaming         → Suspense for slow recommendations without blocking the pag
 Caching           → CDN (static) + Data Cache (catalog) + no-store (cart/orders)
 Deployment        → CDN → Edge (auth) → Node functions → DB, multi-region</div>
       <div class="callout tip"><b>How to answer:</b> for each surface, state the data's shape (shared vs per-user, how often it changes) → derive the rendering strategy and cache policy. That reasoning <em>is</em> the senior-level answer.</div>
+      <table>
+        <tr><th>Surface</th><th>Choice</th><th>Rejected alternative &amp; trade-off</th></tr>
+        <tr><td>Product page</td><td>ISR + PPR</td><td>Pure SSR (slower TTFB, higher cost at scale); pure SSG (stale prices)</td></tr>
+        <tr><td>Cart</td><td>Client + optimistic, server-persisted</td><td>SSR every change (janky UX); localStorage-only (lost across devices)</td></tr>
+        <tr><td>Orders</td><td>SSR, <code>no-store</code></td><td>Cached (would leak another user's orders — privacy bug)</td></tr>
+        <tr><td>Search</td><td>Route Handler + debounce</td><td>Server Component per keystroke (too many full renders)</td></tr>
+        <tr><td>Auth</td><td>Middleware gate + server RBAC</td><td>Client-only guard (trivially bypassed)</td></tr>
+      </table>
+      <p><b>Scaling &amp; ops:</b> catalog reads scale via CDN + Data Cache; checkout scales by keeping actions stateless and pushing writes to the DB/queue; multi-region edge for auth/latency; observability (traces + Web Vitals) to catch regressions.</p>
 
       <h3>🟢 Beginner</h3>
       <details class="qa"><summary>What is Next.js and why use it over plain React?</summary><div class="ans"><p>A React framework adding SSR, file-based routing, Server Components, caching, and an API layer — giving SEO, fast first paint, small bundles, and full-stack ability without stitching libraries together.</p></div></details>
